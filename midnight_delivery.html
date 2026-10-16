@@ -619,8 +619,8 @@
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zm-4 17v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2H8zm4-14a4 4 0 0 1 4 4h-2a2 2 0 0 0-2-2V5z"/></svg>
           </div>
           <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">DRAW</div>
-            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / BOX</div>
+            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">CRATE</div>
+            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / DROP</div>
           </div>
         </button>
 
@@ -681,7 +681,7 @@
       <div class="flex items-center gap-2 pointer-events-auto w-full sm:w-auto justify-end">
         <button id="btn-home-quick-draw" class="hidden py-3 sm:py-4 px-4 sm:px-5 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs sm:text-base arcade-font arcade-btn items-center justify-center gap-1.5 flex-1 sm:flex-initial">
           <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
-          <span>BLIND DRAW (100)</span>
+          <span>SUPPLY DROP (100)</span>
         </button>
         <button id="btn-start-play" class="flex-1 sm:flex-initial py-3 sm:py-4 px-7 sm:px-12 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-emerald-300 via-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-lg sm:text-3xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
           <span>START!</span>
@@ -714,7 +714,7 @@
   </div>
 
   <!-- ============================================================================ -->
-  <!-- HOME SUB-MODALS: LEADERBOARD, HALL OF FAME, ANIMATED PRIZE DRAW & SETTINGS   -->
+  <!-- HOME SUB-MODALS: LEADERBOARD, HALL OF FAME, COURIER SUPPLY CRATES & SETTINGS -->
   <!-- ============================================================================ -->
 
   <!-- 1. LEADERBOARD MODAL -->
@@ -771,7 +771,7 @@
     </div>
   </div>
 
-  <!-- 3. BLIND MYSTERY CRATE PRIZE DRAW MACHINE MODAL -->
+  <!-- 3. COURIER SUPPLY DROP & FLEET REQUISITION CRATE MODAL -->
   <div id="modal-draw" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
     <div class="arcade-panel rounded-3xl max-w-xl w-full p-5 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden">
       <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30 relative z-10">
@@ -780,39 +780,39 @@
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
           </div>
           <div class="text-left">
-            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">BLIND MYSTERY RIG DRAW</h2>
-            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Crack open a Blind Mystery Crate to win a surprise 3D Rig!</p>
+            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">COURIER SUPPLY DROP</h2>
+            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Requisition a Courier Supply Crate with earned coins to expand your fleet!</p>
           </div>
         </div>
         <button data-close-modal="modal-draw" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
       </div>
 
-      <!-- Blind Mystery Crate & Reveal Stage (Hides all available cars until unboxed!) -->
+      <!-- Courier Supply Drop Crate & Reveal Stage -->
       <div class="my-4 bg-slate-950 border-3 border-sky-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center min-h-[245px] relative overflow-hidden shadow-inner">
         <div id="draw-sunburst" class="sunburst-rays absolute inset-[-50%] opacity-35 pointer-events-none"></div>
         <canvas id="draw-confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
 
         <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
-          <!-- Blind Mystery Crate Graphic (Shown before & during spin) -->
+          <!-- Supply Crate Graphic -->
           <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
             <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
               <rect x="8" y="14" width="48" height="42" rx="8" fill="#1e293b" stroke="#facc15" stroke-width="4"/>
               <path d="M8 26H56" stroke="#38bdf8" stroke-width="4"/>
               <rect x="26" y="20" width="12" height="12" rx="3" fill="#facc15"/>
-              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">?</text>
+              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">📦</text>
             </svg>
           </div>
-          <!-- Unboxed 3D Vehicle Image (Hidden until reveal!) -->
-          <img id="draw-vehicle-img" src="" alt="Prize Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
-          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">BLIND BOX</span>
+          <!-- Unboxed 3D Vehicle Image -->
+          <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
+          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">SUPPLY CRATE</span>
         </div>
 
-        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">MYSTERY VOXEL RIG CAPSULE</div>
-        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Contents are 100% hidden until you unbox &bull; Duplicate Refund +60 Coins</div>
+        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET SUPPLY REQUISITION</div>
+        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Unlock 3D delivery vehicles with coins earned in-game &bull; Fleet Scrap Value +60 Coins</div>
       </div>
 
       <div class="flex items-center justify-between bg-slate-950/90 px-4 py-3 rounded-2xl border-2 border-sky-500/40 mb-4 relative z-10">
-        <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">YOUR COIN VAULT</span>
+        <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">EARNED COIN BALANCE</span>
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">$</div>
           <span id="draw-coins-Readout" class="arcade-font text-xl text-amber-300">250</span>
@@ -823,7 +823,7 @@
       <div class="flex gap-2.5 relative z-10">
         <button id="btn-spin-draw" class="flex-1 py-4 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-base sm:text-xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V14h-2v2.93A8 8 0 0 1 4.07 11H7V9H4.07A8 8 0 0 1 11 4.07V7h2V4.07A8 8 0 0 1 19.93 11H17v2h2.93A8 8 0 0 1 13 16.93z"/></svg>
-          <span>OPEN BLIND BOX (100 COINS)</span>
+          <span>REQUISITION CRATE (100 COINS)</span>
         </button>
       </div>
     </div>
@@ -853,8 +853,8 @@
 
         <div class="flex items-center justify-between bg-slate-950/85 p-3.5 rounded-2xl border-2 border-amber-400/50">
           <div>
-            <div class="font-extrabold text-amber-300">Sponsor Grant: +300 Coins &amp; Discovery</div>
-            <div class="text-[10px] text-sky-300">Instant coins to test the Blind Draw Machine</div>
+            <div class="font-extrabold text-amber-300">Courier Grant: +300 Coins</div>
+            <div class="text-[10px] text-sky-300">Earned delivery bonus coins to test Supply Crates</div>
           </div>
           <button id="setting-gift-coins" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold arcade-btn">+300 COINS</button>
         </div>
@@ -1229,8 +1229,8 @@
       {
         id: 2,
         key: 'ps5',
-        name: 'PS5 Pro + VR Bundle',
-        short: 'PS5 PRO',
+        name: 'DigitBox 7 Pro Console',
+        short: 'DIGITBOX 7',
         pts: 450,
         tier: 'GOLD TIER',
         tierClass: 'tier-gold',
@@ -1289,8 +1289,8 @@
       {
         id: 7,
         key: 'ramen',
-        name: 'Ichiraku Ramen Bowl',
-        short: 'RAMEN BOWL',
+        name: 'Midnight Shan Noodle XL',
+        short: 'SHAN NOODLE',
         pts: 250,
         tier: 'RARE TIER',
         tierClass: 'tier-rare',
@@ -1351,13 +1351,13 @@
     // 8 Expressive, Cool Voxel Characters
     const CHARACTER_TYPES = [
       { id: 'goblin',    name: 'Big-Eye Goblin',   phrase: '"Hehe!  Yes!"' },
-      { id: 'doge',      name: 'Shiba Doge Chef',  phrase: '"Much Parcel! Wow!"' },
+      { id: 'doge',      name: 'Golden Inle Chef', phrase: '"Much Parcel! Very Fast!"' },
       { id: 'banana',    name: 'Cool Banana Bro',  phrase: '"Peel Good Bro!"' },
       { id: 'neko',      name: 'Neko-Chan',        phrase: '"Meow! Toss Here!"' },
       { id: 'ledbot',    name: 'LED-Bot 9000',     phrase: '"BEEP! Drop Beat!"' },
       { id: 'wizard',    name: 'Starlight Wizard', phrase: '"By My Beard!"' },
-      { id: 'panda',     name: 'Kung-Fu Panda',    phrase: '"Skadoosh! Here!"' },
-      { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Preem Delivery!"' }
+      { id: 'panda',     name: 'Master Bamboo',    phrase: '"Inner Peace! Drop Here!"' },
+      { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Laser-Sharp Delivery!"' }
     ];
 
     const PLAYABLE_VANS = [
@@ -1440,7 +1440,7 @@
       { name: 'NekoChan_Tokyo',     vanId: 'cyber',      van: 'Cyber-Blade 2099',       delivered: 118, distance: 3940, rank: 2 },
       { name: 'YangonTeaMaster',    vanId: 'goldtuktuk', van: 'Royal Bangkok Tuk-Tuk',  delivered: 96,  distance: 3310, rank: 3 },
       { name: 'ChaiWallah_Express', vanId: 'bullion',    van: 'Fort Knox Bullion Rig',  delivered: 84,  distance: 2890, rank: 4 },
-      { name: 'DogeChef_Wow',       vanId: 'ramen',      van: 'Harajuku Ramen Truck',   delivered: 68,  distance: 2350, rank: 5 },
+      { name: 'InleChef_Fast',      vanId: 'ramen',      van: 'Harajuku Ramen Truck',   delivered: 68,  distance: 2350, rank: 5 },
       { name: 'Moai_Shades_Bro',    vanId: 'classic',    van: 'Express Courier GTI',    delivered: 45,  distance: 1620, rank: 6 }
     ];
 
@@ -1456,7 +1456,7 @@
         roofs: [0x1e293b, 0x0f172a, 0x991b1b],
         accent: 0xe11d48,
         signs: [
-          { top: 'ラーメン', bottom: 'ICHIRAKU RAMEN', bg: '#b91c1c', fg: '#fef08a' },
+          { top: 'ラーメン', bottom: 'TOKYO RAMEN',    bg: '#b91c1c', fg: '#fef08a' },
           { top: 'たこ焼き', bottom: 'TOKYO TAKOYAKI', bg: '#0f172a', fg: '#ffffff' },
           { top: '居酒屋',   bottom: 'SHIBUYA IZAKAYA', bg: '#4c1d95', fg: '#00f5d4' }
         ]
@@ -1865,7 +1865,7 @@
         addVoxelBox(group, 0.98, 0.84, 0.14, 0,  0.44, -0.08, 0xfde047, goldOpt);
         addVoxelBox(group, 0.30, 0.12, 0.16, -0.66, 0.70, -0.32, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.8 });
       } else if (typeId === 2) {
-        // 2: GOLD TIER — PS5 PRO + VR STACK
+        // 2: GOLD TIER — DIGITBOX 7 PRO CONSOLE
         addVoxelBox(group, 1.15, 0.16, 1.02, 0, -0.72, 0, 0x0f172a);
         addVoxelBox(group, 0.46, 1.54, 0.90, 0,  0.04, 0, 0x090d16);
         addVoxelBox(group, 0.50, 1.42, 0.10, 0,  0.06,  0.44, 0x38bdf8, { emissive: 0x0284c7, emissiveIntensity: 1.1 });
@@ -1924,7 +1924,7 @@
         addVoxelBox(group, 0.42, 0.18, 0.36,  0.34, 0.28, 0, 0x1e293b);
         addVoxelBox(group, 0.38, 0.38, 0.38,  0,    0.34, 0, 0xec4899);
       } else if (typeId === 7) {
-        // 7: RARE TIER — STEAMING ICHIRAKU RAMEN BOWL
+        // 7: RARE TIER — STEAMING MIDNIGHT SHAN NOODLE XL
         addVoxelBox(group, 1.62, 0.16, 1.62, 0, -0.52, 0, 0x0f172a);
         addVoxelBox(group, 1.50, 0.56, 1.50, 0,  0.04, 0, 0xdc2626);
         addVoxelBox(group, 1.58, 0.16, 1.58, 0,  0.34, 0, 0x18181b);
@@ -3323,9 +3323,9 @@
 
       if (mysteryCrate) mysteryCrate.classList.remove('hidden');
       if (vehicleImg) vehicleImg.classList.add('hidden');
-      if (tierPill) tierPill.textContent = 'BLIND BOX';
-      if (titleEl) titleEl.textContent = 'MYSTERY VOXEL RIG CAPSULE';
-      if (subEl) subEl.textContent = 'Contents are 100% hidden until you unbox • Duplicate Refund +60 Coins';
+      if (tierPill) tierPill.textContent = 'SUPPLY CRATE';
+      if (titleEl) titleEl.textContent = 'FLEET SUPPLY REQUISITION';
+      if (subEl) subEl.textContent = 'Unlock 3D delivery vehicles with coins earned in-game • Fleet Scrap Value +60 Coins';
       if (stageBox) {
         stageBox.classList.remove('prize-reveal-anim', 'capsule-tumbling');
         stageBox.classList.add('blind-crate-idle');
@@ -3370,10 +3370,10 @@
       stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
       stageBox.classList.add('capsule-tumbling');
       sunburst.style.opacity = '0.9';
-      titleEl.textContent = 'SHAKING BLIND MYSTERY CRATE...';
-      subEl.textContent = 'Which Voxel Rig is inside?!';
+      titleEl.textContent = 'OPENING SUPPLY CRATE...';
+      subEl.textContent = 'Requisitioning vehicle for your courier fleet...';
 
-      const mysteryBadges = ['???', 'RARE?', 'EPIC?', 'LEGENDARY?', 'MYSTERY RIG', 'UNBOXING!'];
+      const mysteryBadges = ['SUPPLY', 'RARE', 'EPIC', 'LEGENDARY', 'FLEET RIG', 'UNLOCKED!'];
       const totalSteps = 16;
       let step = 0;
 
@@ -3386,7 +3386,7 @@
           const delay = 55 + Math.pow(step / totalSteps, 2.0) * 165;
           setTimeout(nextBlindShakeTick, delay);
         } else {
-          // Blind Box Explodes Open to Reveal the Won Vehicle!
+          // Supply Crate Opens to Deploy the Requisitioned Vehicle!
           stageBox.classList.remove('capsule-tumbling');
           mysteryCrate.classList.add('hidden');
           vehicleImg.src = vanIconDataURLs[wonVan.id];
@@ -3401,14 +3401,14 @@
             gameState.ownedVans.push(wonVan.id);
             soundFX.playCityGateChime();
             triggerPrizeConfetti();
-            titleEl.textContent = `UNBOXED NEW RIG: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `${wonVan.tier} • Equipped directly onto your 3D Showroom Turntable!`;
+            titleEl.textContent = `UNLOCKED NEW RIG: ${wonVan.name.toUpperCase()}`;
+            subEl.textContent = `${wonVan.tier} • Deployed directly to your 3D Fleet Showroom!`;
           } else {
             gameState.coins += 60;
             soundFX.playDeliverSuccess();
             triggerPrizeConfetti();
-            titleEl.textContent = `UNBOXED DUPLICATE: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `Converted into +60 Bonus Coins Refund!`;
+            titleEl.textContent = `FLEET DUPLICATE: ${wonVan.name.toUpperCase()}`;
+            subEl.textContent = `Scrapped into +60 Earned Delivery Coins!`;
           }
 
           gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === wonVan.id);
@@ -5397,7 +5397,7 @@
             if (alertTxt) {
               alertTxt.textContent = cw.isDuckCrossing
                 ? 'CAUTION: DUCK FAMILY CROSSING AHEAD'
-                : 'CAUTION: SHIBA CHEF CROSSING AHEAD';
+                : 'CAUTION: INLE CHEF CROSSING AHEAD';
             }
           }
 
