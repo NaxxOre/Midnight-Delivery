@@ -1037,42 +1037,58 @@
     }
 
     function updateProjectileArcVisuals(now = performance.now()) {
-      if (!gameState.dragging || !gameState.dragSide || gameState.dragCancel) {
+      let targetApt = null;
+      let parcelId = null;
+      let isAutoLock = false;
+
+      if (gameState.dragging && gameState.dragSide && !gameState.dragCancel) {
+        targetApt = findBestTargetApartmentOnSide(gameState.dragSide);
+        parcelId = gameState.handSlots[gameState.dragSlotIndex];
+      } else if (gameState.mode === 'playing' && gameState.lockedTargetApt) {
+        targetApt = gameState.lockedTargetApt;
+        isAutoLock = true;
+        const matchIdx = gameState.handSlots.indexOf(targetApt.wantedType);
+        const slotIdx = matchIdx !== -1 ? matchIdx : (gameState.selectedSlotIndex || 0);
+        parcelId = gameState.handSlots[slotIdx];
+      }
+
+      if (!targetApt) {
         projectileArcLine.visible = false;
         aimNodes.forEach(n => (n.visible = false));
         aimLandingRing.visible = false;
         return;
       }
 
-      const targetApt = findBestTargetApartmentOnSide(gameState.dragSide);
       gameState.targetAptLock = targetApt;
-
       const startPos = new THREE.Vector3(playerVan.position.x, 2.9, playerVan.position.z);
-      const endPos = targetApt
-        ? new THREE.Vector3(targetApt.group.position.x + targetApt.porchX, 0.9, targetApt.group.position.z + 1.2)
-        : new THREE.Vector3(gameState.dragSide === 'left' ? -11.5 : 11.5, 0.9, gameState.vanZ - 16);
+      const endPos = new THREE.Vector3(
+        targetApt.group.position.x + targetApt.porchX,
+        1.45,
+        targetApt.group.position.z + 1.2
+      );
 
-      const parcelId = gameState.handSlots[gameState.dragSlotIndex];
       const isMatch = targetApt && targetApt.hasOrder && targetApt.wantedType === parcelId;
-      const arcColor = isMatch ? 0x00f5d4 : 0xf43f5e;
+      const arcColor = isMatch ? 0x00f5d4 : (isAutoLock ? 0xfacc15 : 0xf43f5e);
 
       const posAttr = projectileArcLine.geometry.attributes.position;
       for (let i = 0; i < ARC_POINTS; i++) {
         const t = i / (ARC_POINTS - 1);
         const px = THREE.MathUtils.lerp(startPos.x, endPos.x, t);
-        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 6.8;
+        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 5.8;
         const pz = THREE.MathUtils.lerp(startPos.z, endPos.z, t);
         posAttr.setXYZ(i, px, py, pz);
       }
       posAttr.needsUpdate = true;
       arcLineMat.color.setHex(arcColor);
+      arcLineMat.transparent = true;
+      arcLineMat.opacity = isAutoLock ? 0.85 : 1.0;
       projectileArcLine.visible = true;
 
       const animOffset = ((now * 0.003) % 1) / aimNodes.length;
       aimNodes.forEach((node, idx) => {
         const t = Math.min(0.98, (idx + 0.5) / aimNodes.length + animOffset);
         node.position.lerpVectors(startPos, endPos, t);
-        node.position.y += Math.sin(t * Math.PI) * 6.8;
+        node.position.y += Math.sin(t * Math.PI) * 5.8;
         node.rotation.x += 0.08;
         node.rotation.y += 0.1;
         node.material.color.setHex(arcColor);
@@ -1080,7 +1096,7 @@
       });
 
       aimLandingRing.position.set(endPos.x, 0.42, endPos.z);
-      aimLandingRing.scale.setScalar(1 + Math.sin(now * 0.012) * 0.12);
+      aimLandingRing.scale.setScalar(1 + Math.sin(now * 0.012) * 0.14);
       aimLandingRing.material.color.setHex(arcColor);
       aimLandingRing.visible = true;
     }
@@ -1321,7 +1337,7 @@
       p.maxLife = 0.55;
     }
 
-    function throwParcelFromHandSlot(slotIndex, apt) {
+    function throwParcelFromHandSlot(slotIndex, apt, isMagneticHoming = true) {
       if (gameState.mode !== 'playing' || !apt) return;
       const parcelTypeId = gameState.handSlots[slotIndex];
       soundFX.playThrow();
@@ -1343,7 +1359,7 @@
       // Check Sweet-Spot alignment between player van and target resident (center ~18 units ahead)
       const targetZ = apt.group.position.z + 1.2;
       const dz = targetZ - playerVan.position.z;
-      const isSweetSpot = Math.abs(dz + 18.0) <= 6.5;
+      const isSweetSpot = Math.abs(dz + 18.0) <= 7.5;
 
       flyingParcels.push({
         mesh,
@@ -1352,12 +1368,79 @@
         targetApt: apt,
         parcelType: parcelTypeId,
         progress: 0,
-        duration: 0.45,
-        isSweetSpot
+        duration: 0.42,
+        isSweetSpot,
+        magneticHoming: isMagneticHoming
       });
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
       refillHandSlot(slotIndex);
+    }
+
+    function quickThrowParcel(side = 'auto') {
+      if (gameState.mode !== 'playing') return;
+
+      let targetApt = null;
+      if (side === 'auto') {
+        if (gameState.lockedTargetApt && !gameState.lockedTargetApt.delivered) {
+          targetApt = gameState.lockedTargetApt;
+        } else {
+          let bestDist = Infinity;
+          apartments.forEach(apt => {
+            if (apt.hasOrder && !apt.delivered) {
+              const dz = gameState.vanZ - apt.group.position.z;
+              if (dz >= -6 && dz <= 45) {
+                const dist = Math.abs(dz - 18);
+                if (dist < bestDist) {
+                  bestDist = dist;
+                  targetApt = apt;
+                }
+              }
+            }
+          });
+          if (!targetApt) {
+            targetApt = findBestTargetApartmentOnSide(playerVan.position.x < 0 ? 'left' : 'right');
+          }
+        }
+      } else {
+        let bestDist = Infinity;
+        apartments.forEach(apt => {
+          if (apt.side === side && apt.hasOrder && !apt.delivered) {
+            const dz = gameState.vanZ - apt.group.position.z;
+            if (dz >= -6 && dz <= 45) {
+              const dist = Math.abs(dz - 18);
+              if (dist < bestDist) {
+                bestDist = dist;
+                targetApt = apt;
+              }
+            }
+          }
+        });
+        if (!targetApt) {
+          targetApt = findBestTargetApartmentOnSide(side);
+        }
+      }
+
+      if (!targetApt) {
+        showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'NO CUSTOMER IN RANGE!', 'text-amber-300');
+        return;
+      }
+
+      // Pick matching parcel if available in hand, else currently selected slot
+      let slotIdx = gameState.selectedSlotIndex || 0;
+      if (targetApt.hasOrder && !targetApt.delivered) {
+        const matchIdx = gameState.handSlots.indexOf(targetApt.wantedType);
+        if (matchIdx !== -1) {
+          slotIdx = matchIdx;
+          selectHandSlot(matchIdx);
+        }
+      }
+
+      throwParcelFromHandSlot(slotIdx, targetApt, true);
+
+      if (gameState.tutorialActive && gameState.tutorialStep === 2) {
+        completeInteractiveTutorial();
+      }
     }
 
     function updateOrderAlertsAndBubbles() {
@@ -1448,7 +1531,11 @@
         updateTutorialStep2Prompt(activeOrderApt);
       }
 
-      if (!activeOrderApt || gameState.mode !== 'playing') return;
+      if (!activeOrderApt || gameState.mode !== 'playing') {
+        gameState.lockedTargetApt = null;
+        updateProjectileArcVisuals();
+        return;
+      }
 
       const apt = activeOrderApt;
       const pInfo = PARCEL_TYPES[apt.wantedType];
@@ -1456,8 +1543,15 @@
       const parcelImg = parcelIconDataURLs[apt.wantedType] || '';
       const sideLabel = apt.side === 'left' ? 'LEFT' : 'RIGHT';
 
+      // Lock-On active when customer is within throwable delivery window
+      const aptDz = gameState.vanZ - apt.group.position.z;
+      const inThrowableRange = (aptDz >= -6 && aptDz <= 45);
+      gameState.lockedTargetApt = inThrowableRange ? apt : null;
+      updateProjectileArcVisuals();
+
       if (apt.renderedOrderId !== apt.orderId) {
         apt.renderedOrderId = apt.orderId;
+        const throwKeyPrompt = apt.side === 'left' ? '[Q] THROW 👈' : '👉 THROW [E]';
         apt.cloudEl.innerHTML = `
           <div class="thought-cloud-pill">
             <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
@@ -1466,9 +1560,14 @@
             <div class="flex flex-col text-left min-w-0 flex-1">
               <div class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</div>
               <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
-              <span class="cloud-distance-badge mt-0.5 inline-block self-start px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
-                ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
-              </span>
+              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span class="cloud-distance-badge inline-block px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
+                  ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
+                </span>
+                <button type="button" class="quick-throw-cloud-btn px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 font-black text-[8px] sm:text-[9px] arcade-font shadow-[0_0_10px_rgba(250,204,21,0.85)] border border-white cursor-pointer active:scale-95 animate-pulse" title="Quick Throw (or press ${apt.side === 'left' ? 'Q' : 'E'})">
+                  ${throwKeyPrompt}
+                </button>
+              </div>
             </div>
             <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${pInfo.boxTierClass} flex flex-col items-center justify-center p-1 flex-shrink-0">
               <img src="${parcelImg}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" alt="item" />
@@ -1477,6 +1576,13 @@
           </div>
         `;
         apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
+        const cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');
+        if (cloudBtn) {
+          cloudBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            quickThrowParcel(apt.side);
+          });
+        }
       } else if (apt.cloudDistBadge) {
         apt.cloudDistBadge.innerHTML = `${Math.max(0, closestMeters)}m &bull; ${sideLabel}`;
       }
@@ -1968,6 +2074,20 @@
     function endRoadTouch(e) {
       garageDragging = false;
       if (roadTouchId !== null && (!e || e.pointerId === roadTouchId)) {
+        if (e && gameState.mode === 'playing' && !gameState.dragging) {
+          const dx = e.clientX - roadTouchStartX;
+          const dy = e.clientY - roadTouchStartY;
+          // Tap detection without dragging swerves: tap roadside to quick-throw!
+          if (Math.hypot(dx, dy) < 18) {
+            if (e.clientX < window.innerWidth * 0.38) {
+              quickThrowParcel('left');
+            } else if (e.clientX > window.innerWidth * 0.62) {
+              quickThrowParcel('right');
+            } else {
+              quickThrowParcel('auto');
+            }
+          }
+        }
         roadTouchId = null;
       }
     }
@@ -1997,7 +2117,21 @@
       }
     }, { passive: false });
 
-    canvas.addEventListener('touchend', () => {
+    canvas.addEventListener('touchend', (e) => {
+      if (touchSteerStartX !== null && gameState.mode === 'playing' && !gameState.dragging && e.changedTouches && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - touchSteerStartX;
+        const dy = touch.clientY - touchSteerStartY;
+        if (Math.hypot(dx, dy) < 18) {
+          if (touch.clientX < window.innerWidth * 0.38) {
+            quickThrowParcel('left');
+          } else if (touch.clientX > window.innerWidth * 0.62) {
+            quickThrowParcel('right');
+          } else {
+            quickThrowParcel('auto');
+          }
+        }
+      }
       touchSteerStartX = null;
       touchSteerStartY = null;
     }, { passive: true });
@@ -2009,9 +2143,47 @@
       }, { once: true, passive: true });
     });
 
+    // Wire up On-Screen Quick-Throw Action Buttons
+    const btnQuickLeft = document.getElementById('btn-quick-throw-left');
+    const btnQuickRight = document.getElementById('btn-quick-throw-right');
+    const btnQuickAuto = document.getElementById('btn-quick-throw-auto');
+    if (btnQuickLeft) {
+      btnQuickLeft.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        quickThrowParcel('left');
+      });
+    }
+    if (btnQuickRight) {
+      btnQuickRight.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        quickThrowParcel('right');
+      });
+    }
+    if (btnQuickAuto) {
+      btnQuickAuto.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        quickThrowParcel('auto');
+      });
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') moveLane(-1);
       if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') moveLane(1);
+      if (e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        quickThrowParcel('left');
+      }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        quickThrowParcel('right');
+      }
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        quickThrowParcel('auto');
+      }
       if (e.key >= '1' && e.key <= '3') selectHandSlot(parseInt(e.key, 10) - 1);
       if (e.key === 'Escape' && (gameState.mode === 'playing' || gameState.mode === 'paused')) {
         if (gameState.mode === 'playing') pauseShift();
@@ -2802,22 +2974,47 @@
         }
         document.getElementById('crosswalk-alert').classList.toggle('hidden', !showCrosswalkWarning);
 
-        // Suspension / Handling Tune Upgrade (Higher snap speed between lanes)
+        // Snappy Arcade Spring-Damped Lane Switching & Body Physics
         const handLvl = getVanTuningLevel(gameState.equippedVanId, 'handling');
-        const snapLerp = 14 + (handLvl - 1) * 4.5;
         const targetX = LANES[gameState.laneIndex];
-        const dx = targetX - gameState.currentX;
-        gameState.currentX += dx * Math.min(1, rawDt * snapLerp);
+        const springK = 195 + (handLvl - 1) * 45;
+        const damping = 24 + (handLvl - 1) * 3.5;
+
+        const distToTarget = gameState.currentX - targetX;
+        const springForce = -springK * distToTarget - damping * (gameState.lateralVelocity || 0);
+        gameState.lateralVelocity = (gameState.lateralVelocity || 0) + springForce * rawDt;
+        gameState.currentX += gameState.lateralVelocity * rawDt;
+
+        if (Math.abs(distToTarget) < 0.012 && Math.abs(gameState.lateralVelocity) < 0.04) {
+          gameState.currentX = targetX;
+          gameState.lateralVelocity = 0;
+        }
         playerVan.position.x = gameState.currentX;
 
+        // Dynamic Vehicle Body Physics during Lane Changes:
+        // 1. Yaw rotation (steering into the target lane and straightening out)
+        const targetYaw = -gameState.lateralVelocity * 0.028;
+        playerVan.rotation.y = THREE.MathUtils.lerp(playerVan.rotation.y, targetYaw, rawDt * 22);
+
+        // 2. Chassis body roll (tilting into the swerve)
         const chassis = playerVan.userData.chassis;
-        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, -dx * 0.14, rawDt * snapLerp);
-        chassis.rotation.y = THREE.MathUtils.lerp(chassis.rotation.y, -dx * 0.07, rawDt * snapLerp);
-        chassis.position.y = Math.sin(now * 0.024) * 0.05;
+        const targetRoll = gameState.lateralVelocity * 0.032;
+        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, targetRoll, rawDt * 18);
+
+        // 3. Pitch dip (pitch forward slightly during braking/slow-mo, back when boosting)
+        const isBraking = gameState.dragging || (gameState.slowMoEnergy > 0 && gameState.mode === 'playing' && gameState.dragging);
+        const targetPitch = isBraking ? 0.042 : (gameState.boostTimer > 0 ? -0.038 : 0);
+        chassis.rotation.x = THREE.MathUtils.lerp(chassis.rotation.x, targetPitch, rawDt * 14);
+
+        chassis.position.y = Math.sin(now * 0.028) * 0.04;
         chassis.scale.lerp(new THREE.Vector3(1, 1, 1), rawDt * 12);
 
-        playerVan.userData.wheels.forEach(w => {
+        // Wheels spin and front wheels steer with yaw
+        playerVan.userData.wheels.forEach((w, wIdx) => {
           w.rotation.x -= playerSpeed * dt * 0.35;
+          if (wIdx < 2) {
+            w.rotation.y = THREE.MathUtils.lerp(w.rotation.y, targetYaw * 1.6, rawDt * 25);
+          }
         });
 
         if (gameState.invulnerableTimer > 0) {
@@ -2878,12 +3075,14 @@
           }
 
           // Traffic Near-Miss Combo System (Close adjacent pass or last-second lane dodge)
-          if (!tv.nearMissAwarded && gameState.invulnerableTimer <= 0 && gameState.mode === 'playing') {
-            const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
-            const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
+          const hitHalfZ = (tv.mesh.userData.halfZ + 1.8) * 0.85;
+          const hitHalfX = (tv.mesh.userData.halfX + 0.82) * 0.85;
+          const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
+          const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
 
-            const isClosePass = distZ < 3.2 && distX >= 1.6 && distX <= 4.6;
-            const isLastSecondDodge = distZ < 7.8 && distX >= 1.6 && distX <= 4.2 && Math.abs(playerVan.userData.chassis.rotation.y) > 0.035;
+          if (!tv.nearMissAwarded && gameState.invulnerableTimer <= 0 && gameState.mode === 'playing') {
+            const isClosePass = distZ < (hitHalfZ + 1.4) && distX >= hitHalfX && distX <= (hitHalfX + 2.5);
+            const isLastSecondDodge = distZ < 7.8 && distX >= hitHalfX && distX <= (hitHalfX + 2.8) && Math.abs(gameState.lateralVelocity || 0) > 1.2;
 
             if (isClosePass || isLastSecondDodge) {
               tv.nearMissAwarded = true;
@@ -2911,9 +3110,7 @@
           }
 
           if (gameState.invulnerableTimer <= 0) {
-            const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
-            const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
-            if (distZ < (tv.mesh.userData.halfZ + 1.8) && distX < (tv.mesh.userData.halfX + 0.82)) {
+            if (distZ < hitHalfZ && distX < hitHalfX) {
               if (gameState.immortalTimer > 0) {
                 // Rainbow Immortal Mode blasts traffic out of the way without losing hearts!
                 soundFX.playDeliverSuccess();
@@ -2961,22 +3158,24 @@
           const fp = flyingParcels[i];
           fp.progress += rawDt / fp.duration;
 
+          // Customer porch live position (magnetic homing tracks resident in real time)
           const liveEnd = new THREE.Vector3(
             fp.targetApt.group.position.x + fp.targetApt.porchX,
-            1.0,
-            fp.targetApt.group.position.z
+            1.45,
+            fp.targetApt.group.position.z + 1.2
           );
 
           const t = Math.min(1, fp.progress);
+          // Parabolic trajectory with magnetic convergence
           fp.mesh.position.lerpVectors(fp.startPos, liveEnd, t);
-          fp.mesh.position.y += Math.sin(t * Math.PI) * 6.8;
-          fp.mesh.rotation.x += rawDt * 9;
-          fp.mesh.rotation.y += rawDt * 11;
+          fp.mesh.position.y += Math.sin(t * Math.PI) * 6.2;
+          fp.mesh.rotation.x += rawDt * 10;
+          fp.mesh.rotation.y += rawDt * 12;
 
           fp.trailDots.forEach((td, idx) => {
-            const tt = Math.max(0, t - (idx + 1) * 0.06);
+            const tt = Math.max(0, t - (idx + 1) * 0.05);
             td.position.lerpVectors(fp.startPos, liveEnd, tt);
-            td.position.y += Math.sin(tt * Math.PI) * 6.8;
+            td.position.y += Math.sin(tt * Math.PI) * 6.2;
           });
 
           if (fp.progress >= 1) {
