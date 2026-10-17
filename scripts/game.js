@@ -1525,15 +1525,7 @@
     }
 
     function triggerSpeedLines() {
-      const overlay = document.getElementById('speed-lines-overlay');
-      if (overlay) {
-        overlay.classList.remove('active-speed-lines');
-        void overlay.offsetWidth;
-        overlay.classList.add('active-speed-lines');
-        setTimeout(() => {
-          overlay.classList.remove('active-speed-lines');
-        }, 380);
-      }
+      // Disabled: screen light-up and overlay effects removed per user request
     }
 
     function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
@@ -1732,6 +1724,9 @@
         showCityToast(nextTheme);
         if (nextTheme.id === 'tokyo') applyWeatherMode(4);
         else if (nextTheme.id === 'chinatown') applyWeatherMode(1);
+        else if (nextTheme.id === 'yangon') applyWeatherMode(1);
+        else if (nextTheme.id === 'littleindia') applyWeatherMode(1);
+        else if (nextTheme.id === 'pastel') applyWeatherMode(4);
       }
     }
 
@@ -2091,6 +2086,7 @@
       if (m) {
         m.classList.remove('hidden');
         m.classList.add('flex');
+        if (id === 'modal-settings') renderCitySelectorUI();
       }
     }
     function closeModal(id) {
@@ -2259,7 +2255,7 @@
       slowmoVignette.style.opacity = '0';
 
       applyTimeOfDay(0, true);
-      applyWeatherMode(0);
+      applyWeatherMode(4);
       updateHUD();
 
       if (forceTutorial || !gameState.tutorialCompletedOnce) {
@@ -2558,6 +2554,7 @@
 
         if (apt.group.position.z > 32) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
+          apt.index += NUM_PAIRS;
           rebuildApartmentVisuals(apt, CITY_THEMES[gameState.cityIndex], apt.index);
           // Spawn delivery orders after ~150m warm-up (or immediately if in tutorial mode)
           configureApartmentCustomer(apt, gameState.tutorialActive || gameState.distanceMeters >= 55);
@@ -2613,6 +2610,9 @@
 
             if (newTheme.id === 'tokyo') applyWeatherMode(4);
             else if (newTheme.id === 'chinatown') applyWeatherMode(1);
+            else if (newTheme.id === 'yangon') applyWeatherMode(1);
+            else if (newTheme.id === 'littleindia') applyWeatherMode(1);
+            else if (newTheme.id === 'pastel') applyWeatherMode(4);
           }
 
           if (g.mesh.position.z > 38) {
@@ -2863,8 +2863,7 @@
               updateContractProgress('combo_max', gameState.combo, true);
 
               soundFX.playNearMissWhoosh();
-              triggerSpeedLines();
-              triggerScreenShake(0.18, 0.85);
+              // Screen shake, speed-lines, and light-up overlays removed for clean, smooth near-misses
 
               const popupPos = playerVan.position.clone().add(new THREE.Vector3(
                 tv.mesh.position.x > playerVan.position.x ? 1.6 : -1.6,
@@ -3073,3 +3072,60 @@
       requestAnimationFrame(animate);
       hideLoadingOverlay();
     };
+
+
+    function switchCityByIndex(targetIdx) {
+      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
+      const theme = CITY_THEMES[gameState.cityIndex];
+      transformAllApartmentsToCity(theme);
+      soundFX.playCityGateChime();
+      showCityToast(theme);
+      if (theme.id === 'tokyo') applyWeatherMode(4);
+      else if (theme.id === 'chinatown') applyWeatherMode(1);
+      else if (theme.id === 'yangon') applyWeatherMode(1);
+      else if (theme.id === 'littleindia') applyWeatherMode(1);
+      else if (theme.id === 'pastel') applyWeatherMode(4);
+      else if (theme.id === 'paris') applyWeatherMode(4);
+      else if (theme.id === 'rio') applyWeatherMode(1);
+      else if (theme.id === 'washington') applyWeatherMode(4);
+      else if (theme.id === 'dubai') applyWeatherMode(1);
+      else if (theme.id === 'cairo') applyWeatherMode(1);
+      renderCitySelectorUI();
+    }
+
+    function renderCitySelectorUI() {
+      const container = document.getElementById('setting-city-buttons');
+      const label = document.getElementById('setting-current-city');
+      if (label && CITY_THEMES[gameState.cityIndex]) {
+        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
+      }
+      if (!container) return;
+      container.innerHTML = '';
+      const cityIcons = {
+        tokyo: '🗼',
+        chinatown: '🏮',
+        littleindia: '🛕',
+        yangon: '🇲🇲',
+        pastel: '🌆',
+        paris: '🥐',
+        rio: '🌴',
+        washington: '🏛️',
+        dubai: '🏙️',
+        cairo: '🐪'
+      };
+      CITY_THEMES.forEach((ct, idx) => {
+        const isCur = idx === gameState.cityIndex;
+        const btn = document.createElement('button');
+        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
+          isCur
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
+            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
+        );
+        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
+        btn.addEventListener('click', () => {
+          soundFX.init();
+          switchCityByIndex(idx);
+        });
+        container.appendChild(btn);
+      });
+    }

@@ -22,21 +22,9 @@
       height: 100%;
       height: 100dvh;
       overflow: hidden;
-      background: #070b22;
+      background: #0d2b6b;
       font-family: 'Space Grotesk', sans-serif;
       overscroll-behavior: none;
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background:
-        radial-gradient(circle at 18% 14%, rgba(56, 189, 248, 0.12), transparent 28%),
-        radial-gradient(circle at 82% 24%, rgba(168, 85, 247, 0.14), transparent 30%),
-        linear-gradient(180deg, rgba(7, 11, 34, 0.18), rgba(2, 6, 23, 0.72));
-      mix-blend-mode: screen;
     }
     .arcade-font {
       font-family: 'Fredoka', sans-serif;
@@ -95,51 +83,6 @@
     .arcade-btn:active {
       transform: translateY(4px) scale(0.98);
       box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 2px 0 #090d16, 0 4px 10px rgba(0,0,0,0.35);
-    }
-    .brand-lockup {
-      position: relative;
-      isolation: isolate;
-    }
-    .brand-lockup::after {
-      content: '';
-      position: absolute;
-      inset: -8px -14px;
-      z-index: -1;
-      border-radius: 24px;
-      background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 68%);
-      filter: blur(8px);
-    }
-    .brand-wordmark {
-      text-shadow: 0 3px 0 rgba(8, 15, 39, 0.95), 0 0 18px rgba(103, 232, 249, 0.22);
-    }
-    .start-run-btn {
-      position: relative;
-      overflow: hidden;
-      border-color: #fef08a;
-      box-shadow: inset 0 3px 0 rgba(255,255,255,0.72), 0 7px 0 #064e3b, 0 0 0 3px rgba(16,185,129,0.16), 0 0 28px rgba(52,211,153,0.42);
-      background: linear-gradient(135deg, #fef08a 0%, #a7f3d0 32%, #34d399 68%, #059669 100%);
-    }
-    .start-run-btn::before {
-      content: '';
-      position: absolute;
-      top: -30%;
-      left: -45%;
-      width: 34%;
-      height: 180%;
-      transform: rotate(22deg);
-      background: rgba(255,255,255,0.6);
-      filter: blur(8px);
-      animation: startShimmer 3.8s ease-in-out infinite;
-    }
-    @keyframes startShimmer {
-      0%, 45% { left: -45%; opacity: 0; }
-      58% { opacity: 0.75; }
-      78%, 100% { left: 125%; opacity: 0; }
-    }
-    .music-badge {
-      background: rgba(15, 23, 42, 0.82);
-      border: 1px solid rgba(103, 232, 249, 0.4);
-      box-shadow: 0 0 18px rgba(34, 211, 238, 0.16);
     }
 
     /* Rarity Tier Borders for Items */
@@ -409,15 +352,171 @@
     .countdown-pop-anim {
       animation: countdownPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
-  </style>
+
+/* High-Performance Loading Indicator Overlay (<10s requirement) */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0d2b6b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  pointer-events: auto;
+}
+#loading-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loader-spinner {
+  width: 52px;
+  height: 52px;
+  border: 4px solid rgba(56, 189, 248, 0.25);
+  border-top-color: #facc15;
+  border-radius: 50%;
+  animation: loaderSpin 0.85s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+}
+@keyframes loaderSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Floating Arcade Combat Banners (Perfect Drop & Near Miss) */
+.floating-combat-banner {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: clamp(1.15rem, 3.2vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-shadow: 0 4px 0 #000, 0 0 16px currentColor;
+  animation: combatBannerPop 1.15s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  z-index: 85;
+  white-space: nowrap;
+  user-select: none;
+}
+.combat-text-gold {
+  color: #facc15;
+  background: linear-gradient(180deg, #ffffff 0%, #facc15 50%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.9)) drop-shadow(0 3px 0 #000);
+}
+.combat-text-cyan {
+  color: #00f5d4;
+  background: linear-gradient(180deg, #ffffff 0%, #00f5d4 60%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.8)) drop-shadow(0 3px 0 #000);
+}
+.combat-text-fire {
+  color: #f97316;
+  background: linear-gradient(180deg, #fef08a 0%, #fb923c 45%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(249, 115, 22, 0.95)) drop-shadow(0 3px 0 #000);
+}
+
+@keyframes combatBannerPop {
+  0% {
+    transform: translate(-50%, 10%) scale(0.4);
+    opacity: 0;
+  }
+  22% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
+  38% {
+    transform: translate(-50%, -60%) scale(1.0);
+    opacity: 1;
+  }
+  78% {
+    transform: translate(-50%, -105%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -145%) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Tactical Speed Lines Layer (Disabled: screen light-up and overlay removed) */
+#speed-lines-overlay {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Rig Tuning & Shift Contracts Progression Styles */
+.stat-pip {
+  height: 9px;
+  flex: 1;
+  border-radius: 4px;
+  border: 1.5px solid #090d16;
+  transition: all 0.2s ease;
+}
+.pip-active {
+  background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.75);
+}
+.pip-inactive {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.contract-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid rgba(56, 189, 248, 0.3);
+  border-radius: 14px;
+  padding: 8px 10px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.contract-card:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  transform: translateY(-1px);
+}
+.contract-card-completed {
+  border-color: #10b981;
+  background: rgba(6, 78, 59, 0.35);
+}
+
+@keyframes pulseLevelUp {
+  0% { transform: scale(0.9); filter: drop-shadow(0 0 4px #facc15); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 20px #facc15); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 8px #facc15); }
+}
+.level-up-anim {
+  animation: pulseLevelUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+
+
+</style>
 </head>
 <body>
+
+  <!-- High-Performance Loading Indicator Overlay (<10s requirement) -->
+  <div id="loading-overlay">
+    <div class="loader-spinner mb-4"></div>
+    <div class="arcade-font text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-300">
+      MIDNIGHT DELIVERY
+    </div>
+    <div class="text-[11px] sm:text-xs text-sky-200 font-bold mt-1 tracking-widest uppercase">
+      LOADING 3D VOXEL TOUR...
+    </div>
+  </div>
 
   <!-- 3D WebGL Canvas -->
   <canvas id="game-canvas"></canvas>
 
   <!-- Tactical Slow-Mo Vignette -->
   <div id="slowmo-vignette"></div>
+
+  <!-- Tactical Speed Lines Layer for Near-Misses & Turbo Boosts -->
+  <div id="speed-lines-overlay" class="pointer-events-none fixed inset-0 z-25 opacity-0"></div>
 
   <!-- Single Crisp White Thought Cloud Layer -->
   <div id="thought-clouds-layer" class="absolute inset-0 pointer-events-none overflow-hidden" style="z-index: 20;"></div>
@@ -471,7 +570,7 @@
       </div>
       <div id="tutorial-title" class="arcade-font text-sm sm:text-base text-white leading-snug">STEER LEFT &amp; RIGHT TO DODGE CARS</div>
       <p id="tutorial-desc" class="text-[10px] sm:text-xs text-sky-200 font-semibold mt-0.5 leading-tight">
-        Swipe Left &amp; Right on the road (one swipe = one lane) to practice dodging traffic!
+        Swipe Left &amp; Right on the road (or press A / D) twice to practice dodging traffic!
       </p>
       <div id="tutorial-progress-row" class="mt-1.5 flex items-center justify-center gap-3 text-amber-300">
         <span class="arcade-font text-xs">&larr;</span>
@@ -590,7 +689,7 @@
 
     <!-- TOP BAR: Custom "MIDNIGHT DELIVERY" Brand Logo Emblem + Player Coins & Stats -->
     <div class="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
-      <div class="arcade-panel brand-lockup rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2.5 sm:gap-3.5 pointer-events-auto min-w-0">
+      <div class="arcade-panel rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2.5 sm:gap-3.5 pointer-events-auto min-w-0">
         <!-- Custom Stylized Midnight Delivery Crescent Moon & Turbo Van Emblem SVG -->
         <div class="relative w-10 h-10 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-500/40 border-2 border-amber-300 flex items-center justify-center shadow-[0_0_16px_rgba(250,204,21,0.45)] flex-shrink-0 p-1">
           <svg class="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 64 64" fill="none">
@@ -613,18 +712,30 @@
             <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold text-[7px] sm:text-[9px] uppercase tracking-wider">NIGHT SHIFT</span>
             <span class="text-[8px] sm:text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest truncate">WORLD TOUR</span>
           </div>
-          <h1 class="arcade-font brand-wordmark text-base sm:text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-300 leading-tight tracking-wide mt-0.5 drop-shadow truncate">
+          <h1 class="arcade-font text-base sm:text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-300 leading-tight tracking-wide mt-0.5 drop-shadow truncate">
             MIDNIGHT DELIVERY
           </h1>
-          <div class="music-badge inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] text-cyan-200 font-extrabold uppercase tracking-[0.16em]">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.9)]"></span>
-            COZY NIGHT RADIO
-          </div>
         </div>
       </div>
 
-      <!-- Right Stats: Coins, Best Run & Unlocked Collection -->
+      <!-- Right Stats: Coins, Best Run, Rank Badge & Unlocked Collection -->
       <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto flex-shrink-0">
+        <!-- Courier Rank Pill -->
+        <button id="topbar-rank-btn" class="arcade-btn arcade-panel rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 flex items-center gap-2 text-left" title="View Courier Rank & Contracts">
+          <div id="home-rank-badge" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-700 text-sky-200 border-2 border-white flex items-center justify-center font-extrabold text-xs arcade-font shadow flex-shrink-0">
+            R1
+          </div>
+          <div class="min-w-0 hidden xs:block sm:block">
+            <div class="flex items-center gap-1">
+              <span class="text-[7px] sm:text-[8px] font-extrabold uppercase text-amber-300">RANK</span>
+              <span id="home-rank-title" class="arcade-font text-[9px] sm:text-xs text-white truncate max-w-[95px] sm:max-w-[130px]">Yangon Rookie</span>
+            </div>
+            <div class="w-16 sm:w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/30 mt-0.5">
+              <div id="home-rank-bar" class="h-full bg-gradient-to-r from-amber-400 to-cyan-300 transition-all duration-300" style="width: 25%"></div>
+            </div>
+          </div>
+        </button>
+
         <div class="arcade-panel rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-4">
           <div class="flex items-center gap-1.5">
             <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-2 border-white flex items-center justify-center shadow flex-shrink-0">
@@ -680,8 +791,8 @@
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zm-4 17v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2H8zm4-14a4 4 0 0 1 4 4h-2a2 2 0 0 0-2-2V5z"/></svg>
           </div>
           <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">DRAW</div>
-            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / BOX</div>
+            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">CRATE</div>
+            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / DROP</div>
           </div>
         </button>
 
@@ -707,13 +818,27 @@
       </div>
 
       <!-- CENTER SHOWROOM TURNTABLE ARROWS (No Right Telemetry Card — 100% Unobstructed View!) -->
-      <div class="flex-1 flex items-center justify-between px-2 sm:px-12 lg:px-24 pointer-events-none my-auto">
+      <div class="flex-1 flex items-center justify-between px-2 sm:px-6 lg:px-12 pointer-events-none my-auto">
         <button id="btn-prev-van" class="pointer-events-auto w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 arcade-btn flex items-center justify-center text-slate-950" title="Previous Vehicle">
           <svg class="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
         <button id="btn-next-van" class="pointer-events-auto w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 arcade-btn flex items-center justify-center text-slate-950" title="Next Vehicle">
           <svg class="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
         </button>
+      </div>
+
+      <!-- RIGHT: COMPACT ACTIVE SHIFT CONTRACTS WIDGET (Desktop/Tablet) -->
+      <div id="home-contracts-widget" class="hidden lg:flex flex-col gap-1.5 z-20 pointer-events-auto w-64 xl:w-72 arcade-panel rounded-2xl p-2.5 border-2 border-sky-400">
+        <div class="flex items-center justify-between border-b border-sky-400/30 pb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">📋</span>
+            <span class="arcade-font text-[11px] text-white">ACTIVE SHIFT CONTRACTS</span>
+          </div>
+          <button id="btn-contracts-expand" class="text-[8px] font-bold text-sky-300 hover:text-white uppercase">VIEW ALL &rarr;</button>
+        </div>
+        <div id="home-contracts-list" class="space-y-1.5">
+          <!-- Populated dynamically with 3 active contracts -->
+        </div>
       </div>
     </div>
 
@@ -726,8 +851,8 @@
         <span>USE ARROWS TO SWITCH RIG</span>
       </div>
 
-      <!-- Selected Vehicle Name Plate & Mini Selector Pills -->
-      <div class="arcade-panel rounded-2xl sm:rounded-3xl px-3.5 sm:px-5 py-1.5 sm:py-2.5 flex flex-col items-center gap-1 pointer-events-auto sm:mx-auto">
+      <!-- Selected Vehicle Name Plate & Mini Selector Pills + Tuning & Contracts Actions -->
+      <div class="arcade-panel rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-1.5 sm:py-2 flex flex-col items-center gap-1 pointer-events-auto sm:mx-auto">
         <div class="flex items-center justify-center gap-2">
           <span id="home-van-name" class="arcade-font text-sm sm:text-2xl text-white tracking-wide truncate">Express Courier GTI</span>
           <span id="home-van-status" class="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">EQUIPPED</span>
@@ -735,17 +860,27 @@
         <div id="home-van-dots" class="flex items-center gap-1.5">
           <!-- Populated dynamically with vehicle selector pills -->
         </div>
-        <div id="home-van-sub" class="text-[9px] sm:text-[10px] text-sky-200 font-bold">Owned Fleet: 1 / 6 Vehicles</div>
+        <div class="flex items-center gap-2 mt-0.5">
+          <button id="btn-open-tuning" class="arcade-btn px-2.5 sm:px-3.5 py-1 rounded-xl bg-gradient-to-b from-amber-400 via-amber-500 to-orange-600 text-slate-950 font-extrabold text-[9px] sm:text-[11px] arcade-font flex items-center gap-1">
+            <span>⚙️</span>
+            <span>TUNE RIG</span>
+          </button>
+          <button id="btn-open-contracts" class="arcade-btn px-2.5 sm:px-3.5 py-1 rounded-xl bg-gradient-to-b from-sky-400 via-sky-500 to-indigo-600 text-slate-950 font-extrabold text-[9px] sm:text-[11px] arcade-font flex items-center gap-1">
+            <span>📋</span>
+            <span>CONTRACTS</span>
+          </button>
+        </div>
+        <div id="home-van-sub" class="text-[8px] sm:text-[9px] text-sky-200 font-bold">Owned Fleet: 1 / 6 Vehicles</div>
       </div>
 
       <!-- BOTTOM-RIGHT: GIANT TACTILE START! BUTTON -->
       <div class="flex items-center gap-2 pointer-events-auto w-full sm:w-auto justify-end">
         <button id="btn-home-quick-draw" class="hidden py-3 sm:py-4 px-4 sm:px-5 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs sm:text-base arcade-font arcade-btn items-center justify-center gap-1.5 flex-1 sm:flex-initial">
           <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
-          <span>BLIND DRAW (100)</span>
+          <span>SUPPLY DROP (100)</span>
         </button>
-        <button id="btn-start-play" class="start-run-btn flex-1 sm:flex-initial py-3 sm:py-4 px-7 sm:px-12 rounded-2xl sm:rounded-3xl text-slate-950 font-extrabold text-lg sm:text-3xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
-          <span>START RUN</span>
+        <button id="btn-start-play" class="flex-1 sm:flex-initial py-3 sm:py-4 px-7 sm:px-12 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-emerald-300 via-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-lg sm:text-3xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
+          <span>START!</span>
           <svg class="w-5 h-5 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
         </button>
       </div>
@@ -775,7 +910,7 @@
   </div>
 
   <!-- ============================================================================ -->
-  <!-- HOME SUB-MODALS: LEADERBOARD, HALL OF FAME, ANIMATED PRIZE DRAW & SETTINGS   -->
+  <!-- HOME SUB-MODALS: LEADERBOARD, HALL OF FAME, COURIER SUPPLY CRATES & SETTINGS -->
   <!-- ============================================================================ -->
 
   <!-- 1. LEADERBOARD MODAL -->
@@ -832,7 +967,7 @@
     </div>
   </div>
 
-  <!-- 3. BLIND MYSTERY CRATE PRIZE DRAW MACHINE MODAL -->
+  <!-- 3. COURIER SUPPLY DROP & FLEET REQUISITION CRATE MODAL -->
   <div id="modal-draw" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
     <div class="arcade-panel rounded-3xl max-w-xl w-full p-5 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden">
       <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30 relative z-10">
@@ -841,39 +976,39 @@
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
           </div>
           <div class="text-left">
-            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">BLIND MYSTERY RIG DRAW</h2>
-            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Crack open a Blind Mystery Crate to win a surprise 3D Rig!</p>
+            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">COURIER SUPPLY DROP</h2>
+            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Requisition a Courier Supply Crate with earned coins to expand your fleet!</p>
           </div>
         </div>
         <button data-close-modal="modal-draw" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
       </div>
 
-      <!-- Blind Mystery Crate & Reveal Stage (Hides all available cars until unboxed!) -->
+      <!-- Courier Supply Drop Crate & Reveal Stage -->
       <div class="my-4 bg-slate-950 border-3 border-sky-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center min-h-[245px] relative overflow-hidden shadow-inner">
         <div id="draw-sunburst" class="sunburst-rays absolute inset-[-50%] opacity-35 pointer-events-none"></div>
         <canvas id="draw-confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
 
         <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
-          <!-- Blind Mystery Crate Graphic (Shown before & during spin) -->
+          <!-- Supply Crate Graphic -->
           <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
             <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
               <rect x="8" y="14" width="48" height="42" rx="8" fill="#1e293b" stroke="#facc15" stroke-width="4"/>
               <path d="M8 26H56" stroke="#38bdf8" stroke-width="4"/>
               <rect x="26" y="20" width="12" height="12" rx="3" fill="#facc15"/>
-              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">?</text>
+              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">📦</text>
             </svg>
           </div>
-          <!-- Unboxed 3D Vehicle Image (Hidden until reveal!) -->
-          <img id="draw-vehicle-img" src="" alt="Prize Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
-          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">BLIND BOX</span>
+          <!-- Unboxed 3D Vehicle Image -->
+          <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
+          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">SUPPLY CRATE</span>
         </div>
 
-        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">MYSTERY VOXEL RIG CAPSULE</div>
-        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Contents are 100% hidden until you unbox &bull; Duplicate Refund +60 Coins</div>
+        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET SUPPLY REQUISITION</div>
+        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Unlock 3D delivery vehicles with coins earned in-game &bull; Fleet Scrap Value +60 Coins</div>
       </div>
 
       <div class="flex items-center justify-between bg-slate-950/90 px-4 py-3 rounded-2xl border-2 border-sky-500/40 mb-4 relative z-10">
-        <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">YOUR COIN VAULT</span>
+        <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">EARNED COIN BALANCE</span>
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">$</div>
           <span id="draw-coins-Readout" class="arcade-font text-xl text-amber-300">250</span>
@@ -884,7 +1019,7 @@
       <div class="flex gap-2.5 relative z-10">
         <button id="btn-spin-draw" class="flex-1 py-4 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-base sm:text-xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V14h-2v2.93A8 8 0 0 1 4.07 11H7V9H4.07A8 8 0 0 1 11 4.07V7h2V4.07A8 8 0 0 1 19.93 11H17v2h2.93A8 8 0 0 1 13 16.93z"/></svg>
-          <span>OPEN BLIND BOX (100 COINS)</span>
+          <span>REQUISITION CRATE (100 COINS)</span>
         </button>
       </div>
     </div>
@@ -907,17 +1042,29 @@
         <div class="flex items-center justify-between bg-slate-950/85 p-3.5 rounded-2xl border-2 border-sky-500/30">
           <div>
             <div class="font-extrabold text-white">Cozy Driving Music &amp; Sirens</div>
-            <div class="text-[10px] text-sky-300">94 BPM Cozy Night-Drive Groove &amp; Vehicle SFX</div>
+            <div class="text-[10px] text-sky-300">118 BPM City-Pop Groove &amp; Vehicle SFX</div>
           </div>
           <button id="setting-toggle-audio" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold arcade-btn">ON</button>
         </div>
 
         <div class="flex items-center justify-between bg-slate-950/85 p-3.5 rounded-2xl border-2 border-amber-400/50">
           <div>
-            <div class="font-extrabold text-amber-300">Sponsor Grant: +300 Coins &amp; Discovery</div>
-            <div class="text-[10px] text-sky-300">Instant coins to test the Blind Draw Machine</div>
+            <div class="font-extrabold text-amber-300">Courier Grant: +300 Coins</div>
+            <div class="text-[10px] text-sky-300">Earned delivery bonus coins to test Supply Crates</div>
           </div>
           <button id="setting-gift-coins" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold arcade-btn">+300 COINS</button>
+        </div>
+
+        <!-- World Tour City Destinations -->
+        <div class="bg-slate-950/85 p-3 rounded-2xl border-2 border-sky-400/50">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <div class="font-extrabold text-sky-300">World Tour Destinations (10 Cities)</div>
+              <div class="text-[10px] text-slate-400">Jump directly to any global city</div>
+            </div>
+            <span id="setting-current-city" class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[9px] border border-sky-400">TOKYO</span>
+          </div>
+          <div id="setting-city-buttons" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5"></div>
         </div>
       </div>
 
@@ -928,41 +1075,168 @@
   </div>
 
   <!-- GAME OVER MODAL -->
-  <div id="gameover-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
-    <div class="arcade-panel rounded-3xl max-w-md w-full p-6 text-center text-white border-4 border-rose-500">
-      <div class="pixel-font text-xl text-rose-400 mb-1">SHIFT COMPLETE</div>
-      <h2 class="arcade-font text-2xl text-white">VAN ARMOR DEPLETED</h2>
-      <p id="gameover-unlock-summary" class="text-xs text-emerald-300 font-bold mt-1">Coins &amp; discoveries saved to your Showroom Garage</p>
+  <!-- 5. RIG TUNING UPGRADES MODAL (GARAGE PROGRESSION) -->
+  <div id="modal-tuning" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
+    <div class="arcade-panel rounded-3xl max-w-xl w-full max-h-[92dvh] flex flex-col p-5 sm:p-6 text-white border-4 border-amber-400">
+      <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center border-2 border-white text-lg">
+            ⚙️
+          </div>
+          <div>
+            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">RIG TUNING &amp; UPGRADES</h2>
+            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Upgrade engine, suspension &amp; battery for your active van fleet</p>
+          </div>
+        </div>
+        <button data-close-modal="modal-tuning" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
+      </div>
 
-      <div class="grid grid-cols-3 gap-2 my-4 bg-slate-950/90 p-3.5 rounded-2xl border-2 border-sky-500/30">
-        <div>
-          <div class="text-[9px] text-sky-300 uppercase font-bold">FINAL SCORE</div>
-          <div id="final-score" class="arcade-font text-xl text-amber-400">0</div>
+      <!-- Active Van Tuning Profile Card -->
+      <div class="my-3 bg-slate-950/90 rounded-2xl p-3 border-2 border-sky-500/30 flex items-center justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-12 h-12 rounded-xl bg-slate-900 border border-sky-400/40 p-1 flex items-center justify-center flex-shrink-0">
+            <img id="tuning-van-img" src="" alt="Active Rig" class="w-full h-full object-contain" />
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span id="tuning-van-name" class="arcade-font text-base sm:text-lg text-white truncate">Express Courier GTI</span>
+              <span id="tuning-van-tier" class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold text-[8px] uppercase">STARTER RIG</span>
+            </div>
+            <div class="text-[10px] text-sky-300 font-semibold truncate">Stats persist in localStorage for each van in your fleet</div>
+          </div>
         </div>
-        <div>
-          <div class="text-[9px] text-sky-300 uppercase font-bold">DELIVERED</div>
-          <div id="final-deliveries" class="arcade-font text-xl text-emerald-400">0</div>
-        </div>
-        <div>
-          <div class="text-[9px] text-sky-300 uppercase font-bold">COINS EARNED</div>
-          <div id="final-coins" class="arcade-font text-xl text-yellow-300">+0</div>
+        <div class="text-right flex-shrink-0 pl-2">
+          <div class="text-[8px] font-extrabold uppercase text-amber-300">BALANCE</div>
+          <div class="arcade-font text-base sm:text-xl text-amber-300 flex items-center gap-1">
+            <span>🪙</span>
+            <span id="tuning-coins-readout">250</span>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-2.5">
-        <button id="btn-gameover-home" class="flex-1 py-3.5 rounded-2xl bg-sky-400 text-slate-950 font-extrabold text-base arcade-font arcade-btn">
+      <!-- 3 Stat Tuning Sliders / Upgrades -->
+      <div id="tuning-stats-container" class="flex-1 overflow-y-auto space-y-3 pr-1 my-1">
+        <!-- Populated dynamically with Engine, Handling, and Battery upgrades -->
+      </div>
+
+      <div class="pt-3 border-t-2 border-sky-400/30 flex items-center justify-between">
+        <span class="text-[10px] text-sky-200 font-bold">Earn coins by completing shifts, sweet-spot drops, &amp; near-misses</span>
+        <button data-close-modal="modal-tuning" class="px-6 py-2.5 rounded-xl bg-sky-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+          DONE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ACTIVE SHIFT CONTRACTS & COURIER RANK MODAL -->
+  <div id="modal-contracts" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
+    <div class="arcade-panel rounded-3xl max-w-xl w-full max-h-[92dvh] flex flex-col p-5 sm:p-6 text-white border-4 border-sky-400">
+      <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-sky-400 to-indigo-600 text-slate-950 flex items-center justify-center border-2 border-white text-lg">
+            📋
+          </div>
+          <div>
+            <h2 class="arcade-font text-lg sm:text-2xl text-white leading-none">SHIFT CONTRACTS &amp; RANK</h2>
+            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Complete missions to earn Coins, Courier XP and Rank promotions</p>
+          </div>
+        </div>
+        <button data-close-modal="modal-contracts" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
+      </div>
+
+      <!-- Courier Rank Hero Card -->
+      <div class="my-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-3.5 border-2 border-amber-400/60 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="modal-rank-badge" class="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 border-2 border-white flex items-center justify-center font-extrabold text-base arcade-font shadow flex-shrink-0">
+            R1
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-extrabold uppercase tracking-wider text-amber-300">CURRENT COURIER RANK</span>
+              <span id="modal-rank-level-tag" class="px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-extrabold text-[8px]">LEVEL 1</span>
+            </div>
+            <div id="modal-rank-title" class="arcade-font text-lg sm:text-xl text-white">Yangon Rookie</div>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="w-28 sm:w-44 h-2 bg-slate-950 rounded-full overflow-hidden border border-white/30">
+                <div id="modal-rank-progress-fill" class="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-300 transition-all duration-300" style="width: 25%"></div>
+              </div>
+              <span id="modal-rank-xp-readout" class="text-[9px] font-bold text-sky-300">0 / 300 XP</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right hidden sm:block">
+          <div class="text-[8px] font-extrabold uppercase text-slate-400">NEXT PROMOTION</div>
+          <div id="modal-rank-next" class="arcade-font text-xs text-amber-300">Midnight Runner</div>
+        </div>
+      </div>
+
+      <!-- 3 Active Contracts List -->
+      <div class="text-[10px] font-extrabold uppercase tracking-wider text-sky-200 mb-1.5">ACTIVE COURIER MISSIONS (3 ASSIGNED)</div>
+      <div id="modal-contracts-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="pt-3 border-t-2 border-sky-400/30 flex items-center justify-between">
+        <span class="text-[10px] text-sky-200 font-bold">New missions are assigned as contracts are completed!</span>
+        <button data-close-modal="modal-contracts" class="px-6 py-2.5 rounded-xl bg-sky-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+          CLOSE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER MODAL -->
+  <div id="gameover-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
+    <div class="arcade-panel rounded-3xl max-w-lg w-full p-5 sm:p-6 text-center text-white border-4 border-rose-500 max-h-[92dvh] flex flex-col">
+      <div class="pixel-font text-lg sm:text-xl text-rose-400 mb-0.5">SHIFT COMPLETE</div>
+      <h2 class="arcade-font text-xl sm:text-2xl text-white">VAN ARMOR DEPLETED</h2>
+      <p id="gameover-unlock-summary" class="text-xs text-emerald-300 font-bold mt-0.5">Coins, XP &amp; discoveries saved to your Showroom Garage</p>
+
+      <div class="grid grid-cols-3 gap-2 my-3 bg-slate-950/90 p-3 rounded-2xl border-2 border-sky-500/30">
+        <div>
+          <div class="text-[8px] sm:text-[9px] text-sky-300 uppercase font-bold">FINAL SCORE</div>
+          <div id="final-score" class="arcade-font text-lg sm:text-xl text-amber-400">0</div>
+        </div>
+        <div>
+          <div class="text-[8px] sm:text-[9px] text-sky-300 uppercase font-bold">DELIVERED</div>
+          <div id="final-deliveries" class="arcade-font text-lg sm:text-xl text-emerald-400">0</div>
+        </div>
+        <div>
+          <div class="text-[8px] sm:text-[9px] text-sky-300 uppercase font-bold">COINS EARNED</div>
+          <div id="final-coins" class="arcade-font text-lg sm:text-xl text-yellow-300">+0</div>
+        </div>
+      </div>
+
+      <!-- Shift Contracts Live Progress Card in GameOver -->
+      <div id="gameover-contracts-box" class="bg-slate-950/90 p-3 rounded-2xl border-2 border-sky-400/40 text-left my-1 flex-1 overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-sky-400/20 pb-1 mb-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">📋</span>
+            <span class="arcade-font text-xs text-white">SHIFT CONTRACTS PROGRESS</span>
+          </div>
+          <span id="gameover-xp-gained" class="text-[10px] font-extrabold text-emerald-300">+0 XP GAINED</span>
+        </div>
+        <div id="gameover-contracts-list" class="space-y-2">
+          <!-- Populated dynamically with shift contract progress -->
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 mt-3">
+        <button id="btn-gameover-home" class="flex-1 py-3 rounded-2xl bg-sky-400 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn">
           SHOWROOM GARAGE
         </button>
-        <button id="btn-play-again" class="flex-1 py-3.5 rounded-2xl bg-emerald-400 text-slate-950 font-extrabold text-base arcade-font arcade-btn">
+        <button id="btn-play-again" class="flex-1 py-3 rounded-2xl bg-emerald-400 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn">
           DRIVE AGAIN
         </button>
       </div>
     </div>
   </div>
 
+
+  <!-- Core Modular Scripts (Shared Global Scope) -->
   <script>
     // ============================================================================
-    // 1. COZY 94 BPM NIGHT-DRIVE CITY-POP GROOVE + PRIZE REEL SFX
+    // 1. UPBEAT 118 BPM CITY-POP / ARCADE DRIVING GROOVE + PRIZE REEL SFX
     // ============================================================================
     class SoundSystem {
       constructor() {
@@ -973,12 +1247,16 @@
       }
 
       init() {
-        if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) this.ctx = new AudioCtx();
-        }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+          }
+        } catch (e) {
+          console.warn('AudioContext initialization deferred:', e);
         }
       }
 
@@ -995,8 +1273,8 @@
         ];
         const bassRoot = [65.41, 55.00, 43.65, 49.00];
         const leadNotes = [
-          392.00, 493.88, 587.33, 659.25, 587.33, 493.88, 440.00, 392.00,
-          493.88, 587.33, 783.99, 659.25, 587.33, 493.88, 440.00, 493.88
+          523.25, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33, 523.25,
+          659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 587.33, 659.25
         ];
 
         const tick = () => {
@@ -1067,10 +1345,10 @@
             if (s16 === 0 || s16 === 2 || s16 === 5 || s16 === 8 || s16 === 11 || s16 === 14) {
               const lOsc = this.ctx.createOscillator();
               const lGain = this.ctx.createGain();
-              lOsc.type = 'triangle';
+              lOsc.type = 'square';
               const note = leadNotes[(s16 + bar * 3) % leadNotes.length];
               lOsc.frequency.setValueAtTime(note, now);
-              lGain.gain.setValueAtTime(0.010, now);
+              lGain.gain.setValueAtTime(0.014, now);
               lGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.15);
               lOsc.connect(lGain);
               lGain.connect(this.ctx.destination);
@@ -1080,7 +1358,7 @@
 
             this.step++;
           }
-          setTimeout(tick, 160);
+          setTimeout(tick, 127);
         };
         tick();
       }
@@ -1255,9 +1533,51 @@
           osc.stop(now + 0.32);
         }
       }
+
+      playPerfectChime() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        // Sparkling high-pitched arcade synth arpeggio (C6, E6, G6, C7)
+        [1046.5, 1318.5, 1567.98, 2093.0].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+          gain.gain.setValueAtTime(0.08, now + idx * 0.055);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.055);
+          osc.stop(now + idx * 0.055 + 0.30);
+        });
+      }
+
+      playNearMissWhoosh() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(540, now + 0.08);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.26);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.08, now + 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.27);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      }
     }
 
     const soundFX = new SoundSystem();
+
+
 
     // ============================================================================
     // 2. 12 TIERED SURPRISE & MEME ITEMS (RAINBOW LEGENDARY, GOLD, EPIC, RARE)
@@ -1290,8 +1610,8 @@
       {
         id: 2,
         key: 'ps5',
-        name: 'PS5 Pro + VR Bundle',
-        short: 'PS5 PRO',
+        name: 'DigitBox 7 Pro Console',
+        short: 'DIGITBOX 7',
         pts: 450,
         tier: 'GOLD TIER',
         tierClass: 'tier-gold',
@@ -1350,8 +1670,8 @@
       {
         id: 7,
         key: 'ramen',
-        name: 'Ichiraku Ramen Bowl',
-        short: 'RAMEN BOWL',
+        name: 'Midnight Shan Noodle XL',
+        short: 'SHAN NOODLE',
         pts: 250,
         tier: 'RARE TIER',
         tierClass: 'tier-rare',
@@ -1412,13 +1732,13 @@
     // 8 Expressive, Cool Voxel Characters
     const CHARACTER_TYPES = [
       { id: 'goblin',    name: 'Big-Eye Goblin',   phrase: '"Hehe!  Yes!"' },
-      { id: 'doge',      name: 'Shiba Doge Chef',  phrase: '"Much Parcel! Wow!"' },
+      { id: 'doge',      name: 'Golden Inle Chef', phrase: '"Much Parcel! Very Fast!"' },
       { id: 'banana',    name: 'Cool Banana Bro',  phrase: '"Peel Good Bro!"' },
       { id: 'neko',      name: 'Neko-Chan',        phrase: '"Meow! Toss Here!"' },
       { id: 'ledbot',    name: 'LED-Bot 9000',     phrase: '"BEEP! Drop Beat!"' },
       { id: 'wizard',    name: 'Starlight Wizard', phrase: '"By My Beard!"' },
-      { id: 'panda',     name: 'Kung-Fu Panda',    phrase: '"Skadoosh! Here!"' },
-      { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Preem Delivery!"' }
+      { id: 'panda',     name: 'Master Bamboo',    phrase: '"Inner Peace! Drop Here!"' },
+      { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Laser-Sharp Delivery!"' }
     ];
 
     const PLAYABLE_VANS = [
@@ -1501,7 +1821,7 @@
       { name: 'NekoChan_Tokyo',     vanId: 'cyber',      van: 'Cyber-Blade 2099',       delivered: 118, distance: 3940, rank: 2 },
       { name: 'YangonTeaMaster',    vanId: 'goldtuktuk', van: 'Royal Bangkok Tuk-Tuk',  delivered: 96,  distance: 3310, rank: 3 },
       { name: 'ChaiWallah_Express', vanId: 'bullion',    van: 'Fort Knox Bullion Rig',  delivered: 84,  distance: 2890, rank: 4 },
-      { name: 'DogeChef_Wow',       vanId: 'ramen',      van: 'Harajuku Ramen Truck',   delivered: 68,  distance: 2350, rank: 5 },
+      { name: 'InleChef_Fast',      vanId: 'ramen',      van: 'Harajuku Ramen Truck',   delivered: 68,  distance: 2350, rank: 5 },
       { name: 'Moai_Shades_Bro',    vanId: 'classic',    van: 'Express Courier GTI',    delivered: 45,  distance: 1620, rank: 6 }
     ];
 
@@ -1517,7 +1837,7 @@
         roofs: [0x1e293b, 0x0f172a, 0x991b1b],
         accent: 0xe11d48,
         signs: [
-          { top: 'ラーメン', bottom: 'ICHIRAKU RAMEN', bg: '#b91c1c', fg: '#fef08a' },
+          { top: 'ラーメン', bottom: 'TOKYO RAMEN',    bg: '#b91c1c', fg: '#fef08a' },
           { top: 'たこ焼き', bottom: 'TOKYO TAKOYAKI', bg: '#0f172a', fg: '#ffffff' },
           { top: '居酒屋',   bottom: 'SHIBUYA IZAKAYA', bg: '#4c1d95', fg: '#00f5d4' }
         ]
@@ -1581,99 +1901,174 @@
           { top: 'BAKERY', bottom: 'SWEET DONUTS', bg: '#be185d', fg: '#fef08a' },
           { top: 'GAMING', bottom: 'CYBER SHOP',   bg: '#1e1b4b', fg: '#38bdf8' }
         ]
+      },
+      {
+        id: 'paris',
+        name: 'Paris',
+        banner: 'BIENVENUE À PARIS',
+        gatePrimary: 0x2563eb,
+        gateSecondary: 0xef4444,
+        walls: [0xfef3c7, 0xf8fafc, 0xfde68a],
+        roofs: [0x475569, 0x334155, 0x1e293b],
+        accent: 0x2563eb,
+        signs: [
+          { top: 'BOULANGERIE', bottom: 'CROISSANTS & PAIN', bg: '#1e3a8a', fg: '#fef08a' },
+          { top: 'CAFÉ DE PARIS', bottom: 'BISTRO PARISIEN',  bg: '#7f1d1d', fg: '#ffffff' },
+          { top: 'PÂTISSERIE',   bottom: 'MACARONS ROYAUX',   bg: '#047857', fg: '#fde047' }
+        ]
+      },
+      {
+        id: 'rio',
+        name: 'Rio de Janeiro',
+        banner: 'BEM-VINDO AO RIO DE JANEIRO',
+        gatePrimary: 0x16a34a,
+        gateSecondary: 0xfacc15,
+        walls: [0xf8fafc, 0xfef08a, 0x67e8f9],
+        roofs: [0x0284c7, 0x15803d, 0xf97316],
+        accent: 0x16a34a,
+        signs: [
+          { top: 'ÁGUA DE COCO', bottom: 'COPACABANA BEACH', bg: '#15803d', fg: '#facc15' },
+          { top: 'CHURRASCARIA', bottom: 'SAMBA & GRILL',    bg: '#991b1b', fg: '#ffffff' },
+          { top: 'AÇAÍ TROPICAL', bottom: 'PRAIA DE IPANEMA', bg: '#4a044e', fg: '#38bdf8' }
+        ]
+      },
+      {
+        id: 'washington',
+        name: 'Washington D.C.',
+        banner: 'WELCOME TO WASHINGTON D.C.',
+        gatePrimary: 0x1d4ed8,
+        gateSecondary: 0xef4444,
+        walls: [0xf8fafc, 0xe2e8f0, 0x991b1b],
+        roofs: [0x1e293b, 0x334155, 0x0f172a],
+        accent: 0xef4444,
+        signs: [
+          { top: 'CAPITOL DINER', bottom: 'HOT DOGS & PIES',   bg: '#1e3a8a', fg: '#ffffff' },
+          { top: 'SMITHSONIAN',   bottom: 'NATIONAL ARCHIVES', bg: '#0f172a', fg: '#facc15' },
+          { top: 'THE MALL CAFE', bottom: 'COFFEE & PRETZELS', bg: '#b91c1c', fg: '#f8fafc' }
+        ]
+      },
+      {
+        id: 'dubai',
+        name: 'Dubai',
+        banner: 'مرحباً بكم في دبي (WELCOME TO DUBAI)',
+        gatePrimary: 0xfacc15,
+        gateSecondary: 0x0284c7,
+        walls: [0x334155, 0x0f172a, 0xfef3c7],
+        roofs: [0xfacc15, 0x38bdf8, 0xd97706],
+        accent: 0x38bdf8,
+        signs: [
+          { top: 'سوق الذهب',     bottom: 'DUBAI GOLD SOUK',   bg: '#78350f', fg: '#facc15' },
+          { top: 'مقهى القهوة',   bottom: 'ARABIC GAHWA CAFE', bg: '#0f172a', fg: '#00f5d4' },
+          { top: 'برج مارينا',   bottom: 'MARINA SKY LOUNGE', bg: '#0369a1', fg: '#ffffff' }
+        ]
+      },
+            {
+        id: 'cairo',
+        name: 'Cairo',
+        banner: 'مرحباً بكم في القاهرة (WELCOME TO CAIRO)',
+        gatePrimary: 0xd97706,
+        gateSecondary: 0xfacc15,
+        walls: [0xfde68a, 0xf59e0b, 0xd97706],
+        roofs: [0xd97706, 0x92400e, 0x78350f],
+        accent: 0xfacc15,
+        signs: [
+          { top: 'خان الخليلي',  bottom: 'KHAN EL-KHALILI BAZAAR', bg: '#7f1d1d', fg: '#facc15' },
+          { top: 'قهوة النيل',   bottom: 'NILE-SIDE AHWA TEAHOUSE', bg: '#064e3b', fg: '#fef08a' },
+          { top: 'أهرامات الجيزة', bottom: 'GIZA PYRAMID MARKET',   bg: '#78350f', fg: '#ffffff' }
+        ]
       }
     ];
 
     const TIME_PRESETS = [
       {
-        id: 'day',
-        name: 'Mint Day',
-        skyHex: 0x6bf2c6,
-        fogHex: 0x6bf2c6,
-        roadHex: 0x3b4254,
-        sidewalkHex: 0xcfd8e3,
-        hemiSky: 0xffffff,
-        hemiGround: 0x334155,
-        hemiInt: 0.74,
-        dirHex: 0xfffbeb,
-        dirInt: 0.94,
-        sunPos: [36, 52, 24],
-        windowEmissive: 0.0,
-        lightsOn: false,
-        moteColor: 0xffffff,
-        moteOpacity: 0.0
-      },
-      {
-        id: 'morning',
-        name: 'Rose Dawn',
-        skyHex: 0xdf8375,
-        fogHex: 0xdf8375,
-        roadHex: 0x3d3542,
-        sidewalkHex: 0xd6bfc2,
-        hemiSky: 0xffedd5,
-        hemiGround: 0x272030,
-        hemiInt: 0.64,
-        dirHex: 0xfde68a,
-        dirInt: 0.98,
-        sunPos: [54, 25, 18],
-        windowEmissive: 0.45,
-        lightsOn: false,
-        moteColor: 0xfffbeb,
-        moteOpacity: 0.85
-      },
-      {
-        id: 'evening',
-        name: 'Amber Sunset',
-        skyHex: 0xe37424,
-        fogHex: 0xe37424,
-        roadHex: 0x362d38,
-        sidewalkHex: 0xd4b499,
-        hemiSky: 0xfed7aa,
-        hemiGround: 0x291d24,
-        hemiInt: 0.58,
-        dirHex: 0xffedd5,
-        dirInt: 1.05,
-        sunPos: [-54, 23, 15],
-        windowEmissive: 0.95,
-        lightsOn: true,
-        moteColor: 0xfef08a,
-        moteOpacity: 0.92
-      },
-      {
-        id: 'night',
-        name: 'Starry Night',
-        skyHex: 0x070b19,
-        fogHex: 0x070b19,
-        roadHex: 0x182032,
+        id: 'cozy_night',
+        name: 'Cozy Midnight',
+        skyHex: 0x0c1228,
+        fogHex: 0x161e38,
+        roadHex: 0x1d2436,
         sidewalkHex: 0x334155,
-        hemiSky: 0x38bdf8,
-        hemiGround: 0x050811,
-        hemiInt: 0.38,
-        dirHex: 0x7dd3fc,
-        dirInt: 0.52,
-        sunPos: [-42, 34, 22],
-        windowEmissive: 1.65,
+        hemiSky: 0x60a5fa,
+        hemiGround: 0x0f172a,
+        hemiInt: 0.65,
+        dirHex: 0xfef08a,
+        dirInt: 0.75,
+        sunPos: [-36, 42, 20],
+        windowEmissive: 1.85,
         lightsOn: true,
-        moteColor: 0xfef08a,
+        moteColor: 0xfde047,
+        moteOpacity: 0.95
+      },
+      {
+        id: 'sunset_glow',
+        name: 'Golden Sunset Twilight',
+        skyHex: 0xd95d39,
+        fogHex: 0xd95d39,
+        roadHex: 0x332630,
+        sidewalkHex: 0xcca685,
+        hemiSky: 0xfed7aa,
+        hemiGround: 0x241820,
+        hemiInt: 0.72,
+        dirHex: 0xffd166,
+        dirInt: 1.15,
+        sunPos: [-50, 24, 16],
+        windowEmissive: 1.35,
+        lightsOn: true,
+        moteColor: 0xffd166,
+        moteOpacity: 0.90
+      },
+      {
+        id: 'sakura_dawn',
+        name: 'Sakura Rose Dawn',
+        skyHex: 0x8a5b78,
+        fogHex: 0x8a5b78,
+        roadHex: 0x382e3b,
+        sidewalkHex: 0xd4b8c7,
+        hemiSky: 0xfce7f3,
+        hemiGround: 0x261928,
+        hemiInt: 0.68,
+        dirHex: 0xfbcfe8,
+        dirInt: 0.98,
+        sunPos: [48, 26, 18],
+        windowEmissive: 0.85,
+        lightsOn: false,
+        moteColor: 0xf9a8d4,
+        moteOpacity: 0.88
+      },
+      {
+        id: 'starry_synth',
+        name: 'Starry Synthwave',
+        skyHex: 0x060914,
+        fogHex: 0x060914,
+        roadHex: 0x141c2c,
+        sidewalkHex: 0x1e293b,
+        hemiSky: 0x818cf8,
+        hemiGround: 0x05070e,
+        hemiInt: 0.48,
+        dirHex: 0x00f5d4,
+        dirInt: 0.65,
+        sunPos: [-42, 34, 22],
+        windowEmissive: 1.95,
+        lightsOn: true,
+        moteColor: 0x00f5d4,
         moteOpacity: 1.0
       },
       {
-        id: 'azure',
-        name: 'Azure Dusk',
-        skyHex: 0x257ca3,
-        fogHex: 0x257ca3,
-        roadHex: 0x283548,
-        sidewalkHex: 0x94a3b8,
-        hemiSky: 0xbae6fd,
+        id: 'warm_afternoon',
+        name: 'Warm Sunny Breeze',
+        skyHex: 0x48a9a6,
+        fogHex: 0x48a9a6,
+        roadHex: 0x384152,
+        sidewalkHex: 0xc9d5e3,
+        hemiSky: 0xfef3c7,
         hemiGround: 0x1e293b,
-        hemiInt: 0.62,
-        dirHex: 0xe0f2fe,
-        dirInt: 0.88,
-        sunPos: [-48, 28, -18],
-        windowEmissive: 1.15,
-        lightsOn: true,
-        moteColor: 0xe0f2fe,
-        moteOpacity: 0.88
+        hemiInt: 0.82,
+        dirHex: 0xfffbeb,
+        dirInt: 1.05,
+        sunPos: [36, 52, 24],
+        windowEmissive: 0.25,
+        lightsOn: false,
+        moteColor: 0xfef08a,
+        moteOpacity: 0.45
       }
     ];
 
@@ -1697,6 +2092,8 @@
       coins: 250,
       runCoinsEarned: 0,
       combo: 1,
+      nearMissCount: 0,
+      perfectDropCount: 0,
       hearts: 3,
       maxHearts: 5,
       laneIndex: 2,
@@ -1713,7 +2110,7 @@
       selectedSlotIndex: 0,
       cityIndex: 0,
       timeIndex: 0,
-      weatherIndex: 0,
+      weatherIndex: 4,
       distanceMeters: 0,
       nextGateDistance: 220,
       invulnerableTimer: 0,
@@ -1722,6 +2119,11 @@
       dragSide: null,
       dragCancel: false,
       targetAptLock: null,
+      // Courier Rank & Retention State
+      courierXP: 0,
+      courierRankLevel: 1,
+      shiftContracts: [],
+      vanTuning: {},
       // Step-by-Step Tutorial State
       tutorialActive: false,
       tutorialStep: 0,
@@ -1734,6 +2136,84 @@
       unlockedItems: [0, 2, 6],
       unlockedChars: ['goblin', 'doge']
     };
+
+    const COURIER_RANKS = [
+      { level: 1, title: 'Yangon Rookie', xpNeeded: 300, badgeBg: 'bg-slate-700 text-sky-200' },
+      { level: 2, title: 'Midnight Runner', xpNeeded: 750, badgeBg: 'bg-emerald-600 text-white' },
+      { level: 3, title: 'ASEAN Express', xpNeeded: 1500, badgeBg: 'bg-cyan-600 text-slate-950 font-bold' },
+      { level: 4, title: 'Cyber Courier', xpNeeded: 2600, badgeBg: 'bg-purple-600 text-amber-200 font-bold' },
+      { level: 5, title: 'Digit7 Legend', xpNeeded: 4200, badgeBg: 'bg-amber-400 text-slate-950 font-extrabold' }
+    ];
+
+    const CONTRACT_TEMPLATES = [
+      { id: 'deliv_run', title: 'Deliver 5 Parcels in a Single Run', target: 5, type: 'deliveries_run', rewardCoins: 150, rewardXP: 100 },
+      { id: 'perfect_3', title: 'Land 3 Perfect Drops', target: 3, type: 'perfect_drops', rewardCoins: 150, rewardXP: 120 },
+      { id: 'near_miss_4', title: 'Perform 4 Traffic Near-Misses', target: 4, type: 'near_misses', rewardCoins: 150, rewardXP: 110 },
+      { id: 'yangon_coins', title: 'Collect 40 Coins in Yangon', target: 40, type: 'yangon_coins', rewardCoins: 150, rewardXP: 100 },
+      { id: 'combo_5', title: 'Reach Combo x5 without crashing', target: 5, type: 'combo_max', rewardCoins: 150, rewardXP: 130 },
+      { id: 'dist_500', title: 'Drive 500 Meters in a Shift', target: 500, type: 'distance_shift', rewardCoins: 150, rewardXP: 100 },
+      { id: 'legend_item', title: 'Deliver a Legendary Tier Parcel', target: 1, type: 'legendary_drop', rewardCoins: 200, rewardXP: 150 }
+    ];
+
+    const TUNING_STAT_SPECS = {
+      engine: {
+        name: 'Engine Tune',
+        desc: 'Boosts Top Speed & Score Multiplier',
+        icon: '⚡',
+        costs: [0, 120, 240, 400, 650],
+        labels: ['Stock V4', 'Stage 1 Turbo (+4% Spd, +5% Pts)', 'Stage 2 Intercooler (+8% Spd, +10% Pts)', 'Stage 3 ECU Map (+12% Spd, +15% Pts)', 'Twin-Turbo Max (+18% Spd, +25% Pts)']
+      },
+      handling: {
+        name: 'Suspension / Handling',
+        desc: 'Faster Lane-Switch Snap & Reaction Speed',
+        icon: '🎯',
+        costs: [0, 100, 220, 360, 580],
+        labels: ['Stock Springs', 'Sport Struts (+15% Snap)', 'Pro Sway Bars (+30% Snap)', 'Race Coilovers (+50% Snap)', 'Active Aero Dampers (+75% Snap)']
+      },
+      battery: {
+        name: 'Chrono-Battery',
+        desc: 'Extends Slow-Mo Aiming Duration & Lowers Drain',
+        icon: '⏱️',
+        costs: [0, 110, 230, 380, 600],
+        labels: ['8.0s Capacity', '9.5s Capacity (+1.5s)', '11.0s Capacity (+3.0s)', '12.5s Capacity (+4.5s)', '14.5s Max & 30% Slower Drain']
+      }
+    };
+
+    const SAVE_KEY = 'midnight_delivery_v1_save';
+
+    function loadSavedProgression() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Failed to load save from localStorage', e);
+        return null;
+      }
+    }
+
+    function saveProgression() {
+      try {
+        const payload = {
+          coins: gameState.coins,
+          bestDistance: gameState.bestDistance,
+          bestDeliveries: gameState.bestDeliveries,
+          ownedVans: gameState.ownedVans,
+          equippedVanId: gameState.equippedVanId,
+          unlockedItems: gameState.unlockedItems,
+          unlockedChars: gameState.unlockedChars,
+          courierXP: gameState.courierXP,
+          courierRankLevel: gameState.courierRankLevel,
+          shiftContracts: gameState.shiftContracts,
+          vanTuning: gameState.vanTuning
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Failed to save progression to localStorage', e);
+      }
+    }
+
+
 
     const matCache = {};
     function getMat(colorHex, opts = {}) {
@@ -1926,7 +2406,7 @@
         addVoxelBox(group, 0.98, 0.84, 0.14, 0,  0.44, -0.08, 0xfde047, goldOpt);
         addVoxelBox(group, 0.30, 0.12, 0.16, -0.66, 0.70, -0.32, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.8 });
       } else if (typeId === 2) {
-        // 2: GOLD TIER — PS5 PRO + VR STACK
+        // 2: GOLD TIER — DIGITBOX 7 PRO CONSOLE
         addVoxelBox(group, 1.15, 0.16, 1.02, 0, -0.72, 0, 0x0f172a);
         addVoxelBox(group, 0.46, 1.54, 0.90, 0,  0.04, 0, 0x090d16);
         addVoxelBox(group, 0.50, 1.42, 0.10, 0,  0.06,  0.44, 0x38bdf8, { emissive: 0x0284c7, emissiveIntensity: 1.1 });
@@ -1985,7 +2465,7 @@
         addVoxelBox(group, 0.42, 0.18, 0.36,  0.34, 0.28, 0, 0x1e293b);
         addVoxelBox(group, 0.38, 0.38, 0.38,  0,    0.34, 0, 0xec4899);
       } else if (typeId === 7) {
-        // 7: RARE TIER — STEAMING ICHIRAKU RAMEN BOWL
+        // 7: RARE TIER — STEAMING MIDNIGHT SHAN NOODLE XL
         addVoxelBox(group, 1.62, 0.16, 1.62, 0, -0.52, 0, 0x0f172a);
         addVoxelBox(group, 1.50, 0.56, 1.50, 0,  0.04, 0, 0xdc2626);
         addVoxelBox(group, 1.58, 0.16, 1.58, 0,  0.34, 0, 0x18181b);
@@ -2684,12 +3164,9 @@
 
       let roofGift = null;
       if (includeCargoGift) {
-        const selectedSlot = Number.isInteger(gameState.selectedSlotIndex) ? gameState.selectedSlotIndex : 0;
-        const selectedParcelId = gameState.handSlots ? gameState.handSlots[selectedSlot] : 0;
-        roofGift = createParcelVoxelMesh(selectedParcelId ?? 0, 0.74);
+        roofGift = createParcelVoxelMesh(gameState.handSlots ? gameState.handSlots[0] : 0, 0.74);
         roofGift.position.set(0, rackY + 0.56, rackZ);
         roofGift.rotation.y = 0.35;
-        roofGift.userData.parcelTypeId = selectedParcelId ?? 0;
         chassis.add(roofGift);
       }
 
@@ -2905,7 +3382,7 @@
     const sidewalkActors = [];
 
     function initSidewalkPromenadeActors() {
-      // Streetlamps sit right on the outer road curb edge (x = ±7.95) clear of bike & walking lanes
+      // Cozy Warm Gooseneck Streetlamps on the outer road curb edge (x = ±7.95)
       for (let z = 25; z > -235; z -= 26) {
         [-7.95, 7.95].forEach((lx) => {
           const sign = lx < 0 ? 1 : -1;
@@ -2913,21 +3390,28 @@
           lampGroup.position.set(lx, 0, z);
           envGroup.add(lampGroup);
 
-          addVoxelBox(lampGroup, 0.24, 4.6, 0.24, 0, 2.5, 0, 0x1e293b);
-          addVoxelBox(lampGroup, 0.95, 0.20, 0.24, sign * 0.38, 4.75, 0, 0x1e293b);
-          const bulb = addVoxelBox(lampGroup, 0.42, 0.22, 0.36, sign * 0.68, 4.58, 0, 0xfef08a, {
-            emissive: 0xfacc15,
-            emissiveIntensity: 0.15
+          // Cast-iron base plinth and column
+          addVoxelBox(lampGroup, 0.45, 0.35, 0.45, 0, 0.18, 0, 0x0f172a);
+          addVoxelBox(lampGroup, 0.22, 4.6, 0.22, 0, 2.5, 0, 0x1e293b);
+          addVoxelBox(lampGroup, 0.36, 0.25, 0.36, 0, 4.85, 0, 0x0f172a);
+          // Curved overhanging gooseneck arm
+          addVoxelBox(lampGroup, 1.15, 0.18, 0.22, sign * 0.48, 5.05, 0, 0x1e293b);
+          addVoxelBox(lampGroup, 0.72, 0.14, 0.62, sign * 0.95, 5.12, 0, 0x0f172a);
+          // Warm incandescent glowing lantern head
+          const bulb = addVoxelBox(lampGroup, 0.52, 0.44, 0.48, sign * 0.95, 4.78, 0, 0xfffbeb, {
+            emissive: 0xfde047,
+            emissiveIntensity: 1.6
           });
           streetLampBulbs.push(bulb);
 
+          // Warm soft ambient golden light puddle on sidewalk
           const pool = new THREE.Mesh(
-            new THREE.CircleGeometry(2.6, 16),
-            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false })
+            new THREE.CircleGeometry(3.6, 24),
+            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.32, depthWrite: false })
           );
           pool.rotation.x = -Math.PI / 2;
-          pool.position.set(sign * 0.68, 0.26, 0);
-          pool.visible = false;
+          pool.position.set(sign * 0.95, 0.26, 0);
+          pool.visible = true;
           lampGroup.add(pool);
           streetLampPools.push(pool);
 
@@ -2935,8 +3419,7 @@
         });
       }
 
-      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path
-      // (x = ±10.95) while trees & porch pads are positioned so nobody ever walks through a tree!
+      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path (x = ±11.45)
       const charIds = ['goblin', 'doge', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
       const dogCols = [0xd97706, 0xfef3c7, 0x78350f, 0xf97316];
       for (let i = 0; i < 12; i++) {
@@ -2957,204 +3440,822 @@
       }
     }
 
-    const apartments = [];
-    const BLOCK_SPACING = 26;
-    const NUM_PAIRS = 10;
-    let globalOrderCounter = 0;
+    // ============================================================================
+    // ============================================================================
+    // 8B. 10 GRAND REAL-LIFE CITY LANDMARKS (Towering authentic architecture)
+    // ============================================================================
 
-    function rebuildApartmentVisuals(apt, cityTheme, index) {
-      while (apt.archGroup.children.length > 0) {
-        apt.archGroup.remove(apt.archGroup.children[0]);
-      }
+// 1. TOKYO
+function createGrandTokyoTower(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const red = 0xef4444;
+  const white = 0xf8fafc;
+  [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([lx, lz]) => {
+    addVoxelBox(root, 1.4, 1.4, 1.4, lx, 0.7, lz, 0x1e293b);
+    addVoxelBox(root, 0.9, 9.2, 0.9, lx * 0.75, 5.2, lz * 0.75, red);
+  });
+  addVoxelBox(root, 6.2, 0.6, 0.6, 0, 8.5, -2.6, white);
+  addVoxelBox(root, 6.2, 0.6, 0.6, 0, 8.5,  2.6, white);
+  addVoxelBox(root, 0.6, 0.6, 6.2, -2.6, 8.5, 0, white);
+  addVoxelBox(root, 0.6, 0.6, 6.2,  2.6, 8.5, 0, white);
+  addVoxelBox(root, 7.4, 2.6, 7.4, 0, 11.2, 0, 0x1e293b);
+  addVoxelBox(root, 7.8, 1.2, 7.8, 0, 11.2, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.75 });
+  addVoxelBox(root, 7.5, 0.4, 7.5, 0, 12.6, 0, red);
+  addVoxelBox(root, 4.2, 4.2, 4.2, 0, 14.8, 0, white);
+  addVoxelBox(root, 3.4, 4.2, 3.4, 0, 18.8, 0, red);
+  addVoxelBox(root, 2.6, 4.2, 2.6, 0, 22.8, 0, white);
+  addVoxelBox(root, 3.8, 1.6, 3.8, 0, 25.4, 0, 0xfacc15, { emissive: 0xfef08a, emissiveIntensity: 0.9 });
+  addVoxelBox(root, 4.2, 0.35, 4.2, 0, 26.3, 0, red);
+  addVoxelBox(root, 1.6, 3.5, 1.6, 0, 28.2, 0, red);
+  addVoxelBox(root, 1.0, 3.5, 1.0, 0, 31.6, 0, white);
+  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 35.0, 0, red);
+  addVoxelBox(root, 0.8, 0.8, 0.8, 0, 37.0, 0, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.2 });
+  parent.add(root);
+  return root;
+}
 
-      const xSign = apt.side === 'left' ? -1 : 1;
-      const wallCol = cityTheme.walls[index % cityTheme.walls.length];
-      const roofCol = cityTheme.roofs[index % cityTheme.roofs.length];
-      const bType = index % 3;
-      const width = 8.4;
-      const depth = 13.5;
-      const faceX = -xSign * (width / 2 + 0.08);
-      const isNight = TIME_PRESETS[gameState.timeIndex].windowEmissive;
+// 2. YANGON
+function createGrandShwedagonPagoda(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const gold = 0xfacc15;
+  const deepGold = 0xd97706;
+  const brightGold = 0xfef08a;
+  addVoxelBox(root, 16.5, 1.8, 16.5, 0, 0.9, 0, 0xfef3c7);
+  addVoxelBox(root, 17.0, 0.4, 17.0, 0, 1.9, 0, deepGold);
+  [[-6.2, -6.2], [6.2, -6.2], [-6.2, 6.2], [6.2, 6.2]].forEach(([cx, cz]) => {
+    addVoxelBox(root, 2.2, 2.4, 2.2, cx, 3.1, cz, gold);
+    addVoxelBox(root, 1.4, 1.8, 1.4, cx, 5.0, cz, brightGold, { emissive: deepGold, emissiveIntensity: 0.5 });
+    addVoxelBox(root, 0.4, 1.8, 0.4, cx, 6.6, cz, brightGold, { emissive: brightGold, emissiveIntensity: 0.8 });
+  });
+  addVoxelBox(root, 12.5, 1.6, 12.5, 0, 2.8, 0, deepGold);
+  addVoxelBox(root, 10.8, 1.6, 10.8, 0, 4.4, 0, gold, { metalness: 0.6, roughness: 0.2 });
+  addVoxelBox(root, 9.2, 1.6, 9.2, 0, 6.0, 0, gold, { metalness: 0.65, roughness: 0.18 });
+  addVoxelBox(root, 7.8, 1.4, 7.8, 0, 7.5, 0, gold, { metalness: 0.7, emissive: deepGold, emissiveIntensity: 0.3 });
+  addVoxelBox(root, 6.6, 3.8, 6.6, 0, 10.1, 0, gold, { metalness: 0.75, roughness: 0.15, emissive: deepGold, emissiveIntensity: 0.4 });
+  addVoxelBox(root, 5.2, 3.2, 5.2, 0, 13.5, 0, gold, { metalness: 0.8, roughness: 0.12, emissive: gold, emissiveIntensity: 0.5 });
+  addVoxelBox(root, 4.0, 2.4, 4.0, 0, 16.2, 0, brightGold, { metalness: 0.85, emissive: gold, emissiveIntensity: 0.6 });
+  addVoxelBox(root, 3.0, 2.4, 3.0, 0, 18.5, 0, brightGold, { metalness: 0.85, emissive: gold, emissiveIntensity: 0.7 });
+  addVoxelBox(root, 2.2, 2.2, 2.2, 0, 20.7, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.8 });
+  addVoxelBox(root, 1.4, 3.6, 1.4, 0, 23.5, 0, brightGold, { emissive: brightGold, emissiveIntensity: 1.0 });
+  addVoxelBox(root, 3.8, 0.4, 3.8, 0, 26.2, 0, gold);
+  addVoxelBox(root, 3.0, 0.35, 3.0, 0, 27.2, 0, gold);
+  addVoxelBox(root, 2.2, 0.3, 2.2, 0, 28.1, 0, gold);
+  addVoxelBox(root, 1.5, 0.25, 1.5, 0, 28.9, 0, gold);
+  addVoxelBox(root, 0.8, 3.2, 0.8, 0, 30.6, 0, 0xffffff, { emissive: 0xfffbeb, emissiveIntensity: 1.8 });
+  addVoxelBox(root, 1.2, 1.2, 1.2, 0, 32.8, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+  parent.add(root);
+  return root;
+}
 
-      // COMPLETELY UNIQUE ARCHITECTURE & LANDMARKS EXCLUSIVE TO EACH CITY THEME!
-      if (cityTheme.id === 'yangon') {
-        if (bType === 0) {
-          // 1. ICONIC SHWEDAGON GOLDEN PAGODA STUPA MONUMENT (Exclusive to Yangon!)
-          addVoxelBox(apt.archGroup, width, 3.2, depth, 0, 1.6, 0, 0xfef3c7);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.6, depth + 0.8, 0, 3.4, 0, 0xd97706);
-          // Stepped Golden Octagonal Terraces
-          addVoxelBox(apt.archGroup, 6.8, 1.6, 8.8, 0, 4.4, 0, 0xf59e0b);
-          addVoxelBox(apt.archGroup, 5.4, 1.6, 6.8, 0, 5.8, 0, 0xfacc15, { metalness: 0.55, roughness: 0.2 });
-          // Bell-Shaped Golden Stupa Dome
-          addVoxelBox(apt.archGroup, 4.0, 3.2, 4.0, 0, 8.0, 0, 0xfacc15, { metalness: 0.65, roughness: 0.18, emissive: 0xd97706, emissiveIntensity: 0.35 });
-          addVoxelBox(apt.archGroup, 2.6, 2.6, 2.6, 0, 10.6, 0, 0xfde047, { metalness: 0.7, emissive: 0xfacc15, emissiveIntensity: 0.45 });
-          // Sacred Diamond Hti Umbrella Spire
-          addVoxelBox(apt.archGroup, 1.1, 3.2, 1.1, 0, 13.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.9 });
-          addVoxelBox(apt.archGroup, 2.2, 0.35, 2.2, 0, 14.2, 0, 0xfacc15);
-          // Corner Miniature Golden Shrines
-          [[-2.6, -3.5], [-2.6, 3.5], [2.6, -3.5], [2.6, 3.5]].forEach(([sx, sz]) => {
-            addVoxelBox(apt.archGroup, 1.4, 2.4, 1.4, sx, 4.6, sz, 0xfacc15);
-          });
-        } else if (bType === 1) {
-          // 2. TRADITIONAL BURMESE TEAKWOOD PYATTHAT MONASTERY (7-Tiered Roof)
-          addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x78350f);
-          for (let tier = 0; tier < 4; tier++) {
-            const tw = width + 1.4 - tier * 1.4;
-            const td = depth + 1.2 - tier * 2.0;
-            const ty = 7.8 + tier * 1.35;
-            addVoxelBox(apt.archGroup, tw, 0.55, td, 0, ty, 0, 0xfacc15);
-            addVoxelBox(apt.archGroup, tw - 0.8, 0.9, td - 0.8, 0, ty + 0.6, 0, 0x92400e);
-          }
-          addVoxelBox(apt.archGroup, 0.8, 2.5, 0.8, 0, 14.0, 0, 0xfef08a, { emissive: 0xfacc15, emissiveIntensity: 0.6 });
-        } else {
-          // 3. BOGYOKE COLONIAL HERITAGE TEA HOUSE & PALMS
-          addVoxelBox(apt.archGroup, width, 9.5, depth, 0, 4.75, 0, 0xfde68a);
-          addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 9.8, 0, 0x059669);
-          for (let wy = 3.4; wy < 8.5; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.3, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              windowMeshes.push(wm);
-            }
-          }
-        }
-      } else if (cityTheme.id === 'tokyo') {
-        if (bType === 0) {
-          // 1. ICONIC RED & WHITE TOKYO TOWER (Exclusive to Tokyo!)
-          addVoxelBox(apt.archGroup, width, 2.8, depth, 0, 1.4, 0, 0x1e293b);
-          // Stepped Red & White Lattice Tower Tiers
-          addVoxelBox(apt.archGroup, 5.8, 3.2, 5.8, 0, 4.2, 0, 0xef4444);
-          addVoxelBox(apt.archGroup, 6.6, 1.2, 6.6, 0, 6.2, 0, 0xf8fafc, { emissive: 0x38bdf8, emissiveIntensity: 0.35 }); // Main Observation Deck
-          addVoxelBox(apt.archGroup, 4.2, 3.0, 4.2, 0, 8.2, 0, 0xffffff);
-          addVoxelBox(apt.archGroup, 3.2, 2.8, 3.2, 0, 11.0, 0, 0xef4444);
-          addVoxelBox(apt.archGroup, 3.8, 0.9, 3.8, 0, 12.6, 0, 0xf8fafc, { emissive: 0xfef08a, emissiveIntensity: 0.6 }); // Top Deck
-          addVoxelBox(apt.archGroup, 1.8, 2.6, 1.8, 0, 14.2, 0, 0xffffff);
-          addVoxelBox(apt.archGroup, 0.7, 3.5, 0.7, 0, 17.0, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.2 }); // Antenna Spire
-        } else if (bType === 1) {
-          // 2. SHIBUYA NEON ARCADE SKYSCRAPER WITH VERTICAL BLADE BILLBOARDS
-          const h = 14.5;
-          addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
-          // Vertical Neon Kanji Blade Signs protruding toward the street
-          addVoxelBox(apt.archGroup, 1.2, 6.5, 0.65, faceX - xSign * 0.6, 9.2, -2.8, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 0.95 });
-          addVoxelBox(apt.archGroup, 1.2, 5.5, 0.65, faceX - xSign * 0.6, 8.0,  2.8, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.95 });
-          for (let wy = 3.6; wy < h - 1.2; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.4, faceX, wy, wz, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: Math.max(0.45, isNight) });
-              windowMeshes.push(wm);
-            }
-          }
-        } else {
-          // 3. ASAKUSA SENSŌ-JI TEMPLE & RED TORII SHRINE WITH SAKURA TREE
-          addVoxelBox(apt.archGroup, width, 8.2, depth, 0, 4.1, 0, 0xfef3c7);
-          addVoxelBox(apt.archGroup, width + 1.8, 0.8, depth + 1.6, 0, 8.5, 0, 0x1e293b);
-          addVoxelBox(apt.archGroup, width - 1.2, 2.4, depth - 1.2, 0, 10.0, 0, 0x991b1b);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, 11.4, 0, 0x1e293b);
-          // Giant Red Kaminarimon Lantern at front
-          addVoxelBox(apt.archGroup, 1.4, 1.8, 1.4, faceX - xSign * 0.8, 5.6, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.85 });
-        }
-      } else if (cityTheme.id === 'chinatown') {
-        if (bType === 0) {
-          // 1. IMPERIAL DRAGON PAVILION WITH SCULPTED 3D ROOFTOP DRAGON (Exclusive to ChinaTown!)
-          addVoxelBox(apt.archGroup, width, 9.2, depth, 0, 4.6, 0, 0x991b1b);
-          addVoxelBox(apt.archGroup, width + 1.6, 0.7, depth + 1.6, 0, 9.5, 0, 0xf59e0b);
-          // Upturned Flying Eave Horns
-          addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, faceX - xSign * 0.4, 10.2, -depth / 2, 0xfacc15);
-          addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, faceX - xSign * 0.4, 10.2,  depth / 2, 0xfacc15);
-          // Sculpted Undulating 3D Golden & Emerald Chinese Dragon on Roof!
-          [-3.6, -1.8, 0, 1.8, 3.6].forEach((dz, dIdx) => {
-            const dy = 10.5 + (dIdx % 2) * 0.75;
-            addVoxelBox(apt.archGroup, 1.3, 1.2, 1.4, 0, dy, dz, dIdx % 2 === 0 ? 0xfacc15 : 0x10b981);
-            addVoxelBox(apt.archGroup, 0.4, 0.6, 0.5, 0, dy + 0.8, dz, 0xef4444);
-          });
-          // Dragon Head facing the road
-          addVoxelBox(apt.archGroup, 1.8, 1.6, 1.8, faceX * 0.4, 11.4, -4.4, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 0.5 });
-        } else if (bType === 1) {
-          // 2. OCTAGONAL 4-TIER CRIMSON & GOLD PAGODA TOWER
-          for (let tier = 0; tier < 4; tier++) {
-            const s = 7.8 - tier * 1.4;
-            const y = 2.0 + tier * 3.1;
-            addVoxelBox(apt.archGroup, s, 2.5, s, 0, y, 0, 0xb91c1c);
-            addVoxelBox(apt.archGroup, s + 1.4, 0.65, s + 1.4, 0, y + 1.4, 0, 0xf59e0b);
-          }
-        } else {
-          // 3. GOLDEN DIM SUM TEAHOUSE WITH HANGING RED LANTERNS
-          addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0x7f1d1d);
-          addVoxelBox(apt.archGroup, width + 1.2, 0.8, depth + 1.2, 0, 10.8, 0, 0x059669);
-          [-3.5, 0, 3.5].forEach((lz) => {
-            addVoxelBox(apt.archGroup, 0.75, 0.95, 0.75, faceX - xSign * 0.8, 6.8, lz, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.95 });
-          });
-        }
-      } else if (cityTheme.id === 'littleindia') {
-        if (bType === 0) {
-          // 1. VIBRANT STEPPED HINDU GOPURAM TEMPLE TOWER (Exclusive to Little India!)
-          const tierColors = [0xf97316, 0xec4899, 0xfacc15, 0x38bdf8, 0xa855f7];
-          addVoxelBox(apt.archGroup, width, 3.2, depth, 0, 1.6, 0, 0xfde68a);
-          for (let t = 0; t < 5; t++) {
-            const tw = width - t * 1.1;
-            const td = depth - t * 1.8;
-            const ty = 3.8 + t * 2.1;
-            addVoxelBox(apt.archGroup, tw, 1.7, td, 0, ty, 0, tierColors[t]);
-            addVoxelBox(apt.archGroup, tw + 0.5, 0.4, td + 0.5, 0, ty + 0.95, 0, 0xfef08a);
-          }
-          // Row of Golden Kalasha Finials on Gopuram Barrel Roof
-          [-2.2, 0, 2.2].forEach((kz) => {
-            addVoxelBox(apt.archGroup, 0.75, 1.3, 0.75, 0, 14.2, kz, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 0.6 });
-          });
-        } else if (bType === 1) {
-          // 2. JAIPUR ROYAL PINK HAVELI PALACE WITH 3 MUGHAL ONION DOMES & JHAROKHA BALCONIES
-          addVoxelBox(apt.archGroup, width, 9.8, depth, 0, 4.9, 0, 0xfb7185);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.75, depth + 0.8, 0, 10.1, 0, 0xfef08a);
-          [-3.4, 0, 3.4].forEach((dz) => {
-            // Protruding Jharokha Balcony
-            addVoxelBox(apt.archGroup, 1.2, 1.8, 2.0, faceX - xSign * 0.5, 6.2, dz, 0xfdba74);
-            // Rooftop White & Gold Onion Dome
-            addVoxelBox(apt.archGroup, 2.4, 2.0, 2.4, 0, 11.4, dz, 0xffffff);
-            addVoxelBox(apt.archGroup, 0.9, 1.4, 0.9, 0, 12.9, dz, 0xfacc15);
-          });
-        } else {
-          // 3. SPICE BAZAAR EMPORIUM WITH MARIGOLD GARLANDS
-          addVoxelBox(apt.archGroup, width, 9.2, depth, 0, 4.6, 0, 0xfde047);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, 9.5, 0, 0xf97316);
-          for (let wy = 3.4; wy < 8.2; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              windowMeshes.push(wm);
-            }
-          }
-        }
-      } else {
-        // PASTEL METRO: GIANT ROOFTOP DONUT BAKERY, CYBER ATRIUM & ARCADE TOWER
-        const height = 10 + (index % 3) * 2.4;
-        addVoxelBox(apt.archGroup, width, height, depth, 0, height / 2, 0, wallCol);
-        addVoxelBox(apt.archGroup, width + 0.7, 0.85, depth + 0.7, 0, height + 0.4, 0, roofCol);
-        if (bType === 0) {
-          // Giant 3D Frosted Pink Voxel Donut on the Roof!
-          addVoxelBox(apt.archGroup, 1.2, 2.8, 3.2, 0, height + 2.2, 0, 0xfde68a);
-          addVoxelBox(apt.archGroup, 1.3, 2.9, 3.3, 0, height + 2.3, 0, 0xf472b6);
-        }
-        for (let wy = 3.4; wy < height - 1.2; wy += 2.8) {
-          for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-            const wm = addVoxelBox(apt.archGroup, 0.16, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-            windowMeshes.push(wm);
-          }
-        }
-      }
+// 3. LITTLE INDIA
+function createGrandTajMahal(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const whiteMarble = 0xf8fafc;
+  const cream = 0xfef9c3;
+  const gold = 0xfacc15;
+  addVoxelBox(root, 17.5, 2.4, 15.5, 0, 1.2, 0, 0xe2e8f0);
+  addVoxelBox(root, 18.0, 0.4, 16.0, 0, 2.5, 0, whiteMarble);
+  [[-7.8, -6.8], [7.8, -6.8], [-7.8, 6.8], [7.8, 6.8]].forEach(([mx, mz]) => {
+    addVoxelBox(root, 1.8, 1.8, 1.8, mx, 1.5, mz, 0xcbd5e1);
+    addVoxelBox(root, 1.2, 7.5, 1.2, mx, 6.0, mz, whiteMarble);
+    addVoxelBox(root, 1.6, 0.4, 1.6, mx, 9.8, mz, cream);
+    addVoxelBox(root, 1.0, 6.5, 1.0, mx, 13.2, mz, whiteMarble);
+    addVoxelBox(root, 1.4, 0.4, 1.4, mx, 16.6, mz, cream);
+    addVoxelBox(root, 0.8, 5.5, 0.8, mx, 19.5, mz, whiteMarble);
+    addVoxelBox(root, 1.2, 1.4, 1.2, mx, 22.8, mz, whiteMarble);
+    addVoxelBox(root, 0.3, 1.8, 0.3, mx, 24.3, mz, gold, { emissive: gold, emissiveIntensity: 0.8 });
+  });
+  addVoxelBox(root, 11.5, 11.5, 11.5, 0, 8.4, 0, whiteMarble);
+  addVoxelBox(root, 5.5, 7.8, 1.2, 0, 7.2, 5.6, 0x1e293b);
+  addVoxelBox(root, 6.5, 0.6, 0.4, 0, 11.2, 5.8, cream);
+  addVoxelBox(root, 0.6, 8.2, 0.4, -3.2, 7.0, 5.8, cream);
+  addVoxelBox(root, 0.6, 8.2, 0.4,  3.2, 7.0, 5.8, cream);
+  [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([cx, cz]) => {
+    addVoxelBox(root, 1.8, 2.2, 1.8, cx, 15.2, cz, whiteMarble);
+    addVoxelBox(root, 2.2, 1.6, 2.2, cx, 17.0, cz, cream);
+    addVoxelBox(root, 0.3, 1.4, 0.3, cx, 18.4, cz, gold);
+  });
+  addVoxelBox(root, 7.5, 2.2, 7.5, 0, 15.2, 0, cream);
+  addVoxelBox(root, 8.6, 4.5, 8.6, 0, 18.4, 0, whiteMarble, { emissive: 0xffffff, emissiveIntensity: 0.4 });
+  addVoxelBox(root, 6.8, 3.2, 6.8, 0, 22.0, 0, whiteMarble, { emissive: 0xffffff, emissiveIntensity: 0.5 });
+  addVoxelBox(root, 4.2, 2.2, 4.2, 0, 24.5, 0, whiteMarble);
+  addVoxelBox(root, 1.2, 3.2, 1.2, 0, 27.0, 0, gold, { emissive: gold, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 0.4, 2.4, 0.4, 0, 29.5, 0, gold, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  parent.add(root);
+  return root;
+}
 
-      // Street-Level Local Noodle / Tea / Spice Stall Awning & Native Script Signboard
-      const stallX = -xSign * (width / 2 + 1.05);
-      addVoxelBox(apt.archGroup, 1.9, 0.35, 4.8, stallX, 2.85, -3.2, cityTheme.accent);
-      const signInfo = cityTheme.signs[index % cityTheme.signs.length];
-      const signMesh = createNativeSignboardMesh(signInfo.top, signInfo.bottom, signInfo.bg, signInfo.fg, 0.28, 1.45, 3.8);
-      signMesh.position.set(stallX - xSign * 0.35, 4.15, -3.2);
-      apt.archGroup.add(signMesh);
+// 4. CHINATOWN
+function createImperialTempleOfHeaven(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const crimson = 0x991b1b;
+  const imperialBlue = 0x1d4ed8;
+  const gold = 0xf59e0b;
+  const marble = 0xf8fafc;
+  addVoxelBox(root, 16.5, 1.5, 16.5, 0, 0.75, 0, marble);
+  addVoxelBox(root, 17.2, 0.4, 17.2, 0, 1.7, 0, 0xe2e8f0);
+  addVoxelBox(root, 13.5, 1.4, 13.5, 0, 2.5, 0, marble);
+  addVoxelBox(root, 14.2, 0.4, 14.2, 0, 3.3, 0, 0xe2e8f0);
+  addVoxelBox(root, 10.5, 5.5, 10.5, 0, 6.2, 0, crimson);
+  [-4.8, 4.8].forEach(pxx => {
+    addVoxelBox(root, 0.9, 5.5, 0.9, pxx, 6.2, 4.8, gold);
+    addVoxelBox(root, 0.9, 5.5, 0.9, pxx, 6.2, -4.8, gold);
+  });
+  addVoxelBox(root, 13.2, 1.2, 13.2, 0, 9.5, 0, imperialBlue);
+  addVoxelBox(root, 14.6, 0.5, 14.6, 0, 9.9, 0, gold);
+  addVoxelBox(root, 8.2, 4.8, 8.2, 0, 12.6, 0, crimson);
+  addVoxelBox(root, 10.5, 1.2, 10.5, 0, 15.5, 0, imperialBlue);
+  addVoxelBox(root, 11.6, 0.5, 11.6, 0, 15.9, 0, gold);
+  addVoxelBox(root, 6.2, 4.2, 6.2, 0, 18.5, 0, crimson);
+  addVoxelBox(root, 8.2, 1.2, 8.2, 0, 21.2, 0, imperialBlue);
+  addVoxelBox(root, 9.2, 0.5, 9.2, 0, 21.6, 0, gold);
+  addVoxelBox(root, 5.5, 3.2, 5.5, 0, 23.5, 0, imperialBlue);
+  addVoxelBox(root, 3.5, 2.6, 3.5, 0, 26.2, 0, imperialBlue);
+  addVoxelBox(root, 1.8, 2.2, 1.8, 0, 28.4, 0, gold, { emissive: gold, emissiveIntensity: 1.0 });
+  addVoxelBox(root, 2.2, 2.2, 2.2, 0, 30.2, 0, gold, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  parent.add(root);
+  return root;
+}
 
-      // City-Specific Street Tree tucked flush beside the building wall (clear of both porch & sidewalk actors!)
-      const treeX = -xSign * (width / 2 + 0.95);
-      addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
-      const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
-      addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+// 5. PASTEL METRO
+function createCyberSpaceNeedleAndWheel(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const cyan = 0x00f5d4;
+  const pink = 0xff007f;
+  const violet = 0x7c3aed;
+  const dark = 0x0f172a;
+  addVoxelBox(root, 9.5, 1.5, 9.5, 0, 0.75, -2.5, dark);
+  [[-3.2, -3.2], [3.2, -3.2], [-3.2, 3.2], [3.2, 3.2]].forEach(([tx, tz]) => {
+    addVoxelBox(root, 1.2, 14.5, 1.2, tx * 0.7, 7.8, -2.5 + tz * 0.7, violet);
+  });
+  addVoxelBox(root, 2.4, 26.0, 2.4, 0, 13.0, -2.5, 0x1e1b4b);
+  addVoxelBox(root, 1.6, 26.0, 1.6, 0, 13.0, -2.5, cyan, { emissive: cyan, emissiveIntensity: 0.65 });
+  addVoxelBox(root, 11.5, 1.2, 11.5, 0, 20.8, -2.5, dark);
+  addVoxelBox(root, 12.8, 1.6, 12.8, 0, 22.0, -2.5, pink, { emissive: pink, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 10.2, 1.2, 10.2, 0, 23.3, -2.5, cyan, { emissive: cyan, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 7.5, 1.2, 7.5, 0, 24.4, -2.5, dark);
+  addVoxelBox(root, 1.6, 4.5, 1.6, 0, 27.0, -2.5, pink);
+  addVoxelBox(root, 0.9, 4.5, 0.9, 0, 31.0, -2.5, cyan);
+  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 34.5, -2.5, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+
+  const wheelZ = 4.8;
+  addVoxelBox(root, 0.8, 14.0, 0.8, -2.0, 7.0, wheelZ, dark);
+  addVoxelBox(root, 0.8, 14.0, 0.8,  2.0, 7.0, wheelZ, dark);
+  addVoxelBox(root, 0.6, 12.5, 12.5, 0, 14.0, wheelZ, cyan, { emissive: cyan, emissiveIntensity: 0.95 });
+  addVoxelBox(root, 0.6, 8.5, 8.5, 0, 14.0, wheelZ, pink, { emissive: pink, emissiveIntensity: 0.95 });
+  for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+    const gz = wheelZ + Math.cos(ang) * 5.8;
+    const gy = 14.0 + Math.sin(ang) * 5.8;
+    addVoxelBox(root, 1.2, 1.2, 1.2, 0, gy, gz, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.2 });
+  }
+  parent.add(root);
+  return root;
+}
+
+// 6. PARIS
+function createGrandEiffelTower(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const bronze = 0x8c6d48;
+  const darkIron = 0x523d29;
+  const goldLight = 0xfef08a;
+
+  [[-4.2, -4.2], [4.2, -4.2], [-4.2, 4.2], [4.2, 4.2]].forEach(([lx, lz]) => {
+    addVoxelBox(root, 1.8, 1.6, 1.8, lx, 0.8, lz, 0x334155);
+    addVoxelBox(root, 1.2, 9.5, 1.2, lx * 0.75, 5.5, lz * 0.75, bronze);
+  });
+  addVoxelBox(root, 6.8, 0.8, 0.8, 0, 7.5, -3.1, darkIron);
+  addVoxelBox(root, 6.8, 0.8, 0.8, 0, 7.5,  3.1, darkIron);
+  addVoxelBox(root, 0.8, 0.8, 6.8, -3.1, 7.5, 0, darkIron);
+  addVoxelBox(root, 0.8, 0.8, 6.8,  3.1, 7.5, 0, darkIron);
+
+  addVoxelBox(root, 8.8, 1.4, 8.8, 0, 10.5, 0, darkIron);
+  addVoxelBox(root, 9.2, 0.5, 9.2, 0, 11.2, 0, bronze);
+  addVoxelBox(root, 7.2, 1.2, 7.2, 0, 11.2, 0, goldLight, { emissive: 0xfacc15, emissiveIntensity: 0.8 });
+
+  addVoxelBox(root, 5.2, 4.2, 5.2, 0, 13.8, 0, bronze);
+  addVoxelBox(root, 4.2, 4.2, 4.2, 0, 18.0, 0, bronze);
+
+  addVoxelBox(root, 5.8, 1.2, 5.8, 0, 20.8, 0, darkIron);
+  addVoxelBox(root, 6.2, 0.4, 6.2, 0, 21.4, 0, bronze);
+  addVoxelBox(root, 4.8, 0.9, 4.8, 0, 21.6, 0, goldLight, { emissive: 0xfde047, emissiveIntensity: 1.1 });
+
+  addVoxelBox(root, 2.6, 5.5, 2.6, 0, 24.8, 0, bronze);
+  addVoxelBox(root, 1.8, 5.5, 1.8, 0, 30.2, 0, bronze);
+
+  addVoxelBox(root, 2.4, 1.6, 2.4, 0, 33.8, 0, 0xffffff, { emissive: 0xfffbeb, emissiveIntensity: 2.0 });
+  addVoxelBox(root, 0.8, 3.5, 0.8, 0, 36.2, 0, bronze);
+  addVoxelBox(root, 0.6, 0.6, 0.6, 0, 38.0, 0, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.5 });
+
+  parent.add(root);
+  return root;
+}
+
+// 7. RIO
+function createGrandChristTheRedeemer(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const soapstone = 0xf1f5f9;
+  const granite = 0x64748b;
+  const jungleGreen = 0x15803d;
+
+  addVoxelBox(root, 16.5, 3.5, 15.5, 0, 1.75, 0, 0x334155);
+  addVoxelBox(root, 14.5, 3.5, 13.5, 0, 5.25, 0, granite);
+  addVoxelBox(root, 3.5, 2.2, 3.5, -5.5, 3.5, -4.5, jungleGreen);
+  addVoxelBox(root, 3.8, 2.2, 3.8,  5.2, 3.5,  4.2, jungleGreen);
+  addVoxelBox(root, 2.8, 1.8, 2.8, -4.8, 6.8,  3.8, jungleGreen);
+
+  addVoxelBox(root, 6.5, 4.2, 6.5, 0, 9.1, 0, 0x1e293b);
+  addVoxelBox(root, 7.0, 0.6, 7.0, 0, 11.4, 0, granite);
+
+  addVoxelBox(root, 3.6, 6.5, 2.8, 0, 14.8, 0, soapstone);
+  addVoxelBox(root, 3.2, 6.5, 2.5, 0, 21.2, 0, soapstone);
+  addVoxelBox(root, 4.2, 3.2, 2.4, 0, 26.0, 0, soapstone);
+
+  addVoxelBox(root, 1.6, 1.6, 17.5, 0, 26.6, 0, soapstone);
+  addVoxelBox(root, 1.8, 2.2, 3.5, 0, 25.0, -4.5, soapstone);
+  addVoxelBox(root, 1.8, 2.2, 3.5, 0, 25.0,  4.5, soapstone);
+
+  addVoxelBox(root, 1.6, 2.4, 1.6, 0, 29.2, 0, soapstone);
+  addVoxelBox(root, 1.8, 1.2, 1.4, 0, 29.8, -0.2, 0xe2e8f0);
+  addVoxelBox(root, 1.2, 0.4, 1.2, 0, 31.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 1.5 });
+
+  parent.add(root);
+  return root;
+}
+
+// 8. WASHINGTON
+function createGrandUSCapitolAndMonument(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const whiteMarble = 0xf8fafc;
+  const cream = 0xf1f5f9;
+
+  addVoxelBox(root, 17.5, 1.8, 15.5, 0, 0.9, 0, 0xe2e8f0);
+  addVoxelBox(root, 18.0, 0.4, 16.0, 0, 2.0, 0, whiteMarble);
+
+  addVoxelBox(root, 12.5, 6.5, 10.5, 0, 5.5, -2.5, whiteMarble);
+  addVoxelBox(root, 6.5, 0.8, 2.2, 0, 8.8, 2.5, whiteMarble);
+  [-2.4, -0.8, 0.8, 2.4].forEach(cx => {
+    addVoxelBox(root, 0.5, 5.5, 0.5, cx, 5.6, 2.5, cream);
+  });
+  addVoxelBox(root, 5.2, 1.4, 0.6, 0, 9.8, 2.5, whiteMarble);
+
+  addVoxelBox(root, 8.5, 5.5, 8.5, 0, 11.5, -2.5, whiteMarble);
+  [-3.8, 3.8].forEach(pxx => {
+    addVoxelBox(root, 0.5, 5.5, 0.5, pxx, 11.5, -2.5, cream);
+    addVoxelBox(root, 0.5, 5.5, 0.5, 0, 11.5, -2.5 + pxx, cream);
+  });
+
+  addVoxelBox(root, 7.5, 3.5, 7.5, 0, 16.0, -2.5, whiteMarble);
+  addVoxelBox(root, 6.2, 3.2, 6.2, 0, 19.2, -2.5, whiteMarble);
+  addVoxelBox(root, 4.5, 2.4, 4.5, 0, 21.8, -2.5, whiteMarble);
+
+  addVoxelBox(root, 2.4, 3.2, 2.4, 0, 24.5, -2.5, cream);
+  addVoxelBox(root, 0.8, 1.8, 0.8, 0, 27.0, -2.5, 0xb45309);
+
+  const obX = 0;
+  const obZ = 4.8;
+  addVoxelBox(root, 3.2, 12.0, 3.2, obX, 6.0, obZ, whiteMarble);
+  addVoxelBox(root, 2.6, 12.0, 2.6, obX, 18.0, obZ, whiteMarble);
+  addVoxelBox(root, 2.0, 7.0, 2.0, obX, 27.5, obZ, cream);
+  addVoxelBox(root, 1.4, 2.5, 1.4, obX, 32.0, obZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 0.5, 0.5, 0.5, obX, 33.8, obZ, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.2 });
+
+  parent.add(root);
+  return root;
+}
+
+// 9. DUBAI
+function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const cyanGlass = 0x38bdf8;
+  const deepNavy = 0x0f172a;
+  const mirrorWhite = 0xf8fafc;
+  const gold = 0xfacc15;
+
+  const bkZ = -2.2;
+  addVoxelBox(root, 8.5, 9.5, 8.5, 0, 4.75, bkZ, deepNavy);
+  addVoxelBox(root, 7.2, 9.5, 7.2, 0, 4.75, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.65 });
+
+  addVoxelBox(root, 6.2, 9.0, 6.2, 0, 14.0, bkZ, deepNavy);
+  addVoxelBox(root, 5.2, 9.0, 5.2, 0, 14.0, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.75 });
+
+  addVoxelBox(root, 4.2, 8.0, 4.2, 0, 22.5, bkZ, deepNavy);
+  addVoxelBox(root, 3.4, 8.0, 3.4, 0, 22.5, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.85 });
+
+  addVoxelBox(root, 2.4, 7.0, 2.4, 0, 30.0, bkZ, mirrorWhite);
+  addVoxelBox(root, 1.8, 7.0, 1.8, 0, 30.0, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 1.0 });
+
+  addVoxelBox(root, 1.0, 3.5, 1.0, 0, 35.2, bkZ, mirrorWhite);
+  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 38.5, bkZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.8 });
+
+  const sailZ = 4.8;
+  addVoxelBox(root, 6.5, 1.5, 6.5, 0, 0.75, sailZ, deepNavy);
+  addVoxelBox(root, 1.4, 21.0, 7.5, 0, 11.5, sailZ, mirrorWhite);
+  addVoxelBox(root, 1.6, 18.0, 5.5, 0, 10.0, sailZ + 0.8, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.55 });
+  addVoxelBox(root, 4.2, 0.5, 4.2, -1.8, 19.5, sailZ - 2.2, gold, { emissive: gold, emissiveIntensity: 0.8 });
+  addVoxelBox(root, 0.5, 4.5, 0.5, 0, 23.5, sailZ - 2.5, mirrorWhite);
+
+  parent.add(root);
+  return root;
+}
+
+// 10. CAIRO
+function createGrandPyramidAndSphinx(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const sandGold = 0xd97706;
+  const limeStone = 0xf59e0b;
+  const paleSand = 0xfde68a;
+  const royalGold = 0xfacc15;
+
+  const pyrZ = -1.8;
+  const pyramidTiers = [
+    { w: 17.0, d: 15.0, h: 4.8, y: 2.4 },
+    { w: 14.5, d: 12.8, h: 4.8, y: 7.2 },
+    { w: 12.0, d: 10.5, h: 4.8, y: 12.0 },
+    { w: 9.5,  d: 8.2,  h: 4.8, y: 16.8 },
+    { w: 7.0,  d: 6.0,  h: 4.8, y: 21.6 },
+    { w: 4.5,  d: 4.0,  h: 4.2, y: 26.0 },
+    { w: 2.6,  d: 2.4,  h: 2.5, y: 29.2 }
+  ];
+  pyramidTiers.forEach((tier, i) => {
+    const col = i % 2 === 0 ? sandGold : limeStone;
+    addVoxelBox(root, tier.w, tier.h, tier.d, 0, tier.y, pyrZ, col);
+  });
+
+  addVoxelBox(root, 1.8, 2.2, 1.8, 0, 31.4, pyrZ, royalGold, { metalness: 0.85, emissive: royalGold, emissiveIntensity: 1.8 });
+  addVoxelBox(root, 0.8, 1.2, 0.8, 0, 32.8, pyrZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+
+  const sphZ = 5.2;
+  addVoxelBox(root, 3.4, 2.2, 5.5, 0, 1.1, sphZ, limeStone);
+  addVoxelBox(root, 0.9, 0.8, 2.4, -1.2, 0.4, sphZ + 3.2, limeStone);
+  addVoxelBox(root, 0.9, 0.8, 2.4,  1.2, 0.4, sphZ + 3.2, limeStone);
+  addVoxelBox(root, 2.2, 2.5, 2.2, 0, 3.2, sphZ + 1.2, paleSand);
+  addVoxelBox(root, 2.6, 1.8, 1.2, 0, 3.5, sphZ + 0.8, 0x1d4ed8);
+  addVoxelBox(root, 2.8, 0.4, 1.4, 0, 4.4, sphZ + 0.8, royalGold);
+  addVoxelBox(root, 0.4, 1.2, 0.4, 0, 1.6, sphZ + 2.2, 0x78350f);
+
+  parent.add(root);
+  return root;
+}
+
+// CULTURAL PROPS
+function createHachikoStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xd97706); }
+function createChintheStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xfacc15); }
+function createFooDogStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x94a3b8); }
+function createRoyalElephantStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x475569); }
+function createCyberMascotStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x00f5d4); }
+function createJapaneseVendingMachine(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 2, 1, px, py, pz, 0xef4444); }
+function createSakuraTreeWithBench(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 2, 3, 2, px, py, pz, 0xf472b6); }
+function createBurmeseTeashopSetup(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x78350f); }
+function createDimSumTeaStall(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x991b1b); }
+function createMasalaChaiCart(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x0284c7); }
+function createCozyCafePatio(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x78350f); }
+function createRetroArcadeCabinet(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 2, 1, px, py, pz, 0x0f172a); }
+
+function createParisianCafeBistro(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.1, 0.08, 1.1, 0, 0.78, 0, 0xf8fafc);
+  addVoxelBox(root, 0.12, 0.78, 0.12, 0, 0.39, 0, 0x1e293b);
+  addVoxelBox(root, 0.65, 0.06, 0.65, 0, 0.03, 0, 0x1e293b);
+  addVoxelBox(root, 0.15, 0.16, 0.15, -0.22, 0.86, -0.15, 0xffffff);
+  addVoxelBox(root, 0.24, 0.12, 0.16,  0.22, 0.84,  0.15, 0xd97706);
+  [-0.75, 0.75].forEach(cx => {
+    addVoxelBox(root, 0.48, 0.06, 0.48, cx, 0.45, 0, 0x78350f);
+    addVoxelBox(root, 0.08, 0.55, 0.48, cx + (cx < 0 ? -0.22 : 0.22), 0.72, 0, 0x15803d);
+    [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]].forEach(([lx, lz]) => {
+      addVoxelBox(root, 0.06, 0.45, 0.06, cx + lx, 0.22, lz, 0x1e293b);
+    });
+  });
+  const colX = 1.35;
+  addVoxelBox(root, 0.85, 0.45, 0.85, colX, 0.22, 0, 0x166534);
+  addVoxelBox(root, 0.72, 2.2, 0.72, colX, 1.55, 0, 0xfacc15, { emissive: 0xfde047, emissiveIntensity: 0.4 });
+  addVoxelBox(root, 0.95, 0.35, 0.95, colX, 2.75, 0, 0x166534);
+  addVoxelBox(root, 0.45, 0.45, 0.45, colX, 3.12, 0, 0x14532d);
+  parent.add(root);
+  return root;
+}
+
+function createCopacabanaCoconutKiosk(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.45, 0.85, 0.95, 0, 0.48, 0, 0x78350f);
+  addVoxelBox(root, 1.55, 0.08, 1.05, 0, 0.92, 0, 0xfef08a);
+  for (let c = -1; c <= 1; c++) {
+    addVoxelBox(root, 0.28, 0.28, 0.28, c * 0.32, 1.08, 0, 0x22c55e);
+  }
+  addVoxelBox(root, 0.08, 2.4, 0.08, 0, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 2.4, 0.35, 2.4, 0, 2.45, 0, 0xfacc15);
+  addVoxelBox(root, 1.8, 0.25, 1.8, 0, 2.70, 0, 0x16a34a);
+  addVoxelBox(root, 0.45, 1.9, 0.08, 1.15, 0.95, 0.25, 0x06b6d4);
+  addVoxelBox(root, 0.22, 0.16, 0.22, 0.65, 0.98, 0.25, 0x701a75);
+  parent.add(root);
+  return root;
+}
+
+function createAmericanHotDogCart(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.35, 0.85, 0.95, 0, 0.55, 0, 0x94a3b8);
+  addVoxelBox(root, 1.45, 0.08, 1.05, 0, 0.98, 0, 0xe2e8f0);
+  [-0.65, 0.65].forEach(wx => {
+    addVoxelBox(root, 0.12, 0.65, 0.65, wx, 0.35, 0, 0x1e293b);
+  });
+  addVoxelBox(root, 0.12, 0.35, 0.12, -0.25, 1.18, 0.15, 0xef4444);
+  addVoxelBox(root, 0.12, 0.35, 0.12, -0.05, 1.18, 0.15, 0xfacc15);
+  addVoxelBox(root, 0.45, 0.45, 0.45,  0.35, 1.20, 0, 0xd97706);
+  addVoxelBox(root, 0.08, 2.2, 0.08, 0, 1.45, 0, 0x1e293b);
+  addVoxelBox(root, 2.2, 0.32, 2.2, 0, 2.45, 0, 0xef4444);
+  addVoxelBox(root, 1.5, 0.25, 1.5, 0, 2.70, 0, 0xfacc15);
+  addVoxelBox(root, 0.55, 0.95, 0.55, 1.25, 0.48, 0, 0x1d4ed8);
+  parent.add(root);
+  return root;
+}
+
+function createDubaiGahwaMajlis(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 2.2, 0.08, 2.2, 0, 0.04, 0, 0x991b1b);
+  addVoxelBox(root, 2.4, 0.04, 2.4, 0, 0.02, 0, 0xfacc15);
+  addVoxelBox(root, 1.05, 0.42, 1.05, 0, 0.25, 0, 0xd97706);
+  addVoxelBox(root, 0.28, 0.55, 0.28, 0, 0.68, 0, 0xfacc15, { metalness: 0.8, emissive: 0xf59e0b, emissiveIntensity: 0.6 });
+  addVoxelBox(root, 0.12, 0.22, 0.12, 0, 0.98, 0, 0xfef08a);
+  addVoxelBox(root, 0.35, 0.08, 0.35, 0.32, 0.48, 0, 0x451a03);
+  addVoxelBox(root, 0.10, 0.12, 0.10, -0.28, 0.50, 0.15, 0xffffff);
+  [-0.85, 0.85].forEach(cx => {
+    addVoxelBox(root, 0.55, 0.25, 1.15, cx, 0.15, 0, 0x0284c7);
+  });
+  addVoxelBox(root, 0.45, 0.45, 0.25, -0.65, 0.45, 0.85, 0xfacc15);
+  parent.add(root);
+  return root;
+}
+
+function createCairoAhwaTeahouse(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.15, 0.08, 1.15, 0, 0.55, 0, 0xf59e0b);
+  addVoxelBox(root, 0.12, 0.55, 0.12, 0, 0.28, 0, 0x78350f);
+  addVoxelBox(root, 0.24, 0.45, 0.24, -0.28, 0.82, -0.15, 0x0284c7);
+  addVoxelBox(root, 0.08, 0.52, 0.08, -0.28, 1.25, -0.15, 0xd97706);
+  addVoxelBox(root, 0.18, 0.18, 0.18, -0.28, 1.55, -0.15, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 0.14, 0.22, 0.14, 0.25, 0.68, 0.15, 0x15803d, { emissive: 0x22c55e, emissiveIntensity: 0.6 });
+  [-0.68, 0.68].forEach(sx => {
+    addVoxelBox(root, 0.42, 0.32, 0.42, sx, 0.18, 0, 0x92400e);
+    addVoxelBox(root, 0.46, 0.06, 0.46, sx, 0.35, 0, 0xd97706);
+  });
+  addVoxelBox(root, 0.08, 2.2, 0.08, -0.65, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 0.08, 2.2, 0.08,  0.65, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 1.65, 0.12, 1.25, 0, 2.25, 0, 0xb91c1c);
+  parent.add(root);
+  return root;
+}
+
+function addBackgroundSkyline(parent, xSign, index, cityTheme) {
+  const bgColors = [0x1e1b4b, 0x0f172a, 0x1e293b, 0x334155, 0x451a03];
+  const bgX1 = xSign * (16.0 + (index % 3) * 3.5);
+  const bgZ1 = ((index * 7) % 11) - 5;
+  const bgH1 = 18.0 + ((index * 5) % 15);
+  addVoxelBox(parent, 8.5, bgH1, 11.0, bgX1, bgH1 / 2, bgZ1, bgColors[index % bgColors.length]);
+}
+
+// FULL REBUILD APARTMENT VISUALS
+function rebuildApartmentVisuals(apt, cityTheme, index) {
+  while (apt.archGroup.children.length > 0) {
+    apt.archGroup.remove(apt.archGroup.children[0]);
+  }
+
+  const xSign = apt.side === 'left' ? -1 : 1;
+  const wallCol = cityTheme.walls[index % cityTheme.walls.length];
+  const roofCol = cityTheme.roofs[index % cityTheme.roofs.length];
+  const bType = index % 6;
+  const width = 8.4;
+  const depth = 13.5;
+  const faceX = -xSign * (width / 2 + 0.08);
+  const isNight = TIME_PRESETS[gameState.timeIndex].windowEmissive;
+  const rotFacingStreet = apt.side === 'left' ? Math.PI / 2 : -Math.PI / 2;
+  const frontX = faceX - xSign * 1.5;
+  const frontZ = -3.2;
+
+  addBackgroundSkyline(apt.archGroup, xSign, index, cityTheme);
+
+  // 1. TOKYO
+  if (cityTheme.id === 'tokyo') {
+    if (bType === 0) {
+      createGrandTokyoTower(apt.archGroup, 0, 0, 0);
+      createHachikoStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 8.0, depth, 0, 4.0, 0, 0x1e293b);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 24.0, depth, 0, 12.0, 0, 0x09090b);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      addVoxelBox(apt.archGroup, width, 6.8, depth, 0, 3.4, 0, 0x27272a);
+      createSakuraTreeWithBench(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 17.5, depth, 0, 8.75, 0, 0xf1f5f9);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 18.5, depth * 0.42, 0, 9.25, -depth * 0.27, 0x1e293b);
+      createSakuraTreeWithBench(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     }
 
-    function createApartmentBuilding(side, zPos, index) {
+  // 2. YANGON
+  } else if (cityTheme.id === 'yangon') {
+    if (bType === 0) {
+      createGrandShwedagonPagoda(apt.archGroup, 0, 0, 0);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 11.5, depth, 0, 5.75, 0, 0x991b1b);
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x78350f);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xfde68a);
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 4.5, depth, 0, 2.25, 0, 0xfef3c7);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 18.0, depth, 0, 9.0, 0, 0xfef9c3);
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 3. CHINATOWN
+  } else if (cityTheme.id === 'chinatown') {
+    if (bType === 0) {
+      createImperialTempleOfHeaven(apt.archGroup, 0, 0, 0);
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 14.0, depth, 0, 7.0, 0, 0xb91c1c);
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 14.5, depth, 0, 7.25, 0, 0x78716c);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0x7f1d1d);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 9.5, depth, 0, 4.75, 0, 0x991b1b);
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 20.0, depth, 0, 10.0, 0, 0x44403c);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 4. LITTLE INDIA
+  } else if (cityTheme.id === 'littleindia') {
+    if (bType === 0) {
+      createGrandTajMahal(apt.archGroup, 0, 0, 0);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 12.0, depth, 0, 6.0, 0, 0xfde68a);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0xfb7185);
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      addVoxelBox(apt.archGroup, width, 8.8, depth, 0, 4.4, 0, 0xfde047);
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0xf59e0b);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 16.5, depth, 0, 8.25, 0, 0x06b6d4);
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 5. PASTEL METRO
+  } else if (cityTheme.id === 'pastel') {
+    if (bType === 0) {
+      createCyberSpaceNeedleAndWheel(apt.archGroup, 0, 0, 0);
+      createCyberMascotStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 21.0, depth, 0, 10.5, 0, 0x0f172a);
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 25.0, depth, 0, 12.5, 0, 0x1e1b4b);
+      createRetroArcadeCabinet(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x18181b);
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 18.0, depth, 0, 9.0, 0, 0x0f172a);
+      createRetroArcadeCabinet(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 22.0, depth, 0, 11.0, 0, 0x09090b);
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 6. PARIS (FRANCE)
+  } else if (cityTheme.id === 'paris') {
+    if (bType === 0) {
+      createGrandEiffelTower(apt.archGroup, 0, 0, 0);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      const h = 15.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width - 0.8, 3.2, depth - 0.8, 0, h + 1.6, 0, 0x475569);
+      [6.0, 12.0].forEach(by => {
+        addVoxelBox(apt.archGroup, 1.2, 0.7, depth * 0.85, faceX - xSign * 0.6, by, 0, 0x1e293b);
+      });
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, width + 1.2, 0.8, depth + 1.2, 0, 8.8, 0, 0xe2e8f0);
+      addVoxelBox(apt.archGroup, 5.2, 3.8, 5.2, 0, 10.8, -2.5, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 3.6, 2.5, 3.6, 0, 13.5, -2.5, 0xf1f5f9);
+      addVoxelBox(apt.archGroup, 2.5, 6.5, 2.5, 0, 12.0,  3.5, 0xf8fafc);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      const h = 7.2;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width + 1.2, 0.8, depth + 1.2, 0, h + 0.4, 0, 0x1e293b);
+      addVoxelBox(apt.archGroup, 1.6, 0.35, depth * 0.75, faceX - xSign * 0.8, 3.2, 0, 0x1e3a8a);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      const h = 16.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      addVoxelBox(apt.archGroup, 0.6, h, 0.6, faceX - xSign * 0.8, h / 2, -3.8, 0x2563eb);
+      addVoxelBox(apt.archGroup, 0.6, h, 0.6, faceX - xSign * 0.8, h / 2,  3.8, 0x16a34a);
+      addVoxelBox(apt.archGroup, 1.4, 1.4, depth * 0.8, faceX - xSign * 0.6, 8.5, 0, 0xef4444);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width + 1.4, 1.2, depth + 1.4, 0, h + 0.6, 0, 0xd4a373);
+      addVoxelBox(apt.archGroup, 6.2, 3.2, 7.5, 0, h + 2.2, 0, 0x059669);
+      addVoxelBox(apt.archGroup, 1.2, 1.8, 1.2, 0, h + 4.5, 0, 0xfacc15);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 7. RIO DE JANEIRO (BRASIL)
+  } else if (cityTheme.id === 'rio') {
+    if (bType === 0) {
+      createGrandChristTheRedeemer(apt.archGroup, 0, 0, 0);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      const h = 14.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0x0284c7);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      const favCols = [0xf59e0b, 0xec4899, 0x06b6d4, 0x10b981, 0x8b5cf6];
+      for (let f = 0; f < 5; f++) {
+        const fw = 4.5;
+        const fh = 3.2;
+        const fd = 5.2;
+        const fx = ((f % 2) - 0.5) * 3.5;
+        const fy = 1.6 + f * 2.8;
+        const fz = ((f % 3) - 1.0) * 3.8;
+        addVoxelBox(apt.archGroup, fw, fh, fd, fx, fy, fz, favCols[f % favCols.length]);
+        addVoxelBox(apt.archGroup, 1.1, 0.8, 1.1, fx, fy + fh / 2 + 0.4, fz, 0x0284c7);
+      }
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      const h = 6.8;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x78350f);
+      addVoxelBox(apt.archGroup, width + 1.4, 0.8, depth + 1.4, 0, h + 0.4, 0, 0xfacc15);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 4.2, depth, 0, 2.1, 0, 0x334155);
+      addVoxelBox(apt.archGroup, 7.8, 3.2, 7.8, 0, 6.8, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 8.8, 1.2, 8.8, 0, 8.0, 0, 0x38bdf8);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      const h = 21.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 8. WASHINGTON D.C. (USA)
+  } else if (cityTheme.id === 'washington') {
+    if (bType === 0) {
+      createGrandUSCapitolAndMonument(apt.archGroup, 0, 0, 0);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xe2e8f0);
+      addVoxelBox(apt.archGroup, width + 1.2, 1.2, depth + 1.2, 0, h + 0.6, 0, 0xf8fafc);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      const h = 10.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b);
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0x1e293b);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      const h = 6.8;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0284c7);
+      addVoxelBox(apt.archGroup, width + 1.2, 0.8, depth + 1.2, 0, h + 0.4, 0, 0xef4444);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      const h = 12.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf1f5f9);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      const h = 15.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xe2e8f0);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 9. DUBAI (UAE)
+  } else if (cityTheme.id === 'dubai') {
+    if (bType === 0) {
+      createGrandBurjKhalifaAndArab(apt.archGroup, 0, 0, 0);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      const h = 16.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x334155);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      const h = 23.0;
+      addVoxelBox(apt.archGroup, width * 0.35, h, depth * 0.35, 0, h / 2, -depth * 0.35, 0xfacc15);
+      addVoxelBox(apt.archGroup, width * 0.35, h, depth * 0.35, 0, h / 2,  depth * 0.35, 0xfacc15);
+      addVoxelBox(apt.archGroup, width * 0.45, 2.8, depth, 0, h - 1.4, 0, 0x38bdf8);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      const h = 8.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xd4a373);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      const h = 22.0;
+      for (let s = 0; s < 7; s++) {
+        const mesh = addVoxelBox(apt.archGroup, width - 0.8, 3.2, depth - 1.2, 0, 1.6 + s * 3.0, 0, 0x0284c7);
+        mesh.rotation.y = s * 0.15;
+      }
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 20.0, depth * 0.42, 0, 10.0, -depth * 0.27, 0x0f172a);
+      addVoxelBox(apt.archGroup, width, 23.0, depth * 0.42, 0, 11.5,  depth * 0.27, 0x0284c7);
+      addVoxelBox(apt.archGroup, width * 0.85, 2.4, depth * 0.35, 0, 16.0, 0, 0x00f5d4);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // 10. CAIRO (EGYPT)
+  } else {
+    if (bType === 0) {
+      createGrandPyramidAndSphinx(apt.archGroup, 0, 0, 0);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 1) {
+      addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0xf59e0b);
+      addVoxelBox(apt.archGroup, 2.6, 12.0, 2.6, faceX * 0.4, 16.5, -depth * 0.3, 0xfef3c7);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 2) {
+      const h = 9.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xd97706);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 3) {
+      const h = 7.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfde68a);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else if (bType === 4) {
+      addVoxelBox(apt.archGroup, width, 12.0, depth, 0, 6.0, 0, 0xd97706);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    } else {
+      addVoxelBox(apt.archGroup, width, 18.0, depth, 0, 9.0, 0, 0x78350f);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+  }
+
+  // Street-Level Native Signboard
+  const stallX = -xSign * (width / 2 + 1.05);
+  addVoxelBox(apt.archGroup, 1.9, 0.35, 4.8, stallX, 2.85, -3.2, cityTheme.accent);
+  const signInfo = cityTheme.signs[index % cityTheme.signs.length];
+  const signMesh = createNativeSignboardMesh(signInfo.top, signInfo.bottom, signInfo.bg, signInfo.fg, 0.28, 1.45, 3.8);
+  signMesh.position.set(stallX - xSign * 0.35, 4.15, -3.2);
+  apt.archGroup.add(signMesh);
+
+  // Lush City Tree
+  const treeX = -xSign * (width / 2 + 0.95);
+  addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
+  const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
+  addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+}
+
+var apartments = [];
+var BLOCK_SPACING = 26;
+var NUM_PAIRS = 10;
+var globalOrderCounter = 0;
+window.apartments = apartments;
+window.NUM_PAIRS = NUM_PAIRS;
+window.BLOCK_SPACING = BLOCK_SPACING;
+
+function createApartmentBuilding(side, zPos, index) {
       const group = new THREE.Group();
       const xSign = side === 'left' ? -1 : 1;
       const xCenter = xSign * 16.2;
@@ -3176,6 +4277,17 @@
       const r3 = addVoxelBox(ringGroup, 0.28, 0.18, 3.0, -1.4, 0, 0, ringColor, { emissive: ringColor, emissiveIntensity: 0.95 });
       const r4 = addVoxelBox(ringGroup, 0.28, 0.18, 3.0,  1.4, 0, 0, ringColor, { emissive: ringColor, emissiveIntensity: 0.95 });
 
+      // Dynamic Shrinking Target Indicator & Sweet-Spot Center Bullseye
+      const sweetSpotGroup = new THREE.Group();
+      ringGroup.add(sweetSpotGroup);
+      const centerMarker = addVoxelBox(sweetSpotGroup, 1.1, 0.22, 1.1, 0, 0.04, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.2 });
+      const shrinkRing = new THREE.Group();
+      sweetSpotGroup.add(shrinkRing);
+      addVoxelBox(shrinkRing, 2.6, 0.14, 0.22, 0, 0.06, -1.2, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+      addVoxelBox(shrinkRing, 2.6, 0.14, 0.22, 0, 0.06,  1.2, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+      addVoxelBox(shrinkRing, 0.22, 0.14, 2.6, -1.2, 0.06, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+      addVoxelBox(shrinkRing, 0.22, 0.14, 2.6,  1.2, 0.06, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+
       const customerSlot = new THREE.Group();
       customerSlot.position.set(porchX, 0.28, 1.2);
       customerSlot.rotation.y = side === 'left' ? Math.PI / 2 : -Math.PI / 2;
@@ -3193,6 +4305,9 @@
         porchX,
         ringGroup,
         ringBars: [r1, r2, r3, r4],
+        sweetSpotGroup,
+        shrinkRing,
+        centerMarker,
         customerSlot,
         charMesh: null,
         cloudEl,
@@ -3256,6 +4371,8 @@
         rebuildApartmentVisuals(apt, cityTheme, idx);
       });
     }
+
+
 
     // ============================================================================
     // 10. GAME STATE, 3D SHOWROOM GARAGE STAGE & ANIMATED PRIZE MACHINE
@@ -3387,9 +4504,9 @@
 
       if (mysteryCrate) mysteryCrate.classList.remove('hidden');
       if (vehicleImg) vehicleImg.classList.add('hidden');
-      if (tierPill) tierPill.textContent = 'BLIND BOX';
-      if (titleEl) titleEl.textContent = 'MYSTERY VOXEL RIG CAPSULE';
-      if (subEl) subEl.textContent = 'Contents are 100% hidden until you unbox • Duplicate Refund +60 Coins';
+      if (tierPill) tierPill.textContent = 'SUPPLY CRATE';
+      if (titleEl) titleEl.textContent = 'FLEET SUPPLY REQUISITION';
+      if (subEl) subEl.textContent = 'Unlock 3D delivery vehicles with coins earned in-game • Fleet Scrap Value +60 Coins';
       if (stageBox) {
         stageBox.classList.remove('prize-reveal-anim', 'capsule-tumbling');
         stageBox.classList.add('blind-crate-idle');
@@ -3434,10 +4551,10 @@
       stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
       stageBox.classList.add('capsule-tumbling');
       sunburst.style.opacity = '0.9';
-      titleEl.textContent = 'SHAKING BLIND MYSTERY CRATE...';
-      subEl.textContent = 'Which Voxel Rig is inside?!';
+      titleEl.textContent = 'OPENING SUPPLY CRATE...';
+      subEl.textContent = 'Requisitioning vehicle for your courier fleet...';
 
-      const mysteryBadges = ['???', 'RARE?', 'EPIC?', 'LEGENDARY?', 'MYSTERY RIG', 'UNBOXING!'];
+      const mysteryBadges = ['SUPPLY', 'RARE', 'EPIC', 'LEGENDARY', 'FLEET RIG', 'UNLOCKED!'];
       const totalSteps = 16;
       let step = 0;
 
@@ -3450,7 +4567,7 @@
           const delay = 55 + Math.pow(step / totalSteps, 2.0) * 165;
           setTimeout(nextBlindShakeTick, delay);
         } else {
-          // Blind Box Explodes Open to Reveal the Won Vehicle!
+          // Supply Crate Opens to Deploy the Requisitioned Vehicle!
           stageBox.classList.remove('capsule-tumbling');
           mysteryCrate.classList.add('hidden');
           vehicleImg.src = vanIconDataURLs[wonVan.id];
@@ -3465,14 +4582,14 @@
             gameState.ownedVans.push(wonVan.id);
             soundFX.playCityGateChime();
             triggerPrizeConfetti();
-            titleEl.textContent = `UNBOXED NEW RIG: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `${wonVan.tier} • Equipped directly onto your 3D Showroom Turntable!`;
+            titleEl.textContent = `UNLOCKED NEW RIG: ${wonVan.name.toUpperCase()}`;
+            subEl.textContent = `${wonVan.tier} • Deployed directly to your 3D Fleet Showroom!`;
           } else {
             gameState.coins += 60;
             soundFX.playDeliverSuccess();
             triggerPrizeConfetti();
-            titleEl.textContent = `UNBOXED DUPLICATE: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `Converted into +60 Bonus Coins Refund!`;
+            titleEl.textContent = `FLEET DUPLICATE: ${wonVan.name.toUpperCase()}`;
+            subEl.textContent = `Scrapped into +60 Earned Delivery Coins!`;
           }
 
           gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === wonVan.id);
@@ -3483,6 +4600,346 @@
       }
 
       nextBlindShakeTick();
+    }
+
+    // ============================================================================
+    // RETENTION & PROGRESSION LOOP: CONTRACTS, COURIER RANKS & RIG TUNING
+    // ============================================================================
+    function initSavedProgression() {
+      const saved = loadSavedProgression();
+      if (saved) {
+        if (typeof saved.coins === 'number') gameState.coins = saved.coins;
+        if (typeof saved.bestDistance === 'number') gameState.bestDistance = saved.bestDistance;
+        if (typeof saved.bestDeliveries === 'number') gameState.bestDeliveries = saved.bestDeliveries;
+        if (Array.isArray(saved.ownedVans) && saved.ownedVans.length > 0) gameState.ownedVans = saved.ownedVans;
+        if (saved.equippedVanId) gameState.equippedVanId = saved.equippedVanId;
+        if (Array.isArray(saved.unlockedItems)) gameState.unlockedItems = saved.unlockedItems;
+        if (Array.isArray(saved.unlockedChars)) gameState.unlockedChars = saved.unlockedChars;
+        if (typeof saved.courierXP === 'number') gameState.courierXP = saved.courierXP;
+        if (typeof saved.courierRankLevel === 'number') gameState.courierRankLevel = saved.courierRankLevel;
+        if (Array.isArray(saved.shiftContracts)) gameState.shiftContracts = saved.shiftContracts;
+        if (saved.vanTuning && typeof saved.vanTuning === 'object') gameState.vanTuning = saved.vanTuning;
+      }
+      ensureActiveContracts();
+      const eqIdx = PLAYABLE_VANS.findIndex(v => v.id === gameState.equippedVanId);
+      if (eqIdx !== -1) gameState.selectedVanIndex = eqIdx;
+
+      const battLvl = getVanTuningLevel(gameState.equippedVanId, 'battery');
+      gameState.maxSlowMoEnergy = 8.0 + (battLvl - 1) * 1.5;
+      gameState.slowMoEnergy = gameState.maxSlowMoEnergy;
+    }
+
+    function ensureActiveContracts() {
+      if (!Array.isArray(gameState.shiftContracts)) gameState.shiftContracts = [];
+      gameState.shiftContracts = gameState.shiftContracts.filter(c => !c.completed);
+      while (gameState.shiftContracts.length < 3) {
+        const activeIds = gameState.shiftContracts.map(c => c.id);
+        const pool = CONTRACT_TEMPLATES.filter(t => !activeIds.includes(t.id));
+        const pick = pool.length > 0
+          ? pool[Math.floor(Math.random() * pool.length)]
+          : CONTRACT_TEMPLATES[Math.floor(Math.random() * CONTRACT_TEMPLATES.length)];
+        gameState.shiftContracts.push({
+          id: pick.id,
+          title: pick.title,
+          target: pick.target,
+          type: pick.type,
+          current: 0,
+          rewardCoins: pick.rewardCoins,
+          rewardXP: pick.rewardXP,
+          completed: false,
+          claimed: false
+        });
+      }
+      saveProgression();
+    }
+
+    function getVanTuningLevel(vanId, statKey) {
+      if (!gameState.vanTuning) gameState.vanTuning = {};
+      if (!gameState.vanTuning[vanId]) {
+        gameState.vanTuning[vanId] = { engine: 1, handling: 1, battery: 1 };
+      }
+      if (!gameState.vanTuning[vanId][statKey]) {
+        gameState.vanTuning[vanId][statKey] = 1;
+      }
+      return gameState.vanTuning[vanId][statKey];
+    }
+
+    function addCourierXP(amount) {
+      gameState.courierXP = (gameState.courierXP || 0) + amount;
+      let leveledUp = false;
+      while (gameState.courierRankLevel < COURIER_RANKS.length) {
+        const currentRankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel);
+        if (currentRankSpec && gameState.courierXP >= currentRankSpec.xpNeeded) {
+          gameState.courierRankLevel++;
+          leveledUp = true;
+        } else {
+          break;
+        }
+      }
+      if (leveledUp) {
+        soundFX.playCityGateChime();
+        const newRank = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel);
+        gameState.coins += 200;
+        triggerDiscoveryToast(`PROMOTED: ${newRank.title}! (+200 COINS)`, vanIconDataURLs[gameState.equippedVanId]);
+        const rankBadge = document.getElementById('home-rank-badge');
+        if (rankBadge) {
+          rankBadge.classList.remove('level-up-anim');
+          void rankBadge.offsetWidth;
+          rankBadge.classList.add('level-up-anim');
+        }
+      }
+      updateRankUI();
+      saveProgression();
+    }
+
+    function updateContractProgress(type, amount = 1, isMaxCheck = false) {
+      if (!gameState.shiftContracts) return;
+      let updated = false;
+      gameState.shiftContracts.forEach((c) => {
+        if (c.type === type && !c.completed) {
+          if (isMaxCheck) {
+            c.current = Math.max(c.current, amount);
+          } else {
+            c.current = Math.min(c.target, c.current + amount);
+          }
+          if (c.current >= c.target) {
+            c.completed = true;
+            c.claimed = true;
+            gameState.coins += c.rewardCoins;
+            gameState.runCoinsEarned += c.rewardCoins;
+            soundFX.playCityGateChime();
+            showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), `MISSION COMPLETE! +${c.rewardCoins}`, 'combat-text-gold');
+            showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 4.4, 0)), `+${c.rewardXP} COURIER XP`, 'text-cyan-300 font-extrabold');
+            addCourierXP(c.rewardXP);
+          }
+          updated = true;
+        }
+      });
+      if (updated) {
+        saveProgression();
+        renderHomeContractsUI();
+      }
+    }
+
+    function updateRankUI() {
+      const rankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel) || COURIER_RANKS[0];
+      const nextRankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel + 1);
+
+      const homeBadge = document.getElementById('home-rank-badge');
+      const homeTitle = document.getElementById('home-rank-title');
+      const homeBar = document.getElementById('home-rank-bar');
+
+      if (homeBadge) {
+        homeBadge.textContent = `R${rankSpec.level}`;
+        homeBadge.className = `w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${rankSpec.badgeBg} border-2 border-white flex items-center justify-center font-extrabold text-xs arcade-font shadow flex-shrink-0`;
+      }
+      if (homeTitle) homeTitle.textContent = rankSpec.title;
+
+      const prevXpNeeded = rankSpec.level === 1 ? 0 : (COURIER_RANKS[rankSpec.level - 2]?.xpNeeded || 0);
+      const targetXp = rankSpec.xpNeeded;
+      const progressPercent = nextRankSpec
+        ? Math.min(100, Math.max(0, ((gameState.courierXP - prevXpNeeded) / (targetXp - prevXpNeeded)) * 100))
+        : 100;
+
+      if (homeBar) homeBar.style.width = `${progressPercent}%`;
+
+      const modalBadge = document.getElementById('modal-rank-badge');
+      const modalTag = document.getElementById('modal-rank-level-tag');
+      const modalTitle = document.getElementById('modal-rank-title');
+      const modalFill = document.getElementById('modal-rank-progress-fill');
+      const modalXp = document.getElementById('modal-rank-xp-readout');
+      const modalNext = document.getElementById('modal-rank-next');
+
+      if (modalBadge) {
+        modalBadge.textContent = `R${rankSpec.level}`;
+        modalBadge.className = `w-12 h-12 rounded-2xl ${rankSpec.badgeBg} border-2 border-white flex items-center justify-center font-extrabold text-base arcade-font shadow flex-shrink-0`;
+      }
+      if (modalTag) modalTag.textContent = `LEVEL ${rankSpec.level}`;
+      if (modalTitle) modalTitle.textContent = rankSpec.title;
+      if (modalFill) modalFill.style.width = `${progressPercent}%`;
+      if (modalXp) modalXp.textContent = nextRankSpec
+        ? `${gameState.courierXP} / ${targetXp} XP`
+        : `${gameState.courierXP} XP (MAX RANK)`;
+      if (modalNext) modalNext.textContent = nextRankSpec ? nextRankSpec.title : 'DIGIT7 MASTER COURIER';
+    }
+
+    function renderHomeContractsUI() {
+      const container = document.getElementById('home-contracts-list');
+      if (!container) return;
+      if (!gameState.shiftContracts || gameState.shiftContracts.length === 0) {
+        ensureActiveContracts();
+      }
+      container.innerHTML = gameState.shiftContracts.map((c) => {
+        const pct = Math.min(100, Math.round((c.current / c.target) * 100));
+        const isDone = c.completed;
+        return `
+          <div class="contract-card ${isDone ? 'contract-card-completed' : ''}">
+            <div class="flex items-center justify-between text-[9px] mb-1">
+              <span class="font-extrabold text-white truncate max-w-[145px]">${c.title}</span>
+              <span class="${isDone ? 'text-emerald-300 font-extrabold' : 'text-amber-300 font-bold'} flex-shrink-0">
+                ${isDone ? '✓ DONE' : `${c.current}/${c.target}`}
+              </span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/20">
+              <div class="h-full ${isDone ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-cyan-300'} transition-all duration-200" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[8px] text-sky-200 font-semibold mt-1">
+              <span>Reward: +${c.rewardCoins} 🪙</span>
+              <span class="text-cyan-300 font-bold">+${c.rewardXP} XP</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderContractsModal() {
+      updateRankUI();
+      const listEl = document.getElementById('modal-contracts-list');
+      if (!listEl) return;
+      if (!gameState.shiftContracts || gameState.shiftContracts.length === 0) {
+        ensureActiveContracts();
+      }
+      listEl.innerHTML = gameState.shiftContracts.map((c) => {
+        const pct = Math.min(100, Math.round((c.current / c.target) * 100));
+        const isDone = c.completed;
+        return `
+          <div class="bg-slate-950/85 border-2 ${isDone ? 'border-emerald-400 bg-emerald-950/20' : 'border-sky-500/30'} rounded-2xl p-3 flex items-center justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm">${isDone ? '✅' : '📦'}</span>
+                <span class="arcade-font text-sm text-white truncate">${c.title}</span>
+              </div>
+              <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-white/20 my-1">
+                <div class="h-full ${isDone ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-cyan-300'}" style="width: ${pct}%"></div>
+              </div>
+              <div class="flex items-center gap-3 text-[10px] text-sky-300 font-semibold">
+                <span>Progress: <strong class="text-white">${c.current} / ${c.target}</strong></span>
+                <span>Reward: <strong class="text-amber-300">+${c.rewardCoins} Coins</strong></span>
+                <span>XP: <strong class="text-cyan-300">+${c.rewardXP} XP</strong></span>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <span class="px-2.5 py-1 rounded-lg ${isDone ? 'bg-emerald-400 text-slate-950 font-extrabold' : 'bg-slate-800 text-sky-200 font-bold'} text-[10px] uppercase">
+                ${isDone ? 'COMPLETED' : `${pct}%`}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTuningModal() {
+      const vanSpec = PLAYABLE_VANS[gameState.selectedVanIndex];
+      const isOwned = gameState.ownedVans.includes(vanSpec.id);
+
+      const imgEl = document.getElementById('tuning-van-img');
+      const nameEl = document.getElementById('tuning-van-name');
+      const tierEl = document.getElementById('tuning-van-tier');
+      const coinsReadout = document.getElementById('tuning-coins-readout');
+      const container = document.getElementById('tuning-stats-container');
+
+      if (imgEl) imgEl.src = vanIconDataURLs[vanSpec.id] || vanIconDataURLs['classic'] || '';
+      if (nameEl) nameEl.textContent = vanSpec.name;
+      if (tierEl) tierEl.textContent = isOwned ? vanSpec.tier : 'LOCKED RIG';
+      if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
+
+      if (!container) return;
+      container.innerHTML = Object.keys(TUNING_STAT_SPECS).map((statKey) => {
+        const spec = TUNING_STAT_SPECS[statKey];
+        const currentLvl = getVanTuningLevel(vanSpec.id, statKey);
+        const isMax = currentLvl >= 5;
+        const nextCost = isMax ? 0 : spec.costs[currentLvl];
+        const canAfford = gameState.coins >= nextCost && isOwned && !isMax;
+
+        const pipsHtml = [1, 2, 3, 4, 5].map((lvl) => {
+          return `<div class="stat-pip ${lvl <= currentLvl ? 'pip-active' : 'pip-inactive'}"></div>`;
+        }).join('');
+
+        return `
+          <div class="bg-slate-950/90 rounded-2xl p-3 border-2 border-sky-500/30">
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${spec.icon}</span>
+                <div>
+                  <div class="arcade-font text-sm sm:text-base text-white leading-tight">${spec.name}</div>
+                  <div class="text-[9px] text-sky-300 font-semibold">${spec.desc}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase">
+                  ${isMax ? 'MAX LEVEL 5' : `LV.${currentLvl} / 5`}
+                </span>
+              </div>
+            </div>
+
+            <!-- Pips Bar -->
+            <div class="flex items-center gap-1.5 my-2">
+              ${pipsHtml}
+            </div>
+
+            <!-- Current Spec Label & Upgrade Action -->
+            <div class="flex items-center justify-between pt-1 border-t border-sky-400/20">
+              <span class="text-[10px] text-amber-200 font-bold truncate max-w-[200px] sm:max-w-xs">
+                ${spec.labels[currentLvl - 1]}
+              </span>
+              <button data-upgrade-stat="${statKey}" ${!canAfford ? 'disabled' : ''} class="arcade-btn px-3 py-1.5 rounded-xl font-extrabold text-[10px] sm:text-xs arcade-font flex items-center gap-1 ${
+                isMax
+                  ? 'bg-slate-800 text-slate-400 border-slate-700 cursor-not-allowed'
+                  : (canAfford ? 'bg-gradient-to-b from-amber-400 to-amber-600 text-slate-950 cursor-pointer' : 'bg-slate-800 text-sky-400/60 border-slate-700 cursor-not-allowed')
+              }">
+                ${isMax ? 'MAXED' : `UPGRADE (${nextCost} 🪙)`}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-upgrade-stat]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const statKey = btn.dataset.upgradeStat;
+          const currentLvl = getVanTuningLevel(vanSpec.id, statKey);
+          if (currentLvl >= 5 || !isOwned) return;
+          const cost = TUNING_STAT_SPECS[statKey].costs[currentLvl];
+          if (gameState.coins >= cost) {
+            gameState.coins -= cost;
+            gameState.vanTuning[vanSpec.id][statKey] = currentLvl + 1;
+            soundFX.init();
+            soundFX.playCityGateChime();
+            saveProgression();
+            updateHomeGarageUI();
+            renderTuningModal();
+            triggerDiscoveryToast(`UPGRADED: ${TUNING_STAT_SPECS[statKey].name} LV.${currentLvl + 1}!`, vanIconDataURLs[vanSpec.id]);
+          } else {
+            soundFX.playCrash();
+          }
+        });
+      });
+    }
+
+    function renderGameOverContracts() {
+      const container = document.getElementById('gameover-contracts-list');
+      const xpGainedEl = document.getElementById('gameover-xp-gained');
+      if (xpGainedEl) xpGainedEl.textContent = `COURIER RANK LV.${gameState.courierRankLevel} • ${gameState.courierXP} XP`;
+      if (!container || !gameState.shiftContracts) return;
+
+      container.innerHTML = gameState.shiftContracts.map((c) => {
+        const pct = Math.min(100, Math.round((c.current / c.target) * 100));
+        const isDone = c.completed;
+        return `
+          <div class="flex items-center justify-between text-[10px] bg-slate-900/90 px-2.5 py-1.5 rounded-xl border ${isDone ? 'border-emerald-400 text-emerald-300' : 'border-slate-700 text-sky-200'}">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span>${isDone ? '✅' : '📋'}</span>
+              <span class="font-bold truncate max-w-[170px]">${c.title}</span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="font-extrabold text-amber-300">${c.current}/${c.target}</span>
+              <span class="px-1.5 py-0.2 rounded ${isDone ? 'bg-emerald-400 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-300'} text-[8px]">
+                ${isDone ? '+150 🪙' : `${pct}%`}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function updateHomeGarageUI() {
@@ -3536,6 +4993,9 @@
         quickDrawBtn.classList.remove('hidden');
         quickDrawBtn.classList.add('flex');
       }
+
+      updateRankUI();
+      renderHomeContractsUI();
     }
 
     function setHomePageMode(enable) {
@@ -3833,7 +5293,6 @@
         const replaceIdx = Math.floor(Math.random() * 3);
         gameState.handSlots[replaceIdx] = wantedType;
         renderBottomParcelHandUI(replaceIdx);
-        if (replaceIdx === gameState.selectedSlotIndex) updateVehicleCargoPreview();
       }
     }
 
@@ -3881,30 +5340,7 @@
     }
 
     function selectHandSlot(slotIdx) {
-      if (!Number.isInteger(slotIdx) || slotIdx < 0 || slotIdx >= gameState.handSlots.length) return;
       gameState.selectedSlotIndex = slotIdx;
-      updateVehicleCargoPreview();
-    }
-
-    function updateVehicleCargoPreview() {
-      if (!playerVan || !playerVan.userData || !playerVan.userData.chassis) return;
-      const slotIdx = Number.isInteger(gameState.selectedSlotIndex) ? gameState.selectedSlotIndex : 0;
-      const parcelTypeId = gameState.handSlots[slotIdx];
-      if (parcelTypeId === undefined) return;
-
-      const currentGift = playerVan.userData.roofGift;
-      if (currentGift && currentGift.userData.parcelTypeId === parcelTypeId) return;
-
-      if (currentGift) {
-        playerVan.userData.chassis.remove(currentGift);
-      }
-
-      const nextGift = createParcelVoxelMesh(parcelTypeId, 0.74);
-      nextGift.position.set(0, playerVan.userData.rackY + 0.56, playerVan.userData.rackZ);
-      nextGift.rotation.y = 0.35;
-      nextGift.userData.parcelTypeId = parcelTypeId;
-      playerVan.userData.chassis.add(nextGift);
-      playerVan.userData.roofGift = nextGift;
     }
 
     const dragGhost = document.getElementById('drag-ghost');
@@ -4261,6 +5697,11 @@
         trailDots.push(td);
       }
 
+      // Check Sweet-Spot alignment between player van and target resident (center ~18 units ahead)
+      const targetZ = apt.group.position.z + 1.2;
+      const dz = targetZ - playerVan.position.z;
+      const isSweetSpot = Math.abs(dz + 18.0) <= 6.5;
+
       flyingParcels.push({
         mesh,
         trailDots,
@@ -4268,7 +5709,8 @@
         targetApt: apt,
         parcelType: parcelTypeId,
         progress: 0,
-        duration: 0.45
+        duration: 0.45,
+        isSweetSpot
       });
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
@@ -4278,10 +5720,12 @@
     function updateOrderAlertsAndBubbles() {
       let activeOrderApt = null;
       let closestMeters = Infinity;
+      const now = performance.now();
 
       apartments.forEach((apt) => {
         if (!apt.hasOrder || apt.delivered) {
           apt.cloudEl.classList.add('hidden');
+          if (apt.ringGroup) apt.ringGroup.visible = false;
           return;
         }
         const dz = gameState.vanZ - apt.group.position.z;
@@ -4298,6 +5742,49 @@
             refillHandSlot(missedSlotIdx);
           }
           return;
+        }
+
+        // Dynamic Sweet-Spot Shrinking 3D Ring & Target Indicator as Player Van approaches
+        if (dz >= -6 && dz <= 75) {
+          apt.ringGroup.visible = true;
+          const sweetDist = Math.abs(dz - 18.0);
+          const isSweet = sweetDist <= 6.5;
+
+          if (isSweet) {
+            // Sweet-spot pulsing gold aura & target bullseye
+            const pulse = 1.0 + Math.sin(now * 0.02) * 0.16;
+            if (apt.shrinkRing) {
+              apt.shrinkRing.scale.set(pulse, 1, pulse);
+              apt.shrinkRing.visible = true;
+            }
+            if (apt.centerMarker) {
+              apt.centerMarker.material.color.setHex(0xfacc15);
+              apt.centerMarker.material.emissive.setHex(0xfacc15);
+              apt.centerMarker.material.emissiveIntensity = 1.9;
+            }
+            apt.ringBars.forEach(b => {
+              b.material.color.setHex(0xfacc15);
+              b.material.emissive.setHex(0xfacc15);
+              b.material.emissiveIntensity = 1.6;
+            });
+          } else {
+            // Approaching: dynamic shrinking ring scales down towards target pad
+            const scale = 1.0 + Math.max(0, Math.min(1.8, (dz - 18.0) / 28.0));
+            if (apt.shrinkRing) {
+              apt.shrinkRing.scale.set(scale, 1, scale);
+              apt.shrinkRing.visible = true;
+            }
+            if (apt.centerMarker) {
+              apt.centerMarker.material.color.setHex(0x00f5d4);
+              apt.centerMarker.material.emissive.setHex(0x00f5d4);
+              apt.centerMarker.material.emissiveIntensity = 0.8;
+            }
+            apt.ringBars.forEach(b => {
+              b.material.color.setHex(0x00f5d4);
+              b.material.emissive.setHex(0x00f5d4);
+              b.material.emissiveIntensity = 0.85;
+            });
+          }
         }
 
         if (meters >= -6 && meters <= 185 && meters < closestMeters) {
@@ -4403,6 +5890,32 @@
           life: 0.65 + Math.random() * 0.35
         });
       }
+    }
+
+    let screenShakeTime = 0;
+    let screenShakeIntensity = 1.0;
+
+    function triggerScreenShake(duration = 0.25, intensity = 1.0) {
+      screenShakeTime = duration;
+      screenShakeIntensity = intensity;
+    }
+
+    function triggerSpeedLines() {
+      // Disabled: screen light-up and overlay effects removed per user request
+    }
+
+    function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
+      const v = worldPos.clone().project(camera);
+      const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+
+      const el = document.createElement('div');
+      el.className = `floating-combat-banner arcade-font ${extraClass}`;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.textContent = text;
+      document.getElementById('popups-layer').appendChild(el);
+      setTimeout(() => el.remove(), 1200);
     }
 
     function showFloatingPopup(worldPos, text, colorClass = 'text-amber-300') {
@@ -4587,6 +6100,9 @@
         showCityToast(nextTheme);
         if (nextTheme.id === 'tokyo') applyWeatherMode(4);
         else if (nextTheme.id === 'chinatown') applyWeatherMode(1);
+        else if (nextTheme.id === 'yangon') applyWeatherMode(1);
+        else if (nextTheme.id === 'littleindia') applyWeatherMode(1);
+        else if (nextTheme.id === 'pastel') applyWeatherMode(4);
       }
     }
 
@@ -4681,7 +6197,7 @@
 
       document.getElementById('tutorial-step-badge').textContent = 'STEP 1 OF 2 • STEERING';
       document.getElementById('tutorial-title').textContent = 'STEER LEFT & RIGHT TO DODGE CARS';
-      document.getElementById('tutorial-desc').textContent = 'Swipe Left & Right on the road (one swipe = one lane) to practice dodging traffic!';
+      document.getElementById('tutorial-desc').textContent = 'Swipe Left & Right on the road (or press A / D) twice to practice dodging traffic!';
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
     }
@@ -4750,7 +6266,6 @@
     let roadTouchId = null;
     let roadTouchStartX = 0;
     let roadTouchStartY = 0;
-    let roadSwipeConsumed = false;
     let garageDragging = false;
     let garageLastX = 0;
     let garageSpinVel = 0;
@@ -4766,7 +6281,6 @@
       roadTouchId = e.pointerId;
       roadTouchStartX = e.clientX;
       roadTouchStartY = e.clientY;
-      roadSwipeConsumed = false;
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -4780,9 +6294,10 @@
       if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing' && !gameState.dragging) {
         const dx = e.clientX - roadTouchStartX;
         const dy = e.clientY - roadTouchStartY;
-        if (!roadSwipeConsumed && Math.abs(dx) > 22 && Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 22 && Math.abs(dx) > Math.abs(dy)) {
           moveLane(dx > 0 ? 1 : -1);
-          roadSwipeConsumed = true;
+          roadTouchStartX = e.clientX;
+          roadTouchStartY = e.clientY;
         }
       }
     });
@@ -4791,7 +6306,6 @@
       garageDragging = false;
       if (roadTouchId !== null && (!e || e.pointerId === roadTouchId)) {
         roadTouchId = null;
-        roadSwipeConsumed = false;
       }
     }
     window.addEventListener('pointerup', endRoadTouch);
@@ -4804,7 +6318,6 @@
       if (gameState.mode !== 'playing' || gameState.dragging || e.touches.length !== 1) return;
       touchSteerStartX = e.touches[0].clientX;
       touchSteerStartY = e.touches[0].clientY;
-      roadSwipeConsumed = false;
     }, { passive: true });
 
     canvas.addEventListener('touchmove', (e) => {
@@ -4814,16 +6327,16 @@
       if (touchSteerStartX === null || gameState.mode !== 'playing' || gameState.dragging || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - touchSteerStartX;
       const dy = e.touches[0].clientY - touchSteerStartY;
-      if (!roadSwipeConsumed && Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy)) {
+      if (Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy)) {
         moveLane(dx > 0 ? 1 : -1);
-        roadSwipeConsumed = true;
+        touchSteerStartX = e.touches[0].clientX;
+        touchSteerStartY = e.touches[0].clientY;
       }
     }, { passive: false });
 
     canvas.addEventListener('touchend', () => {
       touchSteerStartX = null;
       touchSteerStartY = null;
-      roadSwipeConsumed = false;
     }, { passive: true });
 
     // Universal iOS Safari / Android Chrome Audio Unlock on first user interaction
@@ -4949,6 +6462,7 @@
       if (m) {
         m.classList.remove('hidden');
         m.classList.add('flex');
+        if (id === 'modal-settings') renderCitySelectorUI();
       }
     }
     function closeModal(id) {
@@ -5029,6 +6543,38 @@
       updateHomeGarageUI();
     });
 
+    const btnOpenTuning = document.getElementById('btn-open-tuning');
+    if (btnOpenTuning) {
+      btnOpenTuning.addEventListener('click', () => {
+        renderTuningModal();
+        openModal('modal-tuning');
+      });
+    }
+
+    const btnOpenContracts = document.getElementById('btn-open-contracts');
+    if (btnOpenContracts) {
+      btnOpenContracts.addEventListener('click', () => {
+        renderContractsModal();
+        openModal('modal-contracts');
+      });
+    }
+
+    const topbarRankBtn = document.getElementById('topbar-rank-btn');
+    if (topbarRankBtn) {
+      topbarRankBtn.addEventListener('click', () => {
+        renderContractsModal();
+        openModal('modal-contracts');
+      });
+    }
+
+    const btnContractsExpand = document.getElementById('btn-contracts-expand');
+    if (btnContractsExpand) {
+      btnContractsExpand.addEventListener('click', () => {
+        renderContractsModal();
+        openModal('modal-contracts');
+      });
+    }
+
     function resetGame(forceTutorial = false) {
       soundFX.init();
       soundFX.startCozyMusic();
@@ -5043,13 +6589,33 @@
       gameState.deliveries = 0;
       gameState.runCoinsEarned = 0;
       gameState.combo = 1;
+      gameState.nearMissCount = 0;
+      gameState.perfectDropCount = 0;
       gameState.hearts = 3;
       gameState.laneIndex = 2;
       gameState.currentX = LANES[2];
       gameState.throttle = 0.72;
       gameState.boostTimer = 0;
-      gameState.slowMoEnergy = 6.0;
+
+      // Chrono-Battery Upgrade sets Max Slow-Mo Capacity
+      const battLvl = getVanTuningLevel(gameState.equippedVanId, 'battery');
+      gameState.maxSlowMoEnergy = 8.0 + (battLvl - 1) * 1.5;
+      gameState.slowMoEnergy = gameState.maxSlowMoEnergy;
       gameState.immortalTimer = 0;
+
+      // Shift Contracts: Reset run-scoped missions and replenish pool
+      if (gameState.shiftContracts) {
+        gameState.shiftContracts.forEach((c) => {
+          if ((c.type === 'deliveries_run' || c.type === 'combo_max' || c.type === 'distance_shift') && !c.completed) {
+            c.current = 0;
+          }
+        });
+        gameState.shiftContracts = gameState.shiftContracts.filter(c => !c.completed);
+        ensureActiveContracts();
+      }
+      saveProgression();
+      renderHomeContractsUI();
+
       // 1.35s Roll-Out Entrance Animation from Garage onto the Highway (Settles at vanZ = -5.4, well above the Parcel Bar!)
       gameState.entranceTimer = 1.35;
       gameState.vanZ = 9.0;
@@ -5065,7 +6631,7 @@
       slowmoVignette.style.opacity = '0';
 
       applyTimeOfDay(0, true);
-      applyWeatherMode(0);
+      applyWeatherMode(4);
       updateHUD();
 
       if (forceTutorial || !gameState.tutorialCompletedOnce) {
@@ -5117,7 +6683,6 @@
 
       gameState.handSlots = [0, 2, 6];
       renderBottomParcelHandUI();
-      updateVehicleCargoPreview();
 
       const startVehicleTypes = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck'];
       for (let z = -65; z >= -165; z -= 48) {
@@ -5158,6 +6723,7 @@
     // ============================================================================
     // 14. INITIALIZE SCENE & MAIN GAME LOOP
     // ============================================================================
+    initSavedProgression();
     generate3DIcons();
     initWeatherParticles();
     initCozyMotes();
@@ -5170,6 +6736,7 @@
     }
     renderBottomParcelHandUI();
     setHomePageMode(true);
+    updateHomeGarageUI();
 
     let lastTime = performance.now();
     let trafficTimer = 0;
@@ -5220,7 +6787,9 @@
       const slowmoDot = document.getElementById('slowmo-dot');
       if (gameState.dragging && gameState.slowMoEnergy > 0) {
         isDragSlowMoActive = true;
-        gameState.slowMoEnergy = Math.max(0, gameState.slowMoEnergy - rawDt);
+        const battLvl = getVanTuningLevel(gameState.equippedVanId, 'battery');
+        const drainMult = battLvl === 5 ? 0.70 : 1.0;
+        gameState.slowMoEnergy = Math.max(0, gameState.slowMoEnergy - rawDt * drainMult);
         slowmoVignette.style.opacity = '1';
         if (slowmoDot) slowmoDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-300 animate-ping';
       } else {
@@ -5270,10 +6839,19 @@
         camera.lookAt(PLAY_CAM_LOOK);
       }
 
-      // Gradual Speed Acceleration as distance & deliveries increase!
+      if (screenShakeTime > 0) {
+        screenShakeTime = Math.max(0, screenShakeTime - rawDt);
+        const shakeMag = (screenShakeTime / 0.35) * screenShakeIntensity;
+        camera.position.x += (Math.random() - 0.5) * 0.55 * shakeMag;
+        camera.position.y += (Math.random() - 0.5) * 0.40 * shakeMag;
+      }
+
+      // Gradual Speed Acceleration as distance & deliveries increase + Rig Engine Tune Upgrade!
+      const engLvl = getVanTuningLevel(gameState.equippedVanId, 'engine');
+      const engSpeedMult = 1 + (engLvl - 1) * 0.045;
       const speedProgression = Math.min(22, gameState.distanceMeters * 0.015 + gameState.deliveries * 0.65);
       const playerSpeed = gameState.mode === 'playing'
-        ? (gameState.baseSpeed + speedProgression)
+        ? (gameState.baseSpeed + speedProgression) * engSpeedMult
         : 12;
 
       if (gameState.dragging) {
@@ -5352,6 +6930,7 @@
 
         if (apt.group.position.z > 32) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
+          apt.index += NUM_PAIRS;
           rebuildApartmentVisuals(apt, CITY_THEMES[gameState.cityIndex], apt.index);
           // Spawn delivery orders after ~150m warm-up (or immediately if in tutorial mode)
           configureApartmentCustomer(apt, gameState.tutorialActive || gameState.distanceMeters >= 55);
@@ -5379,6 +6958,7 @@
 
       if (gameState.mode === 'playing') {
         gameState.distanceMeters += playerSpeed * dt * 0.42;
+        updateContractProgress('distance_shift', Math.round(gameState.distanceMeters), true);
 
         if (gameState.distanceMeters >= gameState.nextGateDistance && activeGates.length === 0) {
           gameState.nextGateDistance = gameState.distanceMeters + 165;
@@ -5406,6 +6986,9 @@
 
             if (newTheme.id === 'tokyo') applyWeatherMode(4);
             else if (newTheme.id === 'chinatown') applyWeatherMode(1);
+            else if (newTheme.id === 'yangon') applyWeatherMode(1);
+            else if (newTheme.id === 'littleindia') applyWeatherMode(1);
+            else if (newTheme.id === 'pastel') applyWeatherMode(4);
           }
 
           if (g.mesh.position.z > 38) {
@@ -5489,7 +7072,7 @@
             if (alertTxt) {
               alertTxt.textContent = cw.isDuckCrossing
                 ? 'CAUTION: DUCK FAMILY CROSSING AHEAD'
-                : 'CAUTION: SHIBA CHEF CROSSING AHEAD';
+                : 'CAUTION: INLE CHEF CROSSING AHEAD';
             }
           }
 
@@ -5539,6 +7122,8 @@
                   document.getElementById('final-score').textContent = gameState.score.toLocaleString();
                   document.getElementById('final-deliveries').textContent = gameState.deliveries;
                   document.getElementById('final-coins').textContent = `+${gameState.runCoinsEarned}`;
+                  renderGameOverContracts();
+                  saveProgression();
                   document.getElementById('gameover-modal').classList.remove('hidden');
                   document.getElementById('gameover-modal').classList.add('flex');
                 }
@@ -5559,14 +7144,17 @@
         }
         document.getElementById('crosswalk-alert').classList.toggle('hidden', !showCrosswalkWarning);
 
+        // Suspension / Handling Tune Upgrade (Higher snap speed between lanes)
+        const handLvl = getVanTuningLevel(gameState.equippedVanId, 'handling');
+        const snapLerp = 14 + (handLvl - 1) * 4.5;
         const targetX = LANES[gameState.laneIndex];
         const dx = targetX - gameState.currentX;
-        gameState.currentX += dx * Math.min(1, rawDt * 14);
+        gameState.currentX += dx * Math.min(1, rawDt * snapLerp);
         playerVan.position.x = gameState.currentX;
 
         const chassis = playerVan.userData.chassis;
-        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, -dx * 0.14, rawDt * 14);
-        chassis.rotation.y = THREE.MathUtils.lerp(chassis.rotation.y, -dx * 0.07, rawDt * 14);
+        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, -dx * 0.14, rawDt * snapLerp);
+        chassis.rotation.y = THREE.MathUtils.lerp(chassis.rotation.y, -dx * 0.07, rawDt * snapLerp);
         chassis.position.y = Math.sin(now * 0.024) * 0.05;
         chassis.scale.lerp(new THREE.Vector3(1, 1, 1), rawDt * 12);
 
@@ -5631,6 +7219,38 @@
             soundFX.playVehiclePassBy(tv.type);
           }
 
+          // Traffic Near-Miss Combo System (Close adjacent pass or last-second lane dodge)
+          if (!tv.nearMissAwarded && gameState.invulnerableTimer <= 0 && gameState.mode === 'playing') {
+            const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
+            const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
+
+            const isClosePass = distZ < 3.2 && distX >= 1.6 && distX <= 4.6;
+            const isLastSecondDodge = distZ < 7.8 && distX >= 1.6 && distX <= 4.2 && Math.abs(playerVan.userData.chassis.rotation.y) > 0.035;
+
+            if (isClosePass || isLastSecondDodge) {
+              tv.nearMissAwarded = true;
+              gameState.nearMissCount++;
+              const bonusScore = 50 * gameState.combo;
+              gameState.score += bonusScore;
+              gameState.combo = Math.min(8, gameState.combo + 1);
+              updateHUD();
+
+              updateContractProgress('near_misses', 1);
+              updateContractProgress('combo_max', gameState.combo, true);
+
+              soundFX.playNearMissWhoosh();
+              // Screen shake, speed-lines, and light-up overlays removed for clean, smooth near-misses
+
+              const popupPos = playerVan.position.clone().add(new THREE.Vector3(
+                tv.mesh.position.x > playerVan.position.x ? 1.6 : -1.6,
+                2.7,
+                -0.8
+              ));
+              showFloatingCombatText(popupPos, '🔥 NEAR MISS! +50', 'combat-text-fire');
+              spawnVoxelBurst(popupPos, 0xf97316, 16);
+            }
+          }
+
           if (gameState.invulnerableTimer <= 0) {
             const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
             const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
@@ -5664,6 +7284,8 @@
                 document.getElementById('final-score').textContent = gameState.score.toLocaleString();
                 document.getElementById('final-deliveries').textContent = gameState.deliveries;
                 document.getElementById('final-coins').textContent = `+${gameState.runCoinsEarned}`;
+                renderGameOverContracts();
+                saveProgression();
                 document.getElementById('gameover-modal').classList.remove('hidden');
                 document.getElementById('gameover-modal').classList.add('flex');
               }
@@ -5703,26 +7325,50 @@
             const pInfo = PARCEL_TYPES[fp.parcelType];
             if (apt.hasOrder && !apt.delivered) {
               if (apt.wantedType === fp.parcelType) {
-                soundFX.playDeliverSuccess();
+                const isPerfect = !!fp.isSweetSpot;
+                const multiplier = isPerfect ? 2 : 1;
+                const engLvl = getVanTuningLevel(gameState.equippedVanId, 'engine');
+                const engScoreMult = 1 + (engLvl - 1) * 0.05;
+                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * engScoreMult);
+                const vanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
+                const baseCoinGain = Math.round((25 + gameState.combo * 8) * (1 + vanSpec.coinBonus / 100));
+                const coinGain = baseCoinGain + (isPerfect ? 10 : 0);
+
                 apt.delivered = true;
                 apt.ringGroup.visible = false;
                 apt.cloudEl.classList.add('hidden');
-
-                const pts = pInfo.pts * gameState.combo;
-                const vanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
-                const coinGain = Math.round((25 + gameState.combo * 8) * (1 + vanSpec.coinBonus / 100));
 
                 gameState.score += pts;
                 gameState.deliveries += 1;
                 gameState.coins += coinGain;
                 gameState.runCoinsEarned += coinGain;
-                gameState.combo = Math.min(8, gameState.combo + 1);
+                if (isPerfect) gameState.perfectDropCount++;
+                gameState.combo = Math.min(8, gameState.combo + (isPerfect ? 2 : 1));
                 updateHUD();
+
+                updateContractProgress('deliveries_run', 1);
+                updateContractProgress('combo_max', gameState.combo, true);
+                if (isPerfect) updateContractProgress('perfect_drops', 1);
+                if (pInfo.tier === 'LEGENDARY') updateContractProgress('legendary_drop', 1);
+                if (CITY_THEMES[gameState.cityIndex].id === 'yangon') {
+                  updateContractProgress('yangon_coins', coinGain);
+                }
 
                 tryRandomDiscoveryOnDelivery(fp.parcelType, apt.character ? apt.character.id : null);
 
-                spawnVoxelBurst(liveEnd, pInfo.color, 26);
-                showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-emerald-300');
+                if (isPerfect) {
+                  soundFX.playPerfectChime();
+                  triggerScreenShake(0.35, 1.4);
+                  spawnVoxelBurst(liveEnd, 0xfacc15, 36);
+                  showFloatingCombatText(liveEnd, '⚡ PERFECT DROP! x2', 'combat-text-gold');
+                  showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
+                } else {
+                  soundFX.playDeliverSuccess();
+                  triggerScreenShake(0.12, 0.5);
+                  spawnVoxelBurst(liveEnd, pInfo.color, 24);
+                  showFloatingCombatText(liveEnd, 'GOOD DELIVERY!', 'combat-text-cyan');
+                  showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-emerald-300 font-bold');
+                }
               } else {
                 soundFX.playCrash();
                 gameState.combo = 1;
@@ -5782,11 +7428,84 @@
       setTimeout(updateCameraForViewport, 120);
     });
 
+
+    function hideLoadingOverlay() {
+      const loader = document.getElementById('loading-overlay');
+      if (loader && !loader.classList.contains('fade-out')) {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 550);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(hideLoadingOverlay, 1500);
+    });
+
     window.onload = function () {
       updateCameraForViewport();
       lastTime = performance.now();
       requestAnimationFrame(animate);
+      hideLoadingOverlay();
     };
-  </script>
+
+
+    function switchCityByIndex(targetIdx) {
+      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
+      const theme = CITY_THEMES[gameState.cityIndex];
+      transformAllApartmentsToCity(theme);
+      soundFX.playCityGateChime();
+      showCityToast(theme);
+      if (theme.id === 'tokyo') applyWeatherMode(4);
+      else if (theme.id === 'chinatown') applyWeatherMode(1);
+      else if (theme.id === 'yangon') applyWeatherMode(1);
+      else if (theme.id === 'littleindia') applyWeatherMode(1);
+      else if (theme.id === 'pastel') applyWeatherMode(4);
+      else if (theme.id === 'paris') applyWeatherMode(4);
+      else if (theme.id === 'rio') applyWeatherMode(1);
+      else if (theme.id === 'washington') applyWeatherMode(4);
+      else if (theme.id === 'dubai') applyWeatherMode(1);
+      else if (theme.id === 'cairo') applyWeatherMode(1);
+      renderCitySelectorUI();
+    }
+
+    function renderCitySelectorUI() {
+      const container = document.getElementById('setting-city-buttons');
+      const label = document.getElementById('setting-current-city');
+      if (label && CITY_THEMES[gameState.cityIndex]) {
+        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
+      }
+      if (!container) return;
+      container.innerHTML = '';
+      const cityIcons = {
+        tokyo: '🗼',
+        chinatown: '🏮',
+        littleindia: '🛕',
+        yangon: '🇲🇲',
+        pastel: '🌆',
+        paris: '🥐',
+        rio: '🌴',
+        washington: '🏛️',
+        dubai: '🏙️',
+        cairo: '🐪'
+      };
+      CITY_THEMES.forEach((ct, idx) => {
+        const isCur = idx === gameState.cityIndex;
+        const btn = document.createElement('button');
+        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
+          isCur
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
+            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
+        );
+        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
+        btn.addEventListener('click', () => {
+          soundFX.init();
+          switchCityByIndex(idx);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+</script>
 </body>
 </html>
