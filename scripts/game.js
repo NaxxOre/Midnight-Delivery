@@ -1377,54 +1377,76 @@
       refillHandSlot(slotIndex);
     }
 
-    function quickThrowParcel(side = 'auto') {
-      if (gameState.mode !== 'playing') return;
+    function findTargetApartment(targetSide = 'auto') {
+      const effectiveSide = targetSide === 'auto'
+        ? (playerVan.position.x < 0 ? 'left' : 'right')
+        : targetSide;
 
-      let targetApt = null;
-      if (side === 'auto') {
-        if (gameState.lockedTargetApt && !gameState.lockedTargetApt.delivered) {
-          targetApt = gameState.lockedTargetApt;
-        } else {
-          let bestDist = Infinity;
-          apartments.forEach(apt => {
-            if (apt.hasOrder && !apt.delivered) {
-              const dz = gameState.vanZ - apt.group.position.z;
-              if (dz >= -6 && dz <= 45) {
-                const dist = Math.abs(dz - 18);
-                if (dist < bestDist) {
-                  bestDist = dist;
-                  targetApt = apt;
-                }
-              }
+      // 1. First priority: locked target if valid
+      if (targetSide === 'auto' && gameState.lockedTargetApt && !gameState.lockedTargetApt.delivered) {
+        return gameState.lockedTargetApt;
+      }
+
+      // 2. Second priority: active customer order on targetSide within comfortable throw range
+      let bestOrderApt = null;
+      let bestOrderDist = Infinity;
+      apartments.forEach(apt => {
+        if ((targetSide === 'auto' || apt.side === targetSide) && apt.hasOrder && !apt.delivered) {
+          const dz = gameState.vanZ - apt.group.position.z;
+          if (dz >= -14 && dz <= 75) {
+            const dist = Math.abs(dz - 18);
+            if (dist < bestOrderDist) {
+              bestOrderDist = dist;
+              bestOrderApt = apt;
             }
-          });
-          if (!targetApt) {
-            targetApt = findBestTargetApartmentOnSide(playerVan.position.x < 0 ? 'left' : 'right');
           }
         }
-      } else {
-        let bestDist = Infinity;
+      });
+      if (bestOrderApt) return bestOrderApt;
+
+      // 3. Third priority: ANY active customer order on either side within range
+      if (targetSide === 'auto') {
         apartments.forEach(apt => {
-          if (apt.side === side && apt.hasOrder && !apt.delivered) {
+          if (apt.hasOrder && !apt.delivered) {
             const dz = gameState.vanZ - apt.group.position.z;
-            if (dz >= -6 && dz <= 45) {
+            if (dz >= -14 && dz <= 75) {
               const dist = Math.abs(dz - 18);
-              if (dist < bestDist) {
-                bestDist = dist;
-                targetApt = apt;
+              if (dist < bestOrderDist) {
+                bestOrderDist = dist;
+                bestOrderApt = apt;
               }
             }
           }
         });
-        if (!targetApt) {
-          targetApt = findBestTargetApartmentOnSide(side);
-        }
+        if (bestOrderApt) return bestOrderApt;
       }
 
-      if (!targetApt) {
-        showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'NO CUSTOMER IN RANGE!', 'text-amber-300');
-        return;
-      }
+      // 4. Fourth priority: closest roadside apartment ahead on effectiveSide so the throw ALWAYS launches
+      let bestNearbyApt = null;
+      let bestNearbyDist = Infinity;
+      apartments.forEach(apt => {
+        if (apt.side === effectiveSide) {
+          const dz = gameState.vanZ - apt.group.position.z;
+          if (dz >= -16 && dz <= 75) {
+            const dist = Math.abs(dz - 18);
+            if (dist < bestNearbyDist) {
+              bestNearbyDist = dist;
+              bestNearbyApt = apt;
+            }
+          }
+        }
+      });
+      if (bestNearbyApt) return bestNearbyApt;
+
+      // 5. Ultimate fallback: any apartment on effectiveSide or any apartment in scene
+      return apartments.find(a => a.side === effectiveSide) || apartments[0] || null;
+    }
+
+    function quickThrowParcel(side = 'auto') {
+      if (gameState.mode !== 'playing') return;
+
+      const targetApt = findTargetApartment(side);
+      if (!targetApt) return;
 
       // Pick matching parcel if available in hand, else currently selected slot
       let slotIdx = gameState.selectedSlotIndex || 0;
@@ -2143,51 +2165,88 @@
       }, { once: true, passive: true });
     });
 
-    // Wire up On-Screen Quick-Throw Action Buttons
-    const btnQuickLeft = document.getElementById('btn-quick-throw-left');
-    const btnQuickRight = document.getElementById('btn-quick-throw-right');
-    const btnQuickAuto = document.getElementById('btn-quick-throw-auto');
-    if (btnQuickLeft) {
-      btnQuickLeft.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        quickThrowParcel('left');
-      });
+    // Wire up On-Screen Quick-Throw Action Buttons (Dual pointerdown + click with debounce)
+    function bindQuickThrowBtn(btnId, side) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      let lastTrigger = 0;
+      const trigger = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const now = performance.now();
+        if (now - lastTrigger < 140) return;
+        lastTrigger = now;
+        soundFX.init();
+        quickThrowParcel(side);
+      };
+      btn.addEventListener('pointerdown', trigger);
+      btn.addEventListener('click', trigger);
     }
-    if (btnQuickRight) {
-      btnQuickRight.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        quickThrowParcel('right');
-      });
-    }
-    if (btnQuickAuto) {
-      btnQuickAuto.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        quickThrowParcel('auto');
-      });
-    }
+    bindQuickThrowBtn('btn-quick-throw-left', 'left');
+    bindQuickThrowBtn('btn-quick-throw-right', 'right');
+    bindQuickThrowBtn('btn-quick-throw-auto', 'auto');
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') moveLane(-1);
-      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') moveLane(1);
-      if (e.key === 'q' || e.key === 'Q') {
+      // Escape for Pause / Resume
+      if (e.key === 'Escape') {
+        if (gameState.mode === 'playing') pauseShift();
+        else if (gameState.mode === 'paused') resumeShiftWithCountdown();
+        return;
+      }
+
+      // Space / Enter on Home or Game Over Screen starts / restarts shift
+      if (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+        if (gameState.mode === 'home') {
+          e.preventDefault();
+          const startBtn = document.getElementById('btn-start-play');
+          if (startBtn) startBtn.click();
+          return;
+        } else if (gameState.mode === 'gameover') {
+          e.preventDefault();
+          const playAgainBtn = document.getElementById('btn-play-again');
+          if (playAgainBtn) playAgainBtn.click();
+          return;
+        }
+      }
+
+      if (gameState.mode !== 'playing') return;
+
+      const key = e.key ? e.key.toLowerCase() : '';
+      const code = e.code || '';
+
+      // Lane steering: A / D / Arrow Keys
+      if (key === 'a' || code === 'KeyA' || key === 'arrowleft') {
+        e.preventDefault();
+        moveLane(-1);
+      }
+      if (key === 'd' || code === 'KeyD' || key === 'arrowright') {
+        e.preventDefault();
+        moveLane(1);
+      }
+
+      // Quick Throw Left: Q
+      if (key === 'q' || code === 'KeyQ') {
         e.preventDefault();
         quickThrowParcel('left');
       }
-      if (e.key === 'e' || e.key === 'E') {
-        e.preventDefault();
-        quickThrowParcel('right');
-      }
-      if (e.code === 'Space' || e.key === ' ') {
+
+      // Quick Throw Auto / Forward: W, Space, Spacebar, ArrowUp
+      if (key === 'w' || code === 'KeyW' || key === 'arrowup' || key === ' ' || code === 'Space' || key === 'spacebar') {
         e.preventDefault();
         quickThrowParcel('auto');
       }
-      if (e.key >= '1' && e.key <= '3') selectHandSlot(parseInt(e.key, 10) - 1);
-      if (e.key === 'Escape' && (gameState.mode === 'playing' || gameState.mode === 'paused')) {
-        if (gameState.mode === 'playing') pauseShift();
-        else resumeShiftWithCountdown();
+
+      // Quick Throw Right: E
+      if (key === 'e' || code === 'KeyE') {
+        e.preventDefault();
+        quickThrowParcel('right');
+      }
+
+      // Slot selection: 1, 2, 3
+      if (key >= '1' && key <= '3') {
+        selectHandSlot(parseInt(key, 10) - 1);
       }
     });
 

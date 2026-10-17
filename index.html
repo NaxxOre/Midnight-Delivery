@@ -186,15 +186,15 @@
     <!-- BOTTOM CONTROLS: Dual-Mode Quick-Throw Action Buttons & 3-Slot Parcel Bar -->
     <div class="w-full flex flex-col items-center justify-end pb-5 sm:pb-7 pointer-events-none">
       <!-- Quick-Throw Action Buttons (Instant Key/Tap Controls) -->
-      <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 mb-1.5 pointer-events-auto">
-        <button id="btn-quick-throw-left" type="button" class="arcade-btn rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 border-2 border-cyan-400 text-cyan-300 font-extrabold text-[10px] sm:text-xs flex items-center gap-1 shadow-lg active:scale-95 cursor-pointer" title="Throw Left (Press Q)">
+      <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 mb-1.5 interactive pointer-events-auto" style="pointer-events: auto; z-index: 40;">
+        <button id="btn-quick-throw-left" type="button" class="arcade-btn interactive rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 border-2 border-cyan-400 text-cyan-300 font-extrabold text-[10px] sm:text-xs flex items-center gap-1 shadow-lg active:scale-95 cursor-pointer" title="Throw Left (Press Q)" style="pointer-events: auto;">
           <span class="arcade-font text-amber-300 text-[10px] sm:text-xs">[Q]</span> ↰ LEFT
         </button>
-        <button id="btn-quick-throw-auto" type="button" class="arcade-btn rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-amber-400 to-yellow-300 border-2 border-white text-slate-950 font-black text-[10px] sm:text-xs flex items-center gap-1.5 shadow-[0_0_16px_rgba(250,204,21,0.7)] active:scale-95 cursor-pointer" title="Auto-Throw Nearest Customer (Press Spacebar)">
+        <button id="btn-quick-throw-auto" type="button" class="arcade-btn interactive rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-amber-400 to-yellow-300 border-2 border-white text-slate-950 font-black text-[10px] sm:text-xs flex items-center gap-1.5 shadow-[0_0_16px_rgba(250,204,21,0.7)] active:scale-95 cursor-pointer" title="Auto-Throw Nearest Customer (Press W or Spacebar)" style="pointer-events: auto;">
           <span>⚡ QUICK THROW</span>
-          <span class="arcade-font text-[9px] bg-slate-950 text-amber-300 px-1 py-0.5 rounded border border-amber-300 hidden sm:inline">[SPACE]</span>
+          <span class="arcade-font text-[9px] bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded border border-amber-300">[W / SPACE]</span>
         </button>
-        <button id="btn-quick-throw-right" type="button" class="arcade-btn rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 border-2 border-cyan-400 text-cyan-300 font-extrabold text-[10px] sm:text-xs flex items-center gap-1 shadow-lg active:scale-95 cursor-pointer" title="Throw Right (Press E)">
+        <button id="btn-quick-throw-right" type="button" class="arcade-btn interactive rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 border-2 border-cyan-400 text-cyan-300 font-extrabold text-[10px] sm:text-xs flex items-center gap-1 shadow-lg active:scale-95 cursor-pointer" title="Throw Right (Press E)" style="pointer-events: auto;">
           RIGHT ↱ <span class="arcade-font text-amber-300 text-[10px] sm:text-xs">[E]</span>
         </button>
       </div>
