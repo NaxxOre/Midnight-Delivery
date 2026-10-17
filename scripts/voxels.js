@@ -1229,6 +1229,7 @@
     let globalOrderCounter = 0;
 
     function rebuildApartmentVisuals(apt, cityTheme, index) {
+      apt.currentThemeId = cityTheme.id;
       while (apt.archGroup.children.length > 0) {
         apt.archGroup.remove(apt.archGroup.children[0]);
       }
@@ -1567,7 +1568,6 @@
       }
 
       apt.ringGroup.visible = true;
-      ensureParcelAvailableInHand(apt.wantedType);
     }
 
     function transformAllApartmentsToCity(cityTheme) {

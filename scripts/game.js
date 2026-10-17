@@ -984,9 +984,61 @@
     function renderBottomParcelHandUI(animatedSlotIdx = -1) {
       const container = document.getElementById('parcel-hand-horizontal');
       if (!container) return;
-      container.innerHTML = '';
 
       const slotKeyLabels = ['[Q / 1]', '[W / 2]', '[E / 3]'];
+
+      // If cards already exist, update them in place to prevent DOM recreation and pointer listener loss
+      const existingCards = container.querySelectorAll('.parcel-card-slot');
+      if (existingCards.length === 3) {
+        gameState.handSlots.forEach((parcelTypeId, slotIdx) => {
+          const p = PARCEL_TYPES[parcelTypeId];
+          const card = existingCards[slotIdx];
+          card.className = `parcel-card-slot ${p.tierClass} w-[62px] sm:w-[80px] select-none cursor-pointer transition-transform ${
+            slotIdx === animatedSlotIdx ? 'deal-anim' : ''
+          }`;
+
+          const mod = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
+          let modifierBadgeHTML = '';
+          let modifierTrackHTML = '';
+          if (mod && mod.type === 'hot') {
+            const pct = Math.max(0, Math.min(100, (mod.timer / mod.maxTime) * 100));
+            modifierBadgeHTML = `<span class="hot-timer-text px-1 py-0.2 rounded-full bg-gradient-to-r from-red-500 to-amber-400 text-slate-950 font-black text-[5.5px] sm:text-[6.5px] shadow animate-pulse">🔥 HOT ${mod.timer.toFixed(1)}s</span>`;
+            modifierTrackHTML = `
+              <div class="hot-countdown-track">
+                <div class="hot-countdown-fill" style="width: ${pct}%"></div>
+              </div>
+            `;
+          } else if (mod && mod.type === 'fragile') {
+            if (mod.cracked) {
+              modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-cracked text-[5.5px] sm:text-[6.5px]">💔 CRACKED</span>`;
+            } else {
+              modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-fragile text-[5.5px] sm:text-[6.5px] animate-pulse">⚠️ FRAGILE</span>`;
+            }
+          }
+
+          card.innerHTML = `
+            <div class="parcel-card-inner py-1 px-1 sm:px-1.5 flex flex-col items-center justify-center relative">
+              <div class="w-full flex items-center justify-between mb-0.5 pointer-events-none">
+                <span class="px-1.5 py-0.2 rounded bg-slate-950/95 text-amber-300 border border-amber-400 font-black text-[7px] sm:text-[8.5px] arcade-font shadow">
+                  ${slotKeyLabels[slotIdx]}
+                </span>
+                <span class="px-1 py-0.2 rounded-full ${p.badgeBg} font-extrabold text-[6px] sm:text-[7px] shadow">
+                  +${p.pts}
+                </span>
+              </div>
+              ${modifierBadgeHTML ? `<div class="mb-0.5 pointer-events-none">${modifierBadgeHTML}</div>` : ''}
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-950/90 border border-slate-700/80 flex items-center justify-center p-0.5 my-0.5 shadow-inner pointer-events-none">
+                <img src="${parcelIconDataURLs[p.id]}" alt="${p.name}" class="w-full h-full object-contain pointer-events-none" />
+              </div>
+              <span class="text-[6px] sm:text-[7.5px] font-extrabold text-white uppercase tracking-tight leading-none pointer-events-none truncate max-w-full mt-0.5">${p.short}</span>
+              ${modifierTrackHTML}
+            </div>
+          `;
+        });
+        return;
+      }
+
+      container.innerHTML = '';
 
       gameState.handSlots.forEach((parcelTypeId, slotIdx) => {
         const p = PARCEL_TYPES[parcelTypeId];
@@ -1368,19 +1420,22 @@
     }
 
     // Sculpted 3D Voxel Road Power-Ups: Drone Assist, Coin Magnet, Shield Bumper, Extra Heart, Chrono Clock, Immortal Star
+    const powerUpRingGeo = new THREE.RingGeometry(0.95, 1.35, 24);
+    const powerUpRingMats = {
+      heart: new THREE.MeshBasicMaterial({ color: 0xf43f5e, side: THREE.DoubleSide }),
+      slowmo: new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide }),
+      drone: new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide }),
+      magnet: new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide }),
+      shield: new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide }),
+      immortal: new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+    };
+
     function createRoadPowerUpMesh(powerType) {
       const group = new THREE.Group();
 
-      // Glowing pedestal ring on road
-      const ringCol = powerType === 'heart' ? 0xf43f5e
-        : (powerType === 'slowmo' ? 0x00f5d4
-        : (powerType === 'drone' ? 0x00f5d4
-        : (powerType === 'magnet' ? 0xf59e0b
-        : (powerType === 'shield' ? 0x38bdf8 : 0xfacc15))));
-
       const baseRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.95, 1.35, 24),
-        new THREE.MeshBasicMaterial({ color: ringCol, side: THREE.DoubleSide })
+        powerUpRingGeo,
+        powerUpRingMats[powerType] || powerUpRingMats.immortal
       );
       baseRing.rotation.x = -Math.PI / 2;
       baseRing.position.y = 0.12;
@@ -2928,7 +2983,7 @@
       activePowerUps.length = 0;
       nextPowerUpTimer = 18 + Math.random() * 14;
 
-      activeRoadCoins.forEach(c => scene.remove(c.mesh));
+      activeRoadCoins.forEach(c => scene.remove(c.mesh || c));
       activeRoadCoins.length = 0;
 
       gameState.overdriveMeter = 0;
@@ -3221,7 +3276,10 @@
 
         if (apt.group.position.z > 32) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
-          rebuildApartmentVisuals(apt, CITY_THEMES[gameState.cityIndex], apt.index);
+          const currentTheme = CITY_THEMES[gameState.cityIndex];
+          if (apt.currentThemeId !== currentTheme.id) {
+            rebuildApartmentVisuals(apt, currentTheme, apt.index);
+          }
           // Spawn delivery orders after ~150m warm-up (or immediately if in tutorial mode)
           configureApartmentCustomer(apt, gameState.tutorialActive || gameState.distanceMeters >= 55);
         }
