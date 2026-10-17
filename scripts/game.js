@@ -5,6 +5,44 @@
     playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
     scene.add(playerVan);
 
+    // Neon Overdrive Aura Shell
+    const overdriveAuraMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 2.8, 5.8),
+      new THREE.MeshBasicMaterial({ color: 0x00f5d4, wireframe: true, transparent: true, opacity: 0.85 })
+    );
+    overdriveAuraMesh.position.y = 1.35;
+    overdriveAuraMesh.visible = false;
+    playerVan.add(overdriveAuraMesh);
+
+    // Shield Bumper Forcefield Guard
+    const shieldBumperMesh = new THREE.Group();
+    const shieldRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.75, 0.15, 8, 24, Math.PI),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 })
+    );
+    shieldRing.rotation.y = Math.PI;
+    shieldRing.position.set(0, 0.75, -2.6);
+    shieldBumperMesh.add(shieldRing);
+    shieldBumperMesh.visible = false;
+    playerVan.add(shieldBumperMesh);
+
+    // Collectible Drone Assist Quadcopter
+    const droneGroup = new THREE.Group();
+    const dOpt = { emissive: 0x00f5d4, emissiveIntensity: 0.95 };
+    addVoxelBox(droneGroup, 0.75, 0.28, 0.75, 0, 0, 0, 0x0f172a, dOpt);
+    addVoxelBox(droneGroup, 1.5, 0.08, 0.16, 0, 0.12, 0, 0x38bdf8);
+    addVoxelBox(droneGroup, 0.16, 0.08, 1.5, 0, 0.12, 0, 0x38bdf8);
+    const droneRotors = [];
+    [[-0.75, 0, -0.75], [0.75, 0, -0.75], [-0.75, 0, 0.75], [0.75, 0, 0.75]].forEach(pos => {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.12), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+      r.position.set(pos[0], 0.2, pos[2]);
+      droneGroup.add(r);
+      droneRotors.push(r);
+    });
+    droneGroup.visible = false;
+    scene.add(droneGroup);
+    let droneThrowCooldown = 0;
+
     // 3D Architectural Blueprint Showroom Stage (Visible when gameState.mode === 'home')
     const blueprintGarageGroup = new THREE.Group();
     scene.add(blueprintGarageGroup);
@@ -912,6 +950,16 @@
       return Math.floor(Math.random() * PARCEL_TYPES.length);
     }
 
+    function rollParcelModifier() {
+      const roll = Math.random();
+      if (roll < 0.30) {
+        return { type: 'hot', timer: 8.0, maxTime: 8.0 };
+      } else if (roll < 0.55) {
+        return { type: 'fragile', cracked: false };
+      }
+      return null;
+    }
+
     function ensureParcelAvailableInHand(wantedType) {
       if (!gameState.handSlots.includes(wantedType)) {
         const candidates = [0, 1, 2].filter(i => i !== gameState.selectedSlotIndex);
@@ -919,12 +967,16 @@
           ? candidates[Math.floor(Math.random() * candidates.length)]
           : 1;
         gameState.handSlots[replaceIdx] = wantedType;
+        if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
+        gameState.handModifiers[replaceIdx] = rollParcelModifier();
         renderBottomParcelHandUI(replaceIdx);
       }
     }
 
     function refillHandSlot(slotIndex) {
       gameState.handSlots[slotIndex] = pickSmartParcelType();
+      if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
+      gameState.handModifiers[slotIndex] = rollParcelModifier();
       renderBottomParcelHandUI(slotIndex);
       selectHandSlot(gameState.selectedSlotIndex);
     }
@@ -940,9 +992,28 @@
         const p = PARCEL_TYPES[parcelTypeId];
         const card = document.createElement('div');
         card.dataset.slot = slotIdx;
-        card.className = `parcel-card-slot ${p.tierClass} w-[60px] sm:w-[78px] select-none cursor-pointer transition-transform ${
+        card.className = `parcel-card-slot ${p.tierClass} w-[62px] sm:w-[80px] select-none cursor-pointer transition-transform ${
           slotIdx === animatedSlotIdx ? 'deal-anim' : ''
         }`;
+
+        const mod = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
+        let modifierBadgeHTML = '';
+        let modifierTrackHTML = '';
+        if (mod && mod.type === 'hot') {
+          const pct = Math.max(0, Math.min(100, (mod.timer / mod.maxTime) * 100));
+          modifierBadgeHTML = `<span class="hot-timer-text px-1 py-0.2 rounded-full bg-gradient-to-r from-red-500 to-amber-400 text-slate-950 font-black text-[5.5px] sm:text-[6.5px] shadow animate-pulse">🔥 HOT ${mod.timer.toFixed(1)}s</span>`;
+          modifierTrackHTML = `
+            <div class="hot-countdown-track">
+              <div class="hot-countdown-fill" style="width: ${pct}%"></div>
+            </div>
+          `;
+        } else if (mod && mod.type === 'fragile') {
+          if (mod.cracked) {
+            modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-cracked text-[5.5px] sm:text-[6.5px]">💔 CRACKED</span>`;
+          } else {
+            modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-fragile text-[5.5px] sm:text-[6.5px] animate-pulse">⚠️ FRAGILE</span>`;
+          }
+        }
 
         card.innerHTML = `
           <div class="parcel-card-inner py-1 px-1 sm:px-1.5 flex flex-col items-center justify-center relative">
@@ -954,10 +1025,12 @@
                 +${p.pts}
               </span>
             </div>
+            ${modifierBadgeHTML ? `<div class="mb-0.5 pointer-events-none">${modifierBadgeHTML}</div>` : ''}
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-950/90 border border-slate-700/80 flex items-center justify-center p-0.5 my-0.5 shadow-inner pointer-events-none">
               <img src="${parcelIconDataURLs[p.id]}" alt="${p.name}" class="w-full h-full object-contain pointer-events-none" />
             </div>
             <span class="text-[6px] sm:text-[7.5px] font-extrabold text-white uppercase tracking-tight leading-none pointer-events-none truncate max-w-full mt-0.5">${p.short}</span>
+            ${modifierTrackHTML}
           </div>
         `;
 
@@ -1294,12 +1367,17 @@
       return trailDotMatCache[colorHex];
     }
 
-    // 3 Sculpted 3D Voxel Road Power-Ups: Extra Heart, Chrono Slow-Mo Clock, Rainbow Immortal Star
+    // Sculpted 3D Voxel Road Power-Ups: Drone Assist, Coin Magnet, Shield Bumper, Extra Heart, Chrono Clock, Immortal Star
     function createRoadPowerUpMesh(powerType) {
       const group = new THREE.Group();
 
       // Glowing pedestal ring on road
-      const ringCol = powerType === 'heart' ? 0xf43f5e : (powerType === 'slowmo' ? 0x00f5d4 : 0xfacc15);
+      const ringCol = powerType === 'heart' ? 0xf43f5e
+        : (powerType === 'slowmo' ? 0x00f5d4
+        : (powerType === 'drone' ? 0x00f5d4
+        : (powerType === 'magnet' ? 0xf59e0b
+        : (powerType === 'shield' ? 0x38bdf8 : 0xfacc15))));
+
       const baseRing = new THREE.Mesh(
         new THREE.RingGeometry(0.95, 1.35, 24),
         new THREE.MeshBasicMaterial({ color: ringCol, side: THREE.DoubleSide })
@@ -1312,7 +1390,31 @@
       core.position.y = 1.45;
       group.add(core);
 
-      if (powerType === 'heart') {
+      if (powerType === 'drone') {
+        // Collectible Drone Assist Quadcopter Model
+        const dOpt = { emissive: 0x00f5d4, emissiveIntensity: 0.95 };
+        addVoxelBox(core, 0.72, 0.28, 0.72, 0, 0, 0, 0x0f172a, dOpt);
+        addVoxelBox(core, 1.45, 0.08, 0.16, 0, 0.12, 0, 0x38bdf8);
+        addVoxelBox(core, 0.16, 0.08, 1.45, 0, 0.12, 0, 0x38bdf8);
+        addVoxelBox(core, 0.42, 0.04, 0.12, -0.7, 0.2, -0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12,  0.7, 0.2, -0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12, -0.7, 0.2,  0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12,  0.7, 0.2,  0.7, 0x00f5d4);
+      } else if (powerType === 'magnet') {
+        // Collectible Coin Magnet Model
+        const mOpt = { emissive: 0xef4444, emissiveIntensity: 0.85 };
+        addVoxelBox(core, 0.38, 1.15, 0.38, -0.45, 0.1, 0, 0xef4444, mOpt);
+        addVoxelBox(core, 0.42, 0.35, 0.42, -0.45, 0.7, 0, 0xe2e8f0, { metalness: 0.8 });
+        addVoxelBox(core, 0.38, 1.15, 0.38,  0.45, 0.1, 0, 0xef4444, mOpt);
+        addVoxelBox(core, 0.42, 0.35, 0.42,  0.45, 0.7, 0, 0xe2e8f0, { metalness: 0.8 });
+        addVoxelBox(core, 1.25, 0.38, 0.38, 0, -0.45, 0, 0xef4444, mOpt);
+      } else if (powerType === 'shield') {
+        // Collectible Shield Bumper Forcefield Model
+        const sOpt = { emissive: 0x38bdf8, emissiveIntensity: 0.95 };
+        addVoxelBox(core, 1.35, 1.35, 0.28, 0, 0.1, 0, 0x0284c7, sOpt);
+        addVoxelBox(core, 0.45, 1.65, 0.34, 0, 0.1, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.85 });
+        addVoxelBox(core, 1.65, 0.45, 0.34, 0, 0.1, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.85 });
+      } else if (powerType === 'heart') {
         // Sculpted 3D Ruby Voxel Heart
         const hOpt = { emissive: 0xe11d48, emissiveIntensity: 0.75, roughness: 0.2 };
         addVoxelBox(core, 0.42, 0.36, 0.42, 0, -0.42, 0, 0xf43f5e, hOpt);
@@ -1343,11 +1445,8 @@
 
     function spawnRareRoadPowerUp() {
       const laneIdx = Math.floor(Math.random() * 4);
-      const types = ['heart', 'slowmo', 'immortal'];
-      // Weight slightly toward slowmo/immortal if player already has full hearts
-      const chosenType = (gameState.hearts >= gameState.maxHearts && Math.random() < 0.7)
-        ? (Math.random() < 0.5 ? 'slowmo' : 'immortal')
-        : types[Math.floor(Math.random() * types.length)];
+      const types = ['drone', 'magnet', 'shield', 'heart', 'slowmo', 'immortal'];
+      const chosenType = types[Math.floor(Math.random() * types.length)];
 
       const mesh = createRoadPowerUpMesh(chosenType);
       mesh.position.set(LANES[laneIdx], 0, -165);
@@ -1376,6 +1475,32 @@
       p.maxLife = 0.55;
     }
 
+    // 3D Collectible Road Coins for Coin Magnet & Progression
+    let lastCoinSpawnDist = 0;
+    const activeRoadCoins = [];
+    const coinGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.12, 12);
+    const coinMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0xfacc15,
+      emissiveIntensity: 0.65,
+      metalness: 0.85,
+      roughness: 0.2
+    });
+
+    function spawnRoadCoinCluster(startZ = -165) {
+      if (activeRoadCoins.length > 20) return;
+      const laneIdx = Math.floor(Math.random() * 4);
+      const laneX = LANES[laneIdx];
+      const count = 3 + Math.floor(Math.random() * 3);
+      for (let c = 0; c < count; c++) {
+        const mesh = new THREE.Mesh(coinGeo, coinMat);
+        mesh.rotation.z = Math.PI / 2;
+        mesh.position.set(laneX, 0.75, startZ - c * 3.8);
+        scene.add(mesh);
+        activeRoadCoins.push(mesh);
+      }
+    }
+
     function throwParcelFromHandSlot(slotIndex, apt, isMagneticHoming = true) {
       if (gameState.mode !== 'playing' || !apt) return;
       const parcelTypeId = gameState.handSlots[slotIndex];
@@ -1400,12 +1525,17 @@
       const dz = targetZ - playerVan.position.z;
       const isSweetSpot = Math.abs(dz + 18.0) <= 7.5;
 
+      const slotModifier = (gameState.handModifiers && gameState.handModifiers[slotIndex])
+        ? { ...gameState.handModifiers[slotIndex] }
+        : null;
+
       flyingParcels.push({
         mesh,
         trailDots,
         startPos,
         targetApt: apt,
         parcelType: parcelTypeId,
+        modifier: slotModifier,
         progress: 0,
         duration: 0.42,
         isSweetSpot,
@@ -1696,17 +1826,28 @@
       gameState.lockedTargetApt = inThrowableRange ? apt : null;
       updateProjectileArcVisuals();
 
-      const slotKeyPrompt = matchingSlotIdx === 0 ? '⚡ [PRESS Q]' : (matchingSlotIdx === 1 ? '⚡ [PRESS W]' : (matchingSlotIdx === 2 ? '⚡ [PRESS E]' : '⚡ [SPACE]'));
+      const isVip = !!apt.isVip;
+      const vipStep = apt.vipDelivered || 0;
+      const vipBadgeHtml = isVip
+        ? `<span class="vip-crown-badge">👑 VIP (${vipStep}/2)</span>`
+        : '';
+      const slotKeyPrompt = (isVip && vipStep === 1)
+        ? '👑 [THROW 2ND ORDER!]'
+        : (matchingSlotIdx === 0 ? '⚡ [PRESS Q]' : (matchingSlotIdx === 1 ? '⚡ [PRESS W]' : (matchingSlotIdx === 2 ? '⚡ [PRESS E]' : '⚡ [SPACE]')));
 
-      if (apt.renderedOrderId !== apt.orderId) {
+      if (apt.renderedOrderId !== apt.orderId || apt.renderedVipStep !== vipStep) {
         apt.renderedOrderId = apt.orderId;
+        apt.renderedVipStep = vipStep;
         apt.cloudEl.innerHTML = `
           <div class="thought-cloud-pill">
             <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
               <img src="${charImg}" class="w-full h-full object-contain" alt="char" />
             </div>
             <div class="flex flex-col text-left min-w-0 flex-1">
-              <div class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</div>
+              <div class="flex items-center gap-1">
+                <span class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</span>
+                ${vipBadgeHtml}
+              </div>
               <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
               <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <span class="cloud-distance-badge inline-block px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
@@ -1766,6 +1907,30 @@
       }
     }
 
+    function increaseOverdrive(amount) {
+      if (gameState.overdriveActive) return;
+      gameState.overdriveMeter = Math.min(100, (gameState.overdriveMeter || 0) + amount);
+      updateHUD();
+      if (gameState.overdriveMeter >= 100) {
+        triggerOverdrive();
+      }
+    }
+
+    function triggerOverdrive() {
+      gameState.overdriveActive = true;
+      gameState.overdriveTimer = 7.0;
+      gameState.overdriveMeter = 100;
+      soundFX.playCityGateChime();
+      soundFX.playBoost();
+      triggerScreenShake(0.35, 1.4);
+      triggerSpeedLines();
+      if (playerVan) {
+        showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.4, 0)), '⚡ MIDNIGHT OVERDRIVE!', 'combat-text-gold');
+        spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 32);
+      }
+      updateHUD();
+    }
+
     // ============================================================================
     // 13. HUD WITH VOXEL HEART SVGS, VIRTUAL JOYSTICK, KEYBOARD & SHOWCASE CONTROLS
     // ============================================================================
@@ -1774,6 +1939,48 @@
       document.getElementById('delivered-val').textContent = gameState.deliveries;
       document.getElementById('hud-coins-val').textContent = gameState.coins.toLocaleString();
       document.getElementById('combo-val').textContent = `x${gameState.combo}`;
+
+      // Overdrive Meter Update
+      const odFill = document.getElementById('overdrive-bar-fill');
+      const odPct = document.getElementById('overdrive-pct-val');
+      const odTitle = document.getElementById('overdrive-title-text');
+      const odPill = document.getElementById('overdrive-hud-pill');
+      if (odFill && odPct) {
+        const pct = Math.round(gameState.overdriveMeter || 0);
+        odFill.style.width = `${pct}%`;
+        odPct.textContent = `${pct}%`;
+        if (odPill && odTitle) {
+          if (gameState.overdriveActive) {
+            odPill.classList.add('overdrive-fever-active');
+            odTitle.textContent = '⚡ FEVER 2X!';
+          } else {
+            odPill.classList.remove('overdrive-fever-active');
+            odTitle.textContent = 'OVERDRIVE';
+          }
+        }
+      }
+
+      // Collectible Power-Up status pills
+      const dronePill = document.getElementById('pill-drone-assist');
+      const droneTimerText = document.getElementById('drone-timer-text');
+      if (dronePill && droneTimerText) {
+        const active = gameState.droneAssistTimer > 0;
+        dronePill.classList.toggle('hidden', !active);
+        if (active) droneTimerText.textContent = `${Math.ceil(gameState.droneAssistTimer)}s`;
+      }
+
+      const magnetPill = document.getElementById('pill-coin-magnet');
+      const magnetTimerText = document.getElementById('magnet-timer-text');
+      if (magnetPill && magnetTimerText) {
+        const active = gameState.coinMagnetTimer > 0;
+        magnetPill.classList.toggle('hidden', !active);
+        if (active) magnetTimerText.textContent = `${Math.ceil(gameState.coinMagnetTimer)}s`;
+      }
+
+      const shieldPill = document.getElementById('pill-shield-bumper');
+      if (shieldPill) {
+        shieldPill.classList.toggle('hidden', !gameState.shieldBumperActive);
+      }
 
       const armorContainer = document.getElementById('armor-boxes');
       const totalSlots = Math.max(3, gameState.hearts);
@@ -2069,12 +2276,40 @@
           forwardDriveSpeed = nearest.forwardDriveSpeed;
         }
 
+        // 25% chance of Lane-Switch AI with turn signal indicators
+        const canSwitchLane = Math.random() < 0.25;
+        let leftBlinker = null;
+        let rightBlinker = null;
+        if (canSwitchLane) {
+          const blinkMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+          const halfX = mesh.userData.halfX || 1.1;
+          const halfZ = mesh.userData.halfZ || 1.8;
+          leftBlinker = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), blinkMat);
+          leftBlinker.position.set(-halfX - 0.06, 0.75, -halfZ + 0.25);
+          leftBlinker.visible = false;
+          mesh.add(leftBlinker);
+
+          rightBlinker = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), blinkMat);
+          rightBlinker.position.set(halfX + 0.06, 0.75, -halfZ + 0.25);
+          rightBlinker.visible = false;
+          mesh.add(rightBlinker);
+        }
+
         trafficVehicles.push({
           mesh,
           type,
           laneIdx,
           forwardDriveSpeed,
-          passedPlayer: false
+          passedPlayer: false,
+          canSwitchLane,
+          laneSwitchState: 'idle',
+          signalTimer: 0,
+          targetLaneIdx: null,
+          signalSide: null,
+          startLaneX: laneX,
+          switchProgress: 0,
+          leftBlinker,
+          rightBlinker
         });
       }
     }
@@ -2693,6 +2928,30 @@
       activePowerUps.length = 0;
       nextPowerUpTimer = 18 + Math.random() * 14;
 
+      activeRoadCoins.forEach(c => scene.remove(c.mesh));
+      activeRoadCoins.length = 0;
+
+      gameState.overdriveMeter = 0;
+      gameState.overdriveActive = false;
+      gameState.overdriveTimer = 0;
+      gameState.droneAssistTimer = 0;
+      gameState.coinMagnetTimer = 0;
+      gameState.shieldBumperActive = false;
+      gameState.survivalTimer = 0;
+      gameState.rushHourActive = false;
+      gameState.rushHourTimer = 0;
+      gameState.nextRushHourAt = 60;
+      gameState.handModifiers = [
+        rollParcelModifier(),
+        rollParcelModifier(),
+        rollParcelModifier()
+      ];
+      if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+      if (shieldBumperMesh) shieldBumperMesh.visible = false;
+      if (droneGroup) droneGroup.visible = false;
+      const rushBanner = document.getElementById('rush-hour-banner');
+      if (rushBanner) rushBanner.classList.add('hidden');
+
       activeGates.forEach(g => scene.remove(g.mesh));
       activeGates.length = 0;
 
@@ -2991,6 +3250,158 @@
         gameState.distanceMeters += playerSpeed * dt * 0.42;
         updateContractProgress('distance_shift', Math.round(gameState.distanceMeters), true);
 
+        // 1. Hot Parcel Modifiers Live Countdown Update
+        if (gameState.handModifiers) {
+          gameState.handModifiers.forEach((m, slotIdx) => {
+            if (m && m.type === 'hot') {
+              m.timer -= dt;
+              if (m.timer <= 0) {
+                gameState.handModifiers[slotIdx] = null;
+                renderBottomParcelHandUI(slotIdx);
+                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 2.5, 0)), 'PARCEL COOLED DOWN', 'text-slate-400');
+              } else {
+                const card = document.querySelector(`.parcel-card-slot[data-slot="${slotIdx}"]`);
+                if (card) {
+                  const fill = card.querySelector('.hot-countdown-fill');
+                  const badge = card.querySelector('.hot-timer-text');
+                  if (fill) fill.style.width = `${Math.max(0, (m.timer / m.maxTime) * 100)}%`;
+                  if (badge) badge.textContent = `🔥 HOT ${m.timer.toFixed(1)}s`;
+                }
+              }
+            }
+          });
+        }
+
+        // 2. Overdrive (Fever Mode) Live Countdown, Speed Boost, Neon Aura & FOV
+        if (gameState.overdriveActive) {
+          gameState.overdriveTimer -= dt;
+          gameState.overdriveMeter = Math.max(0, (gameState.overdriveTimer / 7.0) * 100);
+          playerSpeed *= 1.35; // Boost speed by 35%!
+          camera.fov = THREE.MathUtils.lerp(camera.fov, 68, dt * 4.0);
+          camera.updateProjectionMatrix();
+
+          if (overdriveAuraMesh) {
+            overdriveAuraMesh.visible = true;
+            overdriveAuraMesh.rotation.y += dt * 4.5;
+            overdriveAuraMesh.scale.setScalar(1 + Math.sin(now * 0.02) * 0.08);
+          }
+
+          if (gameState.overdriveTimer <= 0) {
+            gameState.overdriveActive = false;
+            gameState.overdriveMeter = 0;
+            if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+          }
+          updateHUD();
+        } else {
+          if (Math.abs(camera.fov - 55) > 0.1) {
+            camera.fov = THREE.MathUtils.lerp(camera.fov, 55, dt * 3.0);
+            camera.updateProjectionMatrix();
+          }
+          if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+        }
+
+        // 3. Dynamic Road Event: Rush Hour Blitz every 60s
+        gameState.survivalTimer = (gameState.survivalTimer || 0) + dt;
+        if (!gameState.rushHourActive && gameState.survivalTimer >= gameState.nextRushHourAt) {
+          gameState.rushHourActive = true;
+          gameState.rushHourTimer = 15.0;
+          gameState.nextRushHourAt = gameState.survivalTimer + 60.0 + 15.0;
+          soundFX.playCityGateChime();
+          triggerScreenShake(0.3, 1.2);
+          showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.5, 0)), '🔥 RUSH HOUR BLITZ! 15s', 'combat-text-fire');
+          const banner = document.getElementById('rush-hour-banner');
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.classList.add('flex', 'rush-hour-banner-active');
+          }
+        } else if (gameState.rushHourActive) {
+          gameState.rushHourTimer -= dt;
+          if (gameState.rushHourTimer <= 0) {
+            gameState.rushHourActive = false;
+            const banner = document.getElementById('rush-hour-banner');
+            if (banner) {
+              banner.classList.add('hidden');
+              banner.classList.remove('flex', 'rush-hour-banner-active');
+            }
+          }
+        }
+
+        // 4. Drone Assist: Auto-throw parcels to active customers
+        if (gameState.droneAssistTimer > 0) {
+          gameState.droneAssistTimer -= dt;
+          droneGroup.visible = true;
+          droneGroup.position.set(playerVan.position.x, playerVan.position.y + 3.2, playerVan.position.z - 0.4);
+          droneRotors.forEach(r => (r.rotation.y += dt * 35));
+
+          droneThrowCooldown -= dt;
+          if (droneThrowCooldown <= 0) {
+            const target = apartments.find(a => a.hasOrder && !a.delivered && (gameState.vanZ - a.group.position.z) >= -4 && (gameState.vanZ - a.group.position.z) <= 50);
+            if (target) {
+              droneThrowCooldown = 1.35;
+              autoThrowMatchingSlot();
+              showFloatingPopup(droneGroup.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '🚁 DRONE AUTO-DROP!', 'text-cyan-300 font-bold');
+            }
+          }
+          if (gameState.droneAssistTimer <= 0) {
+            droneGroup.visible = false;
+          }
+        } else {
+          droneGroup.visible = false;
+        }
+
+        // 5. Coin Magnet & Shield Bumper Timers
+        if (gameState.coinMagnetTimer > 0) {
+          gameState.coinMagnetTimer -= dt;
+        }
+        if (shieldBumperMesh) {
+          shieldBumperMesh.visible = !!gameState.shieldBumperActive;
+          if (gameState.shieldBumperActive) {
+            shieldRing.scale.setScalar(1 + Math.sin(now * 0.015) * 0.08);
+          }
+        }
+
+        // 6. Collectible Road Coins Spawning & Attraction
+        if (gameState.distanceMeters - lastCoinSpawnDist > 34) {
+          lastCoinSpawnDist = gameState.distanceMeters;
+          spawnRoadCoinCluster(-165);
+        }
+
+        for (let cIdx = activeRoadCoins.length - 1; cIdx >= 0; cIdx--) {
+          const cMesh = activeRoadCoins[cIdx];
+          cMesh.position.z += playerSpeed * dt;
+          cMesh.rotation.y += rawDt * 3.5;
+          cMesh.position.y = 0.75 + Math.sin(now * 0.008 + cIdx) * 0.14;
+
+          if (gameState.coinMagnetTimer > 0) {
+            const mDz = Math.abs(cMesh.position.z - playerVan.position.z);
+            if (mDz < 35) {
+              cMesh.position.x = THREE.MathUtils.lerp(cMesh.position.x, playerVan.position.x, rawDt * 9);
+              cMesh.position.z = THREE.MathUtils.lerp(cMesh.position.z, playerVan.position.z, rawDt * 11);
+            }
+          }
+
+          const distZ = Math.abs(cMesh.position.z - playerVan.position.z);
+          const distX = Math.abs(cMesh.position.x - playerVan.position.x);
+          if (distZ < 2.0 && distX < 1.6) {
+            soundFX.playDeliverSuccess();
+            gameState.coins += 1;
+            gameState.runCoinsEarned += 1;
+            gameState.score += 20 * (gameState.overdriveActive ? 2 : 1);
+            spawnVoxelBurst(cMesh.position, 0xfacc15, 10);
+            showFloatingPopup(cMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '+1 COIN', 'text-amber-300 font-extrabold');
+            scene.remove(cMesh);
+            activeRoadCoins.splice(cIdx, 1);
+            updateHUD();
+            updateContractProgress('yangon_coins', 1);
+            continue;
+          }
+
+          if (cMesh.position.z > 35) {
+            scene.remove(cMesh);
+            activeRoadCoins.splice(cIdx, 1);
+          }
+        }
+
         if (gameState.distanceMeters >= gameState.nextGateDistance && activeGates.length === 0) {
           gameState.nextGateDistance = gameState.distanceMeters + 165;
           triggerNextCityGate(-135);
@@ -3043,7 +3454,25 @@
           const distX = Math.abs(pu.mesh.position.x - playerVan.position.x);
           if (distZ < 2.3 && distX < 1.8) {
             soundFX.playCityGateChime();
-            if (pu.type === 'heart') {
+            if (pu.type === 'drone') {
+              gameState.droneAssistTimer = 6.0;
+              droneGroup.visible = true;
+              droneThrowCooldown = 0.4;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🚁 DRONE ASSIST ACTIVE (6S)!', 'text-cyan-300 font-extrabold');
+            } else if (pu.type === 'magnet') {
+              gameState.coinMagnetTimer = 8.0;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xf59e0b, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🧲 COIN MAGNET ACTIVE (8S)!', 'text-amber-300 font-extrabold');
+            } else if (pu.type === 'shield') {
+              gameState.shieldBumperActive = true;
+              if (shieldBumperMesh) shieldBumperMesh.visible = true;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x38bdf8, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🛡️ SHIELD BUMPER READY!', 'text-sky-300 font-extrabold');
+            } else if (pu.type === 'heart') {
               gameState.hearts = Math.min(gameState.maxHearts, gameState.hearts + 1);
               updateHUD();
               spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xf43f5e, 24);
@@ -3134,9 +3563,25 @@
               });
               cw.members.length = 0;
 
-              if (gameState.immortalTimer > 0) {
-                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'IMMORTAL KNOCKBACK!', 'text-amber-300');
+              if (gameState.immortalTimer > 0 || gameState.overdriveActive) {
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '⚡ OVERDRIVE KNOCKBACK!', 'combat-text-gold');
+                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'OVERDRIVE KNOCKBACK!', 'text-amber-300');
+              } else if (gameState.shieldBumperActive) {
+                gameState.shieldBumperActive = false;
+                if (shieldBumperMesh) shieldBumperMesh.visible = false;
+                soundFX.playPerfectChime();
+                triggerScreenShake(0.25, 0.9);
+                spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 22);
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD SAVED IMPACT!', 'combat-text-blue');
+                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'SHIELD DEFLECTED!', 'text-cyan-300');
+                updateHUD();
               } else if (gameState.invulnerableTimer <= 0) {
+                // Grazing obstacles or taking damage cracks fragile parcels in hand
+                gameState.handModifiers.forEach(m => {
+                  if (m && m.type === 'fragile' && !m.cracked) m.cracked = true;
+                });
+                renderBottomParcelHandUI();
+
                 gameState.hearts -= 1;
                 gameState.combo = 1;
                 gameState.invulnerableTimer = 1.6;
@@ -3231,6 +3676,56 @@
         for (let i = trafficVehicles.length - 1; i >= 0; i--) {
           const tv = trafficVehicles[i];
 
+          // Intelligent Lane-Switch AI (25% of vehicles telegraph with turn-signals for 1.2s before changing lanes)
+          if (tv.canSwitchLane && tv.leftBlinker && tv.rightBlinker) {
+            const dzToPlayer = playerVan.position.z - tv.mesh.position.z;
+            // When vehicle is within 45 units ahead of player
+            if (tv.laneSwitchState === 'idle' && dzToPlayer > 12 && dzToPlayer <= 45) {
+              const currentLane = tv.laneIdx;
+              const options = [];
+              if (currentLane > 0) options.push(currentLane - 1);
+              if (currentLane < 3) options.push(currentLane + 1);
+              if (options.length > 0) {
+                tv.targetLaneIdx = options[Math.floor(Math.random() * options.length)];
+                tv.signalSide = tv.targetLaneIdx < currentLane ? 'left' : 'right';
+                tv.laneSwitchState = 'signaling';
+                tv.signalTimer = 1.2;
+              }
+            }
+
+            if (tv.laneSwitchState === 'signaling') {
+              tv.signalTimer -= dt;
+              const isBlinking = Math.floor(now / 110) % 2 === 0;
+              if (tv.signalSide === 'left') {
+                tv.leftBlinker.visible = isBlinking;
+                tv.rightBlinker.visible = false;
+              } else {
+                tv.rightBlinker.visible = isBlinking;
+                tv.leftBlinker.visible = false;
+              }
+
+              if (tv.signalTimer <= 0) {
+                tv.laneSwitchState = 'switching';
+                tv.leftBlinker.visible = false;
+                tv.rightBlinker.visible = false;
+                tv.startLaneX = tv.mesh.position.x;
+                tv.switchProgress = 0;
+              }
+            } else if (tv.laneSwitchState === 'switching') {
+              tv.switchProgress += dt / 0.85; // smooth lane transition over 0.85s
+              const targetX = LANES[tv.targetLaneIdx];
+              const smoothT = THREE.MathUtils.smoothstep(tv.switchProgress, 0, 1);
+              tv.mesh.position.x = THREE.MathUtils.lerp(tv.startLaneX, targetX, smoothT);
+              tv.mesh.rotation.y = (tv.targetLaneIdx > tv.laneIdx ? -1 : 1) * Math.sin(smoothT * Math.PI) * 0.16;
+              if (tv.switchProgress >= 1) {
+                tv.mesh.position.x = targetX;
+                tv.mesh.rotation.y = 0;
+                tv.laneIdx = tv.targetLaneIdx;
+                tv.laneSwitchState = 'done';
+              }
+            }
+          }
+
           // Prevent vehicles in the same lane from ever overlapping or passing through each other!
           trafficVehicles.forEach((other) => {
             if (other !== tv && other.laneIdx === tv.laneIdx) {
@@ -3284,6 +3779,7 @@
 
             if (isClosePass || isLastSecondDodge) {
               tv.nearMissAwarded = true;
+              increaseOverdrive(10); // +10% per traffic near-miss
               gameState.nearMissCount++;
               const bonusScore = 50 * gameState.combo;
               gameState.score += bonusScore;
@@ -3309,17 +3805,43 @@
 
           if (gameState.invulnerableTimer <= 0) {
             if (distZ < hitHalfZ && distX < hitHalfX) {
-              if (gameState.immortalTimer > 0) {
-                // Rainbow Immortal Mode blasts traffic out of the way without losing hearts!
+              if (gameState.immortalTimer > 0 || gameState.overdriveActive) {
+                // Rainbow Immortal Mode or Midnight Overdrive blasts traffic out of the way without losing hearts!
                 soundFX.playDeliverSuccess();
-                gameState.score += 150;
+                const bonusScore = gameState.overdriveActive ? 300 : 150;
+                gameState.score += bonusScore;
                 updateHUD();
-                spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 24);
-                showFloatingPopup(tv.mesh.position.clone().add(new THREE.Vector3(0, 3, 0)), 'IMMORTAL SMASH +150!', 'text-amber-300');
+                spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 28);
+                showFloatingCombatText(tv.mesh.position.clone().add(new THREE.Vector3(0, 2.5, 0)), gameState.overdriveActive ? '⚡ OVERDRIVE SMASH! +300' : 'IMMORTAL SMASH! +150', 'combat-text-gold');
+                showFloatingPopup(tv.mesh.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'ROADBLOCK SMASHED!', 'text-amber-300 font-extrabold');
                 scene.remove(tv.mesh);
                 trafficVehicles.splice(i, 1);
                 continue;
               }
+
+              if (gameState.shieldBumperActive) {
+                // Shield Bumper absorbs 1 traffic collision without losing a heart or breaking combo!
+                gameState.shieldBumperActive = false;
+                if (shieldBumperMesh) shieldBumperMesh.visible = false;
+                soundFX.playPerfectChime();
+                triggerScreenShake(0.25, 0.9);
+                spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 26);
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD DEFLECTED IMPACT!', 'combat-text-blue');
+                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.5, 0)), 'BUMPER ABSORPTION!', 'text-cyan-300 font-bold');
+                updateHUD();
+                // Knock traffic vehicle out of player's way
+                tv.forwardDriveSpeed = 45;
+                tv.mesh.position.x += (tv.mesh.position.x >= playerVan.position.x ? 2.8 : -2.8);
+                continue;
+              }
+
+              // Taking damage or grazing obstacles cracks fragile parcels in hand!
+              gameState.handModifiers.forEach((m) => {
+                if (m && m.type === 'fragile' && !m.cracked) {
+                  m.cracked = true;
+                }
+              });
+              renderBottomParcelHandUI();
 
               soundFX.playCrash();
               gameState.hearts -= 1;
@@ -3387,11 +3909,68 @@
 
               if (apt.wantedType === fp.parcelType) {
                 // EXACT ORDER MATCH!
+                increaseOverdrive(20); // +20% Overdrive per successful delivery
+
+                // VIP DOUBLE ORDER (Roadside resident with golden crown requiring 2 throws)
+                if (apt.isVip && (!apt.vipDelivered || apt.vipDelivered < 1)) {
+                  apt.vipDelivered = 1;
+                  soundFX.playDeliverSuccess();
+                  triggerScreenShake(0.18, 0.7);
+                  spawnVoxelBurst(liveEnd, 0xfacc15, 24);
+
+                  const vipHalfPts = Math.round(pInfo.pts * 1.5 * engScoreMult * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfCoins = Math.round(baseCoinGain * (gameState.overdriveActive ? 2 : 1));
+                  gameState.score += vipHalfPts;
+                  gameState.coins += vipHalfCoins;
+                  gameState.runCoinsEarned += vipHalfCoins;
+                  gameState.deliveries += 1;
+                  updateHUD();
+
+                  updateContractProgress('deliveries_run', 1);
+                  showFloatingCombatText(liveEnd, '👑 VIP 1/2 DELIVERED! QUICK THROW 2ND!', 'combat-text-gold');
+                  showFloatingPopup(liveEnd, `👑 VIP 1/2 COMPLETED! +${vipHalfPts} PTS`, 'text-amber-300 font-extrabold');
+
+                  // Guarantee matching parcel for 2nd throw in player's hand!
+                  ensureParcelAvailableInHand(apt.wantedType);
+
+                  scene.remove(fp.mesh);
+                  fp.trailDots.forEach(td => scene.remove(td));
+                  flyingParcels.splice(i, 1);
+                  continue;
+                }
+
+                // If VIP 2nd throw or Standard delivery:
+                const isVipJackpot = apt.isVip && apt.vipDelivered >= 1;
                 const isPerfect = !!fp.isSweetSpot;
+
+                // SPECIAL PARCEL MODIFIERS (HOT / FRAGILE)
+                let modMultiplier = 1.0;
+                let modText = '';
+                if (fp.modifier) {
+                  if (fp.modifier.type === 'hot') {
+                    if (fp.modifier.timer > 0) {
+                      modMultiplier *= 1.5; // +50% Piping Hot Bonus!
+                      modText = '🔥 PIPING HOT! +50%';
+                    } else {
+                      modText = '❄️ COOLED DOWN';
+                    }
+                  } else if (fp.modifier.type === 'fragile') {
+                    if (!fp.modifier.cracked) {
+                      modMultiplier *= 2.5; // 2.5x Intact Bonus!
+                      modText = '💎 INTACT FRAGILE! x2.5';
+                    } else {
+                      modText = '💔 CRACKED';
+                    }
+                  }
+                }
+
+                const overdriveMultiplier = gameState.overdriveActive ? 2 : 1;
+                const vipMultiplier = isVipJackpot ? 3.0 : 1.0;
                 const matchMultiplier = 2; // +100% exact order bonus
-                const multiplier = (isPerfect ? 2 : 1) * matchMultiplier;
-                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * engScoreMult);
-                const coinGain = baseCoinGain * 2 + (isPerfect ? 15 : 0);
+                const multiplier = (isPerfect ? 2 : 1) * matchMultiplier * modMultiplier * vipMultiplier;
+                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult);
+                const vipCoinBonus = isVipJackpot ? 100 : 0;
+                const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier);
 
                 apt.delivered = true;
                 apt.ringGroup.visible = false;
@@ -3402,7 +3981,7 @@
                 gameState.coins += coinGain;
                 gameState.runCoinsEarned += coinGain;
                 if (isPerfect) gameState.perfectDropCount++;
-                gameState.combo = Math.min(8, gameState.combo + (isPerfect ? 2 : 1));
+                gameState.combo = Math.min(8, gameState.combo + (isPerfect || isVipJackpot ? 2 : 1));
                 updateHUD();
 
                 updateContractProgress('deliveries_run', 1);
@@ -3415,17 +3994,25 @@
 
                 tryRandomDiscoveryOnDelivery(fp.parcelType, apt.character ? apt.character.id : null);
 
-                if (isPerfect) {
+                if (isVipJackpot) {
+                  soundFX.playPerfectChime();
+                  triggerScreenShake(0.42, 1.6);
+                  spawnVoxelBurst(liveEnd, 0xfacc15, 48);
+                  showFloatingCombatText(liveEnd, '👑 VIP JACKPOT COMPLETED! x3', 'combat-text-gold');
+                  showFloatingPopup(liveEnd, `👑 VIP JACKPOT! +${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
+                } else if (isPerfect) {
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.35, 1.4);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 36);
-                  showFloatingCombatText(liveEnd, '⚡ PERFECT EXACT DROP! x2', 'combat-text-gold');
+                  const bannerText = modText ? `⚡ PERFECT DROP! (${modText})` : '⚡ PERFECT EXACT DROP! x2';
+                  showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
                   showFloatingPopup(liveEnd, `🎯 EXACT MATCH! +${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
                 } else {
                   soundFX.playDeliverSuccess();
                   triggerScreenShake(0.15, 0.6);
                   spawnVoxelBurst(liveEnd, pInfo.color, 24);
-                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! +100% BONUS', 'combat-text-gold');
+                  const bannerText = modText ? `🎯 EXACT ORDER! (${modText})` : '🎯 EXACT ORDER! +100% BONUS';
+                  showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
                   showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-emerald-300 font-bold');
                 }
               } else {

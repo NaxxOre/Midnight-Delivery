@@ -512,4 +512,79 @@
   animation: pulseLevelUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* ⚡ Overdrive Fever Mode Styles */
+.overdrive-gauge-container {
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+}
+.overdrive-bar-fill {
+  background: linear-gradient(90deg, #f59e0b 0%, #facc15 50%, #00f5d4 100%);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.85);
+  transition: width 0.15s ease-out;
+}
+.overdrive-fever-active {
+  animation: feverPulse 0.45s ease-in-out infinite alternate;
+  box-shadow: 0 0 24px rgba(0, 245, 212, 0.95), inset 0 0 10px #ffffff !important;
+  border-color: #facc15 !important;
+}
+@keyframes feverPulse {
+  0% { transform: scale(1); filter: brightness(1.1); }
+  100% { transform: scale(1.04); filter: brightness(1.5) drop-shadow(0 0 14px #00f5d4); }
+}
+
+/* 🔥 Hot / Timed Parcel Countdown Bar */
+.hot-countdown-track {
+  width: 100%;
+  height: 3.5px;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.hot-countdown-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444 0%, #f97316 60%, #facc15 100%);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.85);
+  transition: width 0.1s linear;
+}
+
+/* ⚠️ Fragile & 💔 Cracked Parcel Badges */
+.badge-fragile {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: #090d16;
+  font-weight: 900;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+.badge-cracked {
+  background: linear-gradient(90deg, #64748b, #475569);
+  color: #fca5a5;
+  font-weight: 900;
+  border: 1px dashed #f87171;
+}
+
+/* 👑 VIP Double Order Styles */
+.vip-crown-badge {
+  background: linear-gradient(135deg, #fef08a 0%, #facc15 50%, #d97706 100%);
+  color: #0f172a;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.9);
+  animation: vipShimmer 1.2s ease-in-out infinite alternate;
+}
+@keyframes vipShimmer {
+  0% { transform: scale(0.96); filter: drop-shadow(0 0 6px #facc15); }
+  100% { transform: scale(1.05); filter: drop-shadow(0 0 18px #fde047); }
+}
+
+/* 🔥 Rush Hour Blitz Event Banner */
+@keyframes rushBannerSlide {
+  0% { transform: translateY(-40px) scale(0.85); opacity: 0; }
+  15% { transform: translateY(0) scale(1.05); opacity: 1; }
+  85% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(0.9); opacity: 0; }
+}
+.rush-hour-banner-active {
+  animation: rushBannerSlide 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 

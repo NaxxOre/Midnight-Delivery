@@ -148,6 +148,32 @@
       <!-- TOP-CENTER: Active Power-Up Countdown Bars (Slow-Mo Energy Pool & Immortal) & Crosswalk Caution Pill -->
       <div class="flex flex-col items-center gap-1 pointer-events-none">
         <div id="powerup-hud-bars" class="flex flex-wrap items-center justify-center gap-1.5">
+          <!-- Overdrive Fever Mode Meter -->
+          <div id="overdrive-hud-pill" class="navy-panel rounded-full px-2.5 sm:px-3 py-1 border-2 border-sky-400 flex items-center gap-2 shadow-lg transition-all">
+            <span class="arcade-font text-[9px] sm:text-[10px] text-amber-300 font-extrabold flex items-center gap-1">
+              <span>⚡</span>
+              <span id="overdrive-title-text">OVERDRIVE</span>
+            </span>
+            <div class="w-14 sm:w-20 h-2 bg-slate-900 rounded-full overflow-hidden border border-white/40">
+              <div id="overdrive-bar-fill" class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-300 transition-all duration-100" style="width: 0%"></div>
+            </div>
+            <span id="overdrive-pct-val" class="text-[8px] sm:text-[9.5px] font-black text-amber-300">0%</span>
+          </div>
+
+          <!-- Collectible Power-Up Badges -->
+          <div id="pill-drone-assist" class="hidden px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 font-black text-[8px] sm:text-[9px] arcade-font shadow flex items-center gap-1 animate-pulse">
+            <span>🚁</span>
+            <span>DRONE (<span id="drone-timer-text">6s</span>)</span>
+          </div>
+          <div id="pill-coin-magnet" class="hidden px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[8px] sm:text-[9px] arcade-font shadow flex items-center gap-1 animate-pulse">
+            <span>🧲</span>
+            <span>MAGNET (<span id="magnet-timer-text">8s</span>)</span>
+          </div>
+          <div id="pill-shield-bumper" class="hidden px-2.5 py-0.5 rounded-full bg-sky-400 text-slate-950 font-black text-[8px] sm:text-[9px] arcade-font shadow flex items-center gap-1">
+            <span>🛡️</span>
+            <span>SHIELD READY</span>
+          </div>
+
           <div id="immortal-hud-pill" class="hidden navy-panel rounded-full px-3 py-1 border-2 border-amber-300 flex items-center gap-2 shadow-lg">
             <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-pink-500 via-amber-300 to-cyan-400 animate-spin"></span>
             <span class="arcade-font text-[10px] sm:text-xs text-amber-300">IMMORTAL STAR</span>
@@ -161,6 +187,15 @@
             <div class="w-14 sm:w-20 h-2 bg-slate-900 rounded-full overflow-hidden border border-white/40">
               <div id="slowmo-bar-fill" class="h-full bg-cyan-400 transition-all duration-100" style="width: 100%"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- Rush Hour Blitz Grand Alert Banner -->
+        <div id="rush-hour-banner" class="hidden fixed top-16 inset-x-0 mx-auto max-w-sm pointer-events-none z-50 flex items-center justify-center">
+          <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-red-600 via-orange-500 to-amber-400 text-slate-950 border-3 border-white shadow-[0_0_30px_rgba(249,115,22,0.95)] flex items-center gap-2 arcade-font font-black text-xs sm:text-sm animate-pulse">
+            <span class="text-base sm:text-lg">🔥</span>
+            <span>RUSH HOUR BLITZ! 2X ORDERS &amp; HIGH TIER!</span>
+            <span class="text-base sm:text-lg">🔥</span>
           </div>
         </div>
 

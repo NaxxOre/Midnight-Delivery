@@ -1490,16 +1490,36 @@
       return aptData;
     }
 
+    function createVoxelCrownMesh() {
+      const crown = new THREE.Group();
+      const cOpt = { emissive: 0xfacc15, emissiveIntensity: 0.95, metalness: 0.8 };
+      addVoxelBox(crown, 1.0, 0.22, 1.0, 0, 0, 0, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24, -0.38, 0.28, -0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24,  0.38, 0.28, -0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24, -0.38, 0.28,  0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24,  0.38, 0.28,  0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.28, 0.28, 0.28, 0, 0.22, 0.42, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.0 });
+      crown.position.y = 2.45;
+      return crown;
+    }
+
     function configureApartmentCustomer(apt, allowOrder = true) {
       while (apt.customerSlot.children.length > 0) {
         apt.customerSlot.remove(apt.customerSlot.children[0]);
       }
       apt.charMesh = null;
+      apt.crownMesh = null;
       apt.delivered = false;
+      apt.isVip = false;
+      apt.vipNeeded = 1;
+      apt.vipDelivered = 0;
 
-      // Enforce at least ~165m gap between active orders so only 1 order is active at a time
+      const isRushHour = !!(gameState && gameState.rushHourActive);
+      const minOrderGap = isRushHour ? 48 : 95;
+
+      // Enforce order gap so orders don't overcrowd
       const tooCloseToExistingOrder = apartments.some(
-        other => other !== apt && other.hasOrder && !other.delivered && Math.abs(other.group.position.z - apt.group.position.z) < 95
+        other => other !== apt && other.hasOrder && !other.delivered && Math.abs(other.group.position.z - apt.group.position.z) < minOrderGap
       );
 
       // Hold off spawning customer orders while player is still in Tutorial Step 1 (Steering Practice)
@@ -1510,7 +1530,8 @@
         return;
       }
 
-      if (!allowOrder || tooCloseToExistingOrder || Math.random() < 0.35) {
+      const skipChance = isRushHour ? 0.12 : 0.35;
+      if (!allowOrder || tooCloseToExistingOrder || Math.random() < skipChance) {
         apt.hasOrder = false;
         apt.ringGroup.visible = false;
         apt.cloudEl.classList.add('hidden');
@@ -1520,12 +1541,30 @@
       globalOrderCounter++;
       apt.hasOrder = true;
       apt.orderId = globalOrderCounter;
-      apt.wantedType = Math.floor(Math.random() * PARCEL_TYPES.length);
+
+      // In Rush Hour Blitz, 65% chance for high-tier parcel (Legendary, Gold, Epic: ids 0 to 5)
+      if (isRushHour && Math.random() < 0.65) {
+        const highTierPool = [0, 1, 2, 3, 4, 5];
+        apt.wantedType = highTierPool[Math.floor(Math.random() * highTierPool.length)];
+      } else {
+        apt.wantedType = Math.floor(Math.random() * PARCEL_TYPES.length);
+      }
       apt.character = CHARACTER_TYPES[Math.floor(Math.random() * CHARACTER_TYPES.length)];
 
       const charMesh = createVoxelCharacter(apt.character.id, 0.96);
       apt.customerSlot.add(charMesh);
       apt.charMesh = charMesh;
+
+      // VIP Double Order (20% chance)
+      const isVip = Math.random() < 0.20;
+      apt.isVip = isVip;
+      apt.vipNeeded = isVip ? 2 : 1;
+      apt.vipDelivered = 0;
+      if (isVip) {
+        const crown = createVoxelCrownMesh();
+        apt.crownMesh = crown;
+        apt.customerSlot.add(crown);
+      }
 
       apt.ringGroup.visible = true;
       ensureParcelAvailableInHand(apt.wantedType);

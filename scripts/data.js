@@ -451,6 +451,7 @@
       entranceTimer: 0,
       baseSpeed: 31,
       handSlots: [0, 2, 6],
+      handModifiers: [null, null, null],
       selectedSlotIndex: 0,
       cityIndex: 0,
       timeIndex: 0,
@@ -463,6 +464,18 @@
       dragSide: null,
       dragCancel: false,
       targetAptLock: null,
+      // Overdrive & Power-Up States
+      overdriveMeter: 0,
+      overdriveActive: false,
+      overdriveTimer: 0,
+      droneAssistTimer: 0,
+      coinMagnetTimer: 0,
+      shieldBumperActive: false,
+      // Dynamic Road Events
+      survivalTimer: 0,
+      rushHourActive: false,
+      rushHourTimer: 0,
+      nextRushHourAt: 60.0,
       // Courier Rank & Retention State
       courierXP: 0,
       courierRankLevel: 1,
