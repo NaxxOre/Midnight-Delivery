@@ -2544,8 +2544,10 @@
       });
       flyingParcels.length = 0;
 
-      exhaustParticles.forEach(ep => scene.remove(ep.mesh));
-      exhaustParticles.length = 0;
+      exhaustPool.forEach(p => {
+        p.active = false;
+        p.mesh.visible = false;
+      });
 
       flyingRagdolls.forEach(rg => scene.remove(rg.mesh));
       flyingRagdolls.length = 0;
@@ -3368,13 +3370,20 @@
         }, 550);
       }
     }
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(hideLoadingOverlay, 1500);
-    });
 
-    window.onload = function () {
+    let isLoopStarted = false;
+    function startAnimationLoop() {
+      if (isLoopStarted) return;
+      isLoopStarted = true;
       updateCameraForViewport();
       lastTime = performance.now();
       requestAnimationFrame(animate);
       hideLoadingOverlay();
-    };
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      startAnimationLoop();
+    } else {
+      document.addEventListener('DOMContentLoaded', startAnimationLoop);
+      window.addEventListener('load', startAnimationLoop);
+    }
