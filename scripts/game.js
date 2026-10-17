@@ -1203,12 +1203,41 @@
     const trafficVehicles = [];
     const flyingParcels = [];
     const particles = [];
-    const exhaustParticles = [];
     const flyingRagdolls = [];
     const activePowerUps = [];
     const weatherParticles = [];
     const activeGates = [];
     const activeCrosswalks = [];
+
+    // Pre-allocated Exhaust Smoke Particle Pool (Eliminates GC pressure & WebGL shader/material exhaustion)
+    const EXHAUST_POOL_SIZE = 28;
+    const exhaustMatNormal = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.65 });
+    const exhaustMatBoost = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 });
+    const exhaustPool = [];
+    for (let i = 0; i < EXHAUST_POOL_SIZE; i++) {
+      const mesh = new THREE.Mesh(unitBoxGeo, exhaustMatNormal);
+      mesh.visible = false;
+      scene.add(mesh);
+      exhaustPool.push({
+        mesh,
+        active: false,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        life: 0,
+        maxLife: 0.55
+      });
+    }
+
+    // Cached shared geometry and materials for parcel throw trail dots
+    const trailDotGeo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
+    const trailDotMatCache = {};
+    function getTrailDotMat(colorHex) {
+      if (!trailDotMatCache[colorHex]) {
+        trailDotMatCache[colorHex] = new THREE.MeshBasicMaterial({ color: colorHex });
+      }
+      return trailDotMatCache[colorHex];
+    }
 
     // 3 Sculpted 3D Voxel Road Power-Ups: Extra Heart, Chrono Slow-Mo Clock, Rainbow Immortal Star
     function createRoadPowerUpMesh(powerType) {
@@ -1273,31 +1302,23 @@
 
     function spawnExhaustSmoke(isBoosting = false) {
       if (!playerVan || !playerVan.visible) return;
-      const puff = new THREE.Mesh(
-        unitBoxGeo,
-        new THREE.MeshBasicMaterial({
-          color: isBoosting ? 0x38bdf8 : 0xe2e8f0,
-          transparent: true,
-          opacity: 0.65
-        })
-      );
+      const p = exhaustPool.find(ep => !ep.active) || exhaustPool[0];
+      p.active = true;
+      p.mesh.visible = true;
+      p.mesh.material = isBoosting ? exhaustMatBoost : exhaustMatNormal;
       const initScale = isBoosting ? 0.38 : 0.24;
-      puff.scale.setScalar(initScale);
+      p.mesh.scale.setScalar(initScale);
       const sideOffset = (Math.random() - 0.5) * 0.6;
-      puff.position.set(
+      p.mesh.position.set(
         playerVan.position.x - 0.55 + sideOffset,
         0.48 + Math.random() * 0.15,
         playerVan.position.z + 2.48
       );
-      scene.add(puff);
-      exhaustParticles.push({
-        mesh: puff,
-        vx: (Math.random() - 0.5) * 1.6,
-        vy: 1.2 + Math.random() * 1.4,
-        vz: 7.5 + Math.random() * 3.5,
-        life: 0.55,
-        maxLife: 0.55
-      });
+      p.vx = (Math.random() - 0.5) * 1.6;
+      p.vy = 1.2 + Math.random() * 1.4;
+      p.vz = 7.5 + Math.random() * 3.5;
+      p.life = 0.55;
+      p.maxLife = 0.55;
     }
 
     function throwParcelFromHandSlot(slotIndex, apt) {
@@ -1311,11 +1332,9 @@
       scene.add(mesh);
 
       const trailDots = [];
+      const trailMat = getTrailDotMat(PARCEL_TYPES[parcelTypeId].color);
       for (let i = 0; i < 6; i++) {
-        const td = new THREE.Mesh(
-          new THREE.BoxGeometry(0.28, 0.28, 0.28),
-          new THREE.MeshBasicMaterial({ color: PARCEL_TYPES[parcelTypeId].color })
-        );
+        const td = new THREE.Mesh(trailDotGeo, trailMat);
         td.position.copy(startPos);
         scene.add(td);
         trailDots.push(td);
@@ -1437,24 +1456,30 @@
       const parcelImg = parcelIconDataURLs[apt.wantedType] || '';
       const sideLabel = apt.side === 'left' ? 'LEFT' : 'RIGHT';
 
-      apt.cloudEl.innerHTML = `
-        <div class="thought-cloud-pill">
-          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
-            <img src="${charImg}" class="w-full h-full object-contain" alt="char" />
+      if (apt.renderedOrderId !== apt.orderId) {
+        apt.renderedOrderId = apt.orderId;
+        apt.cloudEl.innerHTML = `
+          <div class="thought-cloud-pill">
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
+              <img src="${charImg}" class="w-full h-full object-contain" alt="char" />
+            </div>
+            <div class="flex flex-col text-left min-w-0 flex-1">
+              <div class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</div>
+              <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
+              <span class="cloud-distance-badge mt-0.5 inline-block self-start px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
+                ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
+              </span>
+            </div>
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${pInfo.boxTierClass} flex flex-col items-center justify-center p-1 flex-shrink-0">
+              <img src="${parcelImg}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" alt="item" />
+              <span class="text-[6px] font-extrabold text-slate-900 uppercase leading-none mt-0.5">${pInfo.tier.split(' ')[0]}</span>
+            </div>
           </div>
-          <div class="flex flex-col text-left min-w-0 flex-1">
-            <div class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</div>
-            <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
-            <span class="mt-0.5 inline-block self-start px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
-              ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
-            </span>
-          </div>
-          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${pInfo.boxTierClass} flex flex-col items-center justify-center p-1 flex-shrink-0">
-            <img src="${parcelImg}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" alt="item" />
-            <span class="text-[6px] font-extrabold text-slate-900 uppercase leading-none mt-0.5">${pInfo.tier.split(' ')[0]}</span>
-          </div>
-        </div>
-      `;
+        `;
+        apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
+      } else if (apt.cloudDistBadge) {
+        apt.cloudDistBadge.innerHTML = `${Math.max(0, closestMeters)}m &bull; ${sideLabel}`;
+      }
 
       const worldPos = new THREE.Vector3(
         apt.group.position.x + apt.porchX,
@@ -1685,8 +1710,12 @@
         streetLampBulbs.forEach(b => {
           if (b.material) b.material.emissiveIntensity = targetLampEmissive;
         });
-        windowMeshes.forEach(wm => {
-          if (wm.material) wm.material.emissiveIntensity = targetWindowEmissive;
+        apartments.forEach(apt => {
+          if (apt.windowMeshes) {
+            apt.windowMeshes.forEach(wm => {
+              if (wm.material) wm.material.emissiveIntensity = targetWindowEmissive;
+            });
+          }
         });
       }
     }
@@ -1710,9 +1739,13 @@
           b.material.emissiveIntensity = THREE.MathUtils.lerp(b.material.emissiveIntensity, targetLampEmissive, blendRate);
         }
       });
-      windowMeshes.forEach(wm => {
-        if (wm.material) {
-          wm.material.emissiveIntensity = THREE.MathUtils.lerp(wm.material.emissiveIntensity, targetWindowEmissive, blendRate);
+      apartments.forEach(apt => {
+        if (apt.windowMeshes) {
+          apt.windowMeshes.forEach(wm => {
+            if (wm.material) {
+              wm.material.emissiveIntensity = THREE.MathUtils.lerp(wm.material.emissiveIntensity, targetWindowEmissive, blendRate);
+            }
+          });
         }
       });
     }
@@ -1745,6 +1778,7 @@
     }
 
     function spawnTrafficWave() {
+      if (trafficVehicles.length >= 8) return;
       const laneIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
       const count = Math.random() < 0.30 ? 2 : 1;
       const vehiclePool = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck', 'ambulance', 'firetruck', 'police', 'ufo', 'car'];
@@ -2493,22 +2527,22 @@
         exhaustSpawnTimer = 0;
         spawnExhaustSmoke(gameState.boostTimer > 0);
       }
-      for (let i = exhaustParticles.length - 1; i >= 0; i--) {
-        const ep = exhaustParticles[i];
+      exhaustPool.forEach(ep => {
+        if (!ep.active) return;
         ep.life -= rawDt;
+        if (ep.life <= 0) {
+          ep.active = false;
+          ep.mesh.visible = false;
+          return;
+        }
         ep.mesh.position.x += ep.vx * rawDt;
         ep.mesh.position.y += ep.vy * rawDt;
         ep.mesh.position.z += ep.vz * dt;
         ep.mesh.rotation.x += 3.5 * rawDt;
         ep.mesh.rotation.y += 3.5 * rawDt;
         const lifeRatio = Math.max(0, ep.life / ep.maxLife);
-        ep.mesh.material.opacity = lifeRatio * 0.55;
         ep.mesh.scale.setScalar(0.24 + (1 - lifeRatio) * 0.48);
-        if (ep.life <= 0) {
-          scene.remove(ep.mesh);
-          exhaustParticles.splice(i, 1);
-        }
-      }
+      });
 
       roadLines.forEach(dash => {
         dash.position.z += playerSpeed * dt;
@@ -3053,6 +3087,19 @@
       setTimeout(updateCameraForViewport, 120);
     });
 
+    // Handle tab backgrounding & inactivity: Pause Web Audio to avoid buffer lag and reset lastTime
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (soundFX && soundFX.ctx && soundFX.ctx.state === 'running') {
+          soundFX.ctx.suspend().catch(() => {});
+        }
+      } else {
+        lastTime = performance.now();
+        if (soundFX && soundFX.ctx && soundFX.ctx.state === 'suspended' && soundFX.enabled) {
+          soundFX.ctx.resume().catch(() => {});
+        }
+      }
+    });
 
     function hideLoadingOverlay() {
       const loader = document.getElementById('loading-overlay');

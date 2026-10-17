@@ -28,6 +28,8 @@
 
     // Native Script 3D Signboard Generator for Authentic Local Shops & Stalls
     const signTexCache = {};
+    const signGeoCache = {};
+    const signMatCache = {};
     function createNativeSignboardMesh(topText, bottomText, bgHex, fgHex, w, h, d) {
       const key = `${topText}_${bottomText}_${bgHex}_${fgHex}`;
       if (!signTexCache[key]) {
@@ -49,10 +51,14 @@
         ctx.fillText(bottomText, 128, 96);
         signTexCache[key] = new THREE.CanvasTexture(c);
       }
-      return new THREE.Mesh(
-        new THREE.BoxGeometry(w, h, d),
-        new THREE.MeshBasicMaterial({ map: signTexCache[key] })
-      );
+      const geoKey = `${w}_${h}_${d}`;
+      if (!signGeoCache[geoKey]) {
+        signGeoCache[geoKey] = new THREE.BoxGeometry(w, h, d);
+      }
+      if (!signMatCache[key]) {
+        signMatCache[key] = new THREE.MeshBasicMaterial({ map: signTexCache[key] });
+      }
+      return new THREE.Mesh(signGeoCache[geoKey], signMatCache[key]);
     }
 
     // ============================================================================
@@ -1226,6 +1232,7 @@
       while (apt.archGroup.children.length > 0) {
         apt.archGroup.remove(apt.archGroup.children[0]);
       }
+      apt.windowMeshes = [];
 
       const xSign = apt.side === 'left' ? -1 : 1;
       const wallCol = cityTheme.walls[index % cityTheme.walls.length];
@@ -1273,7 +1280,7 @@
           for (let wy = 3.4; wy < 8.5; wy += 2.6) {
             for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
               const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.3, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              windowMeshes.push(wm);
+              apt.windowMeshes.push(wm);
             }
           }
         }
@@ -1299,7 +1306,7 @@
           for (let wy = 3.6; wy < h - 1.2; wy += 2.6) {
             for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
               const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.4, faceX, wy, wz, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: Math.max(0.45, isNight) });
-              windowMeshes.push(wm);
+              apt.windowMeshes.push(wm);
             }
           }
         } else {
@@ -1377,7 +1384,7 @@
           for (let wy = 3.4; wy < 8.2; wy += 2.6) {
             for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
               const wm = addVoxelBox(apt.archGroup, 0.18, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              windowMeshes.push(wm);
+              apt.windowMeshes.push(wm);
             }
           }
         }
@@ -1394,7 +1401,7 @@
         for (let wy = 3.4; wy < height - 1.2; wy += 2.8) {
           for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
             const wm = addVoxelBox(apt.archGroup, 0.16, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-            windowMeshes.push(wm);
+            apt.windowMeshes.push(wm);
           }
         }
       }
