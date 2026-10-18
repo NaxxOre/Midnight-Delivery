@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="styles/utilities.css" />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <script defer src="scripts/vendor/three.r128.min.js"></script>
-  <link rel="stylesheet" href="styles/main.css?v=cargo-phase1-20261019" />
+  <link rel="stylesheet" href="styles/main.css?v=sprint-5" />
 </head>
 <body>
 
@@ -42,9 +42,6 @@
 
   <div id="popups-layer" class="hud-feedback-layer">
     <div id="action-toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  </div>
-  <div id="city-toast" class="hidden" aria-live="polite">
-    <span id="city-toast-title">WELCOME TO TOKYO</span>
   </div>
 
   <!-- Dragging Floating Parcel Ghost -->
@@ -106,8 +103,12 @@
           <div class="hud-stat"><span>SCORE</span> <strong id="score-val">0</strong></div>
           <div class="hud-stat"><span>COINS</span> <strong id="hud-coins-val">250</strong></div>
           <div class="hud-stat"><span>COMBO</span> <strong id="combo-val">x1</strong></div>
+          <div id="cargo-status" class="hud-stat hud-cargo-status" aria-label="Roof cargo and sway">
+            <span>ROOF STACK</span><strong id="cargo-count">3/6 · ×1.8</strong>
+            <div class="cargo-sway-track"><div id="cargo-sway-fill"></div></div>
+          </div>
         </div>
-        <div class="hud-heart-row"><span>LIFE</span><div id="armor-boxes" aria-label="3 hearts"></div></div>
+        <div class="hud-heart-row"><span>HEARTS</span><div id="armor-boxes" aria-label="3 hearts"></div></div>
       </div>
       <div class="hud-controls interactive">
         <button id="btn-audio" class="arcade-btn rounded-xl w-10 h-10 sm:w-11 sm:h-11 bg-slate-800 flex items-center justify-center text-white" title="Toggle Music & Sirens">
@@ -119,10 +120,6 @@
           <span class="arcade-font text-xs sm:text-sm hidden xs:inline sm:inline">PAUSE</span>
         </button>
       </div>
-    </div>
-    <div id="cargo-status" class="hud-cargo-status" aria-label="Roof cargo and sway">
-      <span id="cargo-count">📦 3/6 · ×1.8</span>
-      <div class="cargo-sway-track"><div id="cargo-sway-fill"></div></div>
     </div>
     <div id="parcel-dock" class="parcel-dock">
       <div id="parcel-hand-horizontal" role="group" aria-label="Parcel dock: Q or 1, W or 2, E or 3"></div>
@@ -511,9 +508,6 @@
         </div>
       </div>
 
-      <button data-close-modal="modal-settings" class="w-full py-3.5 rounded-2xl bg-sky-400 text-slate-950 font-extrabold arcade-font arcade-btn">
-        SAVE &amp; CLOSE
-      </button>
       <div class="save-controls">
         <label for="setting-callsign">Courier callsign</label>
         <input id="setting-callsign" maxlength="24" autocomplete="nickname" />
@@ -521,6 +515,9 @@
         <label class="import-save-label">IMPORT SAVE (JSON)<input id="setting-import-save" type="file" accept=".json,application/json" /></label>
         <p id="save-status" role="status"></p>
       </div>
+      <button data-close-modal="modal-settings" class="w-full py-3.5 rounded-2xl bg-sky-400 text-slate-950 font-extrabold arcade-font arcade-btn" style="margin-top:12px">
+        SAVE &amp; CLOSE
+      </button>
     </div>
   </div>
 

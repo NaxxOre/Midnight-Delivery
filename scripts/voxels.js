@@ -112,6 +112,7 @@
       const h = window.innerHeight || 667;
       const aspect = w / h;
       camera.aspect = aspect;
+      camera.userData.gameplayFov = aspect < 0.65 ? 58 : 55;
 
       if (aspect < 0.65) {
         // Tall Portrait Mobile (Matches Screenshots 1 & 2: sky at top, full van centered above parcel bar)
@@ -135,6 +136,7 @@
         PLAY_CAM_LOOK.set(0, 2.3, -42.0);
       }
 
+      if (gameState.mode !== 'home') camera.fov = camera.userData.gameplayFov;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));

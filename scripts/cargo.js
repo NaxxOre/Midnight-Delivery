@@ -26,7 +26,7 @@
       const label = document.getElementById('cargo-count');
       const fill = document.getElementById('cargo-sway-fill');
       if (!status || !label || !fill) return;
-      const text = `📦 ${gameState.roofCrates}/6 · ×${getRoofScoreMultiplier().toFixed(1)}`;
+      const text = `${gameState.roofCrates}/6 · ×${getRoofScoreMultiplier().toFixed(1)}`;
       const stockChanged = label.textContent !== text;
       if (stockChanged) label.textContent = text;
       const danger = Math.round(gameState.cargoDanger * 100);

@@ -48,6 +48,7 @@ exports.run = async root => {
       await page.locator('#btn-start-play').click();
       await require('./mechanics.js').verify(page);
       await require('./database.js').verifyBrowser(page);
+      await require('./layout.js').verify(page, root, width, height);
       await page.evaluate(() => {
         window.smokeFrames = [];
         let previous = performance.now();

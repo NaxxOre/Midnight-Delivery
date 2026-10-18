@@ -1675,8 +1675,8 @@
     // 13. HUD WITH VOXEL HEART SVGS, VIRTUAL JOYSTICK, KEYBOARD & SHOWCASE CONTROLS
     // ============================================================================
     function updateHUD() {
-      document.getElementById('score-val').textContent = gameState.score.toLocaleString();
-      document.getElementById('hud-coins-val').textContent = gameState.coins.toLocaleString();
+      document.getElementById('score-val').textContent = formatHudNumber(gameState.score);
+      document.getElementById('hud-coins-val').textContent = formatHudNumber(gameState.coins);
       document.getElementById('combo-val').textContent = `x${gameState.combo}`;
       const overdrive = Math.round(gameState.overdriveMeter || 0);
       document.getElementById('overdrive-bar-fill').style.width = `${overdrive}%`;
@@ -1732,15 +1732,12 @@
     }
 
     let actionToastTimer = null;
-    let cityToastTimer = null;
     let crosswalkWarningActive = false;
 
     function clearHudFeedback() {
       clearTimeout(actionToastTimer);
-      clearTimeout(cityToastTimer);
       document.getElementById('action-toast').classList.remove('is-visible');
       document.getElementById('action-toast').textContent = '';
-      document.getElementById('city-toast').classList.add('hidden');
       crosswalkWarningActive = false;
     }
 
@@ -1941,13 +1938,7 @@
     }
 
     function showCityToast(cityTheme) {
-      const toast = document.getElementById('city-toast');
-      clearTimeout(cityToastTimer);
-      document.getElementById('city-toast-title').textContent = cityTheme.banner;
-      toast.classList.remove('hidden', 'city-toast-anim');
-      void toast.offsetWidth;
-      toast.classList.add('city-toast-anim');
-      cityToastTimer = setTimeout(() => toast.classList.add('hidden'), 2000);
+      showActionToast(cityTheme.banner, 'info');
     }
 
     function spawnTrafficWave() {
@@ -2248,6 +2239,7 @@
 
 
     window.addEventListener('keydown', (e) => {
+      if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
       // Escape for Pause / Resume
       if (e.key === 'Escape') {
         if (gameState.mode === 'playing') pauseShift();
@@ -2698,6 +2690,8 @@
       document.getElementById('gameover-modal').classList.add('hidden');
       document.getElementById('gameover-modal').classList.remove('flex');
       beginPersistentShift();
+      camera.fov = camera.userData.gameplayFov || 55;
+      camera.updateProjectionMatrix();
     }
 
     document.getElementById('btn-start-play').addEventListener('click', () => {
@@ -2722,7 +2716,7 @@
 
     function aimGameplayCamera() {
       gameplayCameraLook.copy(PLAY_CAM_LOOK);
-      gameplayCameraLook.y -= 1.8;
+      gameplayCameraLook.y -= 2.5;
       camera.lookAt(gameplayCameraLook);
     }
     let trafficTimer = 0;
@@ -2991,8 +2985,8 @@
           }
           updateHUD();
         } else {
-          if (Math.abs(camera.fov - 55) > 0.1) {
-            camera.fov = THREE.MathUtils.lerp(camera.fov, 55, dt * 3.0);
+          if (Math.abs(camera.fov - camera.userData.gameplayFov) > 0.1) {
+            camera.fov = THREE.MathUtils.lerp(camera.fov, camera.userData.gameplayFov, dt * 3.0);
             camera.updateProjectionMatrix();
           }
           if (overdriveAuraMesh) overdriveAuraMesh.visible = false;

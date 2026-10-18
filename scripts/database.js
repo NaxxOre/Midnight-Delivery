@@ -66,6 +66,7 @@ class CourierDB {
     for (const [field, maximum] of Object.entries(limits)) result.state[field] = this.number(state[field], 0, maximum);
     for (const field of ['laneIndex', 'roofCrates', 'maxRoofStack', 'cityIndex', 'timeIndex', 'weatherIndex', 'hearts']) if (!Number.isInteger(result.state[field])) throw new Error('Invalid discrete shift value');
     if (result.state.hearts < 1) throw new Error('Cannot resume an ended shift');
+    result.state.hearts = Math.min(gameState.maxHearts, result.state.hearts);
     result.state.overdriveActive = state.overdriveActive === true;
     result.state.shieldBumperActive = state.shieldBumperActive === true;
     if (!Array.isArray(state.handSlots) || state.handSlots.length !== 3 || !state.handSlots.every(slot => Number.isInteger(slot) && PARCEL_TYPES[slot])) throw new Error('Invalid parcel dock');

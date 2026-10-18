@@ -455,7 +455,7 @@
       nearMissCount: 0,
       perfectDropCount: 0,
       hearts: 3,
-      maxHearts: 5,
+      maxHearts: 3,
       laneIndex: 2,
       currentX: LANES[2],
       vanZ: -5.4,
@@ -561,6 +561,8 @@
     };
 
     const SAVE_KEY = 'midnight_delivery_v1_save';
+    const hudNumberFormat = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+    function formatHudNumber(value) { return value < 100000 ? Math.round(value).toLocaleString('en') : hudNumberFormat.format(value); }
 
     function loadSavedProgression() {
       return courierDB.data.profile;
