@@ -47,4 +47,5 @@ for (const filename of firstParty) {
   dynamic += [...source.matchAll(/getElementById\(/g)].length - [...source.matchAll(/getElementById\(\s*(['"])([^'"\n]+)\1\s*\)/g)].length;
 }
 console.log(`PASS static verification: ${scripts.length} scripts, synchronized entries, competition strings, ${audited} literal DOM references (${dynamic} dynamic references checked during browser exercise)`);
+require('./database.js').verify(root);
 if (!process.argv.includes('--static')) require('./smoke.js').run(root).catch(error => { console.error(error); process.exitCode = 1; });

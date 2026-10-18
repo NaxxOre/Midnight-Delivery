@@ -335,6 +335,14 @@
   </div>
 
   <!-- PAUSE MODAL (Triggered from In-Game Pause Button) -->
+  <div id="resume-shift-panel" class="resume-shift-panel" hidden>
+    <div class="resume-shift-card" role="dialog" aria-modal="true" aria-labelledby="resume-shift-title">
+      <h2 id="resume-shift-title">Resume Active Shift?</h2>
+      <p>Your last checkpoint is ready. Pending throws return to your roof.</p>
+      <button id="btn-resume-shift" type="button">RESUME SHIFT</button>
+      <button id="btn-discard-shift" type="button">START FRESH</button>
+    </div>
+  </div>
   <div id="modal-pause" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
     <div class="arcade-panel rounded-3xl max-w-sm w-full p-6 text-center text-white border-4 border-amber-400">
       <div class="pixel-font text-sm text-amber-300 mb-1">SHIFT PAUSED</div>
@@ -506,6 +514,13 @@
       <button data-close-modal="modal-settings" class="w-full py-3.5 rounded-2xl bg-sky-400 text-slate-950 font-extrabold arcade-font arcade-btn">
         SAVE &amp; CLOSE
       </button>
+      <div class="save-controls">
+        <label for="setting-callsign">Courier callsign</label>
+        <input id="setting-callsign" maxlength="24" autocomplete="nickname" />
+        <button id="setting-export-save" type="button">EXPORT SAVE (JSON)</button>
+        <label class="import-save-label">IMPORT SAVE (JSON)<input id="setting-import-save" type="file" accept=".json,application/json" /></label>
+        <p id="save-status" role="status"></p>
+      </div>
     </div>
   </div>
 
@@ -671,6 +686,7 @@
   <!-- Core Modular Scripts (Shared Global Scope) -->
   <script defer src="scripts/audio.js?v=boot-20261019-1"></script>
   <script defer src="scripts/data.js?v=boot-20261019-1"></script>
+  <script defer src="scripts/database.js?v=sprint-4"></script>
   <script defer src="scripts/voxels.js?v=boot-20261019-1"></script>
   <script defer src="scripts/cargo.js?v=boot-20261019-1"></script>
   <script defer src="scripts/night.js?v=sprint-2"></script>

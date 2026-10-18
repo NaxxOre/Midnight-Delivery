@@ -48,6 +48,7 @@
 
     function syncRoofCargo() {
       gameState.roofCrates = Math.max(0, Math.min(CARGO_CONFIG.capacity, Math.trunc(gameState.roofCrates) || 0));
+      gameState.maxRoofStack = Math.max(gameState.maxRoofStack || 0, gameState.roofCrates);
       roofCrateMeshes.forEach((crate, index) => { crate.visible = index < gameState.roofCrates; });
       updateCargoHud();
     }
@@ -185,7 +186,7 @@
         event.mesh.position.z += playerSpeed * dt;
         if (!event.passed && event.mesh.position.z >= roofZ) {
           event.passed = true;
-          if (event.type === 'supply' && Math.abs(playerVan.position.x - LANES[event.laneIndex]) <= 1.55) {
+          if (event.type === 'supply' && Math.abs(playerVan.position.x - LANES[event.laneIndex]) <= 1.55 + (getVanTuningLevel(gameState.equippedVanId, 'cargoMagnet') - 1) * 0.15) {
             const loaded = loadRoofCargo(2);
             soundFX.playCityGateChime();
             showActionToast(loaded > 0 ? `Supply depot • +${loaded} crates` : 'Cargo full • 6/6', 'info');

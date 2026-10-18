@@ -271,6 +271,10 @@
     function initSavedProgression() {
       const saved = loadSavedProgression();
       if (saved) {
+        gameState.callsign = saved.callsign;
+        gameState.highScore = saved.highScore;
+        gameState.lifetimeDeliveries = saved.lifetimeDeliveries;
+        gameState.tutorialCompletedOnce = saved.tutorialCompletedOnce;
         if (typeof saved.coins === 'number') gameState.coins = saved.coins;
         if (typeof saved.bestDistance === 'number') gameState.bestDistance = saved.bestDistance;
         if (typeof saved.bestDeliveries === 'number') gameState.bestDeliveries = saved.bestDeliveries;
@@ -782,58 +786,8 @@
       }
     }
 
-    function renderLeaderboardModal(sortBy = 'delivered') {
-      const listEl = document.getElementById('leaderboard-list');
-      const playerVanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
-      const playerEntry = {
-        name: 'YOU (Active Courier)',
-        vanId: playerVanSpec.id,
-        van: playerVanSpec.name,
-        delivered: Math.max(gameState.deliveries, gameState.bestDeliveries),
-        distance: Math.round(Math.max(gameState.distanceMeters, gameState.bestDistance)),
-        isPlayer: true
-      };
-
-      const rows = [...STATIC_LEADERBOARD, playerEntry].sort((a, b) =>
-        sortBy === 'delivered' ? b.delivered - a.delivered : b.distance - a.distance
-      );
-
-      listEl.innerHTML = rows.map((r, idx) => {
-        const rankColors = [
-          'bg-amber-400 text-slate-950 border-white',
-          'bg-slate-300 text-slate-950 border-white',
-          'bg-amber-600 text-white border-amber-200'
-        ];
-        const rankClass = rankColors[idx] || 'bg-slate-800 text-sky-200 border-slate-600';
-        const thumbSrc = vanIconDataURLs[r.vanId] || vanIconDataURLs['classic'] || '';
-
-        return `
-          <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border-2 ${
-            r.isPlayer ? 'bg-sky-500/25 border-emerald-400 shadow-lg' : 'bg-slate-950/85 border-sky-500/25'
-          }">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-8 h-8 rounded-xl border-2 flex items-center justify-center font-extrabold text-xs arcade-font flex-shrink-0 ${rankClass}">
-                #${idx + 1}
-              </span>
-              <div class="w-11 h-11 rounded-xl bg-slate-900 border border-sky-400/40 p-0.5 flex items-center justify-center flex-shrink-0">
-                <img src="${thumbSrc}" alt="${r.van}" class="w-full h-full object-contain" />
-              </div>
-              <div class="min-w-0">
-                <div class="arcade-font text-sm ${r.isPlayer ? 'text-emerald-300' : 'text-white'} truncate">${r.name}</div>
-                <div class="text-[10px] text-sky-300 font-bold truncate">${r.van}</div>
-              </div>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <div class="arcade-font text-base text-amber-300">
-                ${sortBy === 'delivered' ? `${r.delivered} PARCELS` : `${r.distance.toLocaleString()}M`}
-              </div>
-              <div class="text-[9px] text-slate-400 font-bold">
-                ${sortBy === 'delivered' ? `${r.distance}m Best Run` : `${r.delivered} Delivered`}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+    function renderLeaderboardModal(sortBy = 'score') {
+      renderRunHistory(sortBy);
     }
 
     function renderHallOfFameModal(tab = 'items') {
@@ -2384,6 +2338,7 @@
     // Pause & 3-Second Countdown Resume Logic
     let activeCountdownTimer = null;
     function pauseShift() {
+      saveActiveShift();
       if (gameState.mode !== 'playing') return;
       endParcelDrag();
       gameState.mode = 'paused';
@@ -2438,6 +2393,7 @@
       resetGame(false);
     });
     document.getElementById('btn-pause-garage').addEventListener('click', () => {
+      completePersistentShift();
       closeModal('modal-pause');
       gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
       gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
@@ -2577,6 +2533,7 @@
     }
 
     function resetGame(forceTutorial = false) {
+      completePersistentShift();
       clearHudFeedback();
       soundFX.init();
       soundFX.startCozyMusic();
@@ -2740,6 +2697,7 @@
 
       document.getElementById('gameover-modal').classList.add('hidden');
       document.getElementById('gameover-modal').classList.remove('flex');
+      beginPersistentShift();
     }
 
     document.getElementById('btn-start-play').addEventListener('click', () => {
@@ -3015,7 +2973,7 @@
 
         // 2. Overdrive (Fever Mode) Live Countdown, Speed Boost, Neon Aura & FOV
         if (gameState.overdriveActive) {
-          gameState.overdriveTimer -= dt;
+          gameState.overdriveTimer = Math.max(0, gameState.overdriveTimer - dt);
           gameState.overdriveMeter = Math.max(0, (gameState.overdriveTimer / 7.0) * 100);
           camera.fov = THREE.MathUtils.lerp(camera.fov, 68, dt * 4.0);
           camera.updateProjectionMatrix();
@@ -3060,7 +3018,7 @@
 
         // 4. Drone Assist: Auto-throw parcels to active customers
         if (gameState.droneAssistTimer > 0) {
-          gameState.droneAssistTimer -= dt;
+          gameState.droneAssistTimer = Math.max(0, gameState.droneAssistTimer - dt);
           droneGroup.visible = true;
           droneGroup.position.set(playerVan.position.x, playerVan.position.y + 3.2, playerVan.position.z - 0.4);
           droneRotors.forEach(r => (r.rotation.y += dt * 35));
@@ -3083,7 +3041,7 @@
 
         // 5. Coin Magnet & Shield Bumper Timers
         if (gameState.coinMagnetTimer > 0) {
-          gameState.coinMagnetTimer -= dt;
+          gameState.coinMagnetTimer = Math.max(0, gameState.coinMagnetTimer - dt);
         }
         if (shieldBumperMesh) {
           shieldBumperMesh.visible = !!gameState.shieldBumperActive;
@@ -3314,6 +3272,7 @@
                 showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'CROSSWALK IMPACT!', 'text-rose-400');
                 if (gameState.hearts <= 0) {
                   gameState.mode = 'gameover';
+                  completePersistentShift();
                   gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
                   gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
                   endParcelDrag();
@@ -3587,6 +3546,7 @@
 
               if (gameState.hearts <= 0) {
                 gameState.mode = 'gameover';
+                completePersistentShift();
                 gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
                 gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
                 endParcelDrag();
@@ -3815,6 +3775,7 @@
       updateFallenCargo(rawDt);
       updateNightSystems(rawDt, dt, playerSpeed);
       updateRivalSystems(rawDt, dt, playerSpeed);
+      updateCourierPersistence(rawDt);
       renderer.render(scene, camera);
     }
 
@@ -3864,6 +3825,7 @@
         initializeNightSystems();
         setHomePageMode(true);
         updateHomeGarageUI();
+        initializeCourierUI();
         startAnimationLoop();
       } catch (error) {
         window.midnightStartup.fail(error, 'Game initialization failed');

@@ -125,6 +125,9 @@ function updateNightSystems(rawDt, roadDt, speed) {
     beam.visible = lightsOn;
     beam.material.opacity = 0.2 * flicker;
     headlightGroundMeshes[index].visible = lightsOn;
+    const reach = 11 + (getVanTuningLevel(gameState.equippedVanId, 'headlights') - 1) * 2;
+    headlightGroundMeshes[index].scale.y = reach;
+    headlightGroundMeshes[index].position.z = -reach - 1;
     headlightGroundMeshes[index].material.opacity = 0.26 * flicker;
   });
   let sparkIndex = 0;

@@ -435,6 +435,10 @@
       bestDeliveries: 0,
       bestDistance: 0,
       coins: 250,
+      callsign: 'Courier',
+      highScore: 0,
+      lifetimeDeliveries: 0,
+      maxRoofStack: 3,
       runCoinsEarned: 0,
       roofCrates: 3,
       vanSwayAngle: 0,
@@ -525,6 +529,14 @@
     ];
 
     const TUNING_STAT_SPECS = {
+      cargoMagnet: {
+        name: 'Cargo Magnet', desc: 'Wider supply depot collection range', icon: '🧲',
+        costs: [0, 100, 220, 360, 580], labels: ['Standard Reach', 'Reach +0.15m', 'Reach +0.30m', 'Reach +0.45m', 'Reach +0.60m']
+      },
+      headlights: {
+        name: 'Headlight Beam', desc: 'Longer ground illumination in blackout zones', icon: '💡',
+        costs: [0, 100, 220, 360, 580], labels: ['Standard Beam', 'Reach +2m', 'Reach +4m', 'Reach +6m', 'Reach +8m']
+      },
       engine: {
         name: 'Engine Tune',
         desc: 'Boosts Top Speed & Score Multiplier',
@@ -551,34 +563,10 @@
     const SAVE_KEY = 'midnight_delivery_v1_save';
 
     function loadSavedProgression() {
-      try {
-        const raw = localStorage.getItem(SAVE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch (e) {
-        console.warn('Failed to load save from localStorage', e);
-        return null;
-      }
+      return courierDB.data.profile;
     }
 
     function saveProgression() {
-      try {
-        const payload = {
-          coins: gameState.coins,
-          bestDistance: gameState.bestDistance,
-          bestDeliveries: gameState.bestDeliveries,
-          ownedVans: gameState.ownedVans,
-          equippedVanId: gameState.equippedVanId,
-          unlockedItems: gameState.unlockedItems,
-          unlockedChars: gameState.unlockedChars,
-          courierXP: gameState.courierXP,
-          courierRankLevel: gameState.courierRankLevel,
-          shiftContracts: gameState.shiftContracts,
-          vanTuning: gameState.vanTuning
-        };
-        localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-      } catch (e) {
-        console.warn('Failed to save progression to localStorage', e);
-      }
+      saveCourierProfile();
     }
 

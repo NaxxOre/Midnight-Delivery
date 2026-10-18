@@ -26,7 +26,7 @@ exports.run = async root => {
       const page = await browser.newPage({ viewport: { width, height } });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      page.on('console', message => { if (message.type() === 'error' && message.text().includes('[Midnight Delivery]')) errors.push(message.text()); });
+      page.on('console', message => { if (message.type() === 'error' && /\[(Midnight Delivery|CourierDB)\]/.test(message.text())) { errors.push(message.text()); console.error(message.text()); } });
       await page.addInitScript(() => {
         window.missingDomIds = new Set();
         const original = Document.prototype.getElementById;
@@ -47,6 +47,7 @@ exports.run = async root => {
       });
       await page.locator('#btn-start-play').click();
       await require('./mechanics.js').verify(page);
+      await require('./database.js').verifyBrowser(page);
       await page.evaluate(() => {
         window.smokeFrames = [];
         let previous = performance.now();
