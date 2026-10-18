@@ -148,12 +148,7 @@
     const moteGeo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
     const moteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0 });
     function initCozyMotes() {
-      for (let i = 0; i < 100; i++) {
-        const m = new THREE.Mesh(moteGeo, moteMat);
-        m.position.set((Math.random() - 0.5) * 65, 1.5 + Math.random() * 26, 15 - Math.random() * 145);
-        scene.add(m);
-        cozyMotes.push({ mesh: m, baseY: m.position.y, phase: Math.random() * Math.PI * 2 });
-      }
+      // Disabled: removed floating cubes from the air per user request
     }
 
     // ============================================================================
@@ -1449,30 +1444,43 @@ function createGrandEiffelTower(parent, px, py, pz) {
 function createGrandChristTheRedeemer(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
+  // Turned slightly towards the street/camera to face the delivery route
+  root.rotation.y = -Math.PI * 0.16;
+
   const soapstone = 0xf1f5f9;
   const granite = 0x64748b;
   const jungleGreen = 0x15803d;
+  const darkRock = 0x334155;
 
-  addVoxelBox(root, 16.5, 3.5, 15.5, 0, 1.75, 0, 0x334155);
-  addVoxelBox(root, 14.5, 3.5, 13.5, 0, 5.25, 0, granite);
-  addVoxelBox(root, 3.5, 2.2, 3.5, -5.5, 3.5, -4.5, jungleGreen);
-  addVoxelBox(root, 3.8, 2.2, 3.8,  5.2, 3.5,  4.2, jungleGreen);
-  addVoxelBox(root, 2.8, 1.8, 2.8, -4.8, 6.8,  3.8, jungleGreen);
+  // Mount Corcovado Green Mountain Peak Base
+  addVoxelBox(root, 22.0, 7.0, 22.0, 0, 3.5, 0, jungleGreen);
+  addVoxelBox(root, 16.0, 5.0, 16.0, 0, 9.5, 0, darkRock);
+  addVoxelBox(root, 11.0, 4.0, 11.0, 0, 14.0, 0, granite);
 
-  addVoxelBox(root, 6.5, 4.2, 6.5, 0, 9.1, 0, 0x1e293b);
-  addVoxelBox(root, 7.0, 0.6, 7.0, 0, 11.4, 0, granite);
+  // Pedestal & Octagonal Chapel Base
+  addVoxelBox(root, 6.8, 4.5, 6.8, 0, 18.25, 0, 0x1e293b);
+  addVoxelBox(root, 7.4, 0.8, 7.4, 0, 20.9, 0, granite);
 
-  addVoxelBox(root, 3.6, 6.5, 2.8, 0, 14.8, 0, soapstone);
-  addVoxelBox(root, 3.2, 6.5, 2.5, 0, 21.2, 0, soapstone);
-  addVoxelBox(root, 4.2, 3.2, 2.4, 0, 26.0, 0, soapstone);
+  // Flowing Robe Body (statue standing tall)
+  addVoxelBox(root, 3.8, 6.5, 2.8, 0, 24.5, 0, soapstone);
+  addVoxelBox(root, 3.4, 6.5, 2.5, 0, 31.0, 0, soapstone);
+  addVoxelBox(root, 4.4, 3.2, 2.4, 0, 35.8, 0, soapstone); // Shoulders
 
-  addVoxelBox(root, 1.6, 1.6, 17.5, 0, 26.6, 0, soapstone);
-  addVoxelBox(root, 1.8, 2.2, 3.5, 0, 25.0, -4.5, soapstone);
-  addVoxelBox(root, 1.8, 2.2, 3.5, 0, 25.0,  4.5, soapstone);
+  // World-Famous Outstretched Cross Arms (spanned across X axis, facing the player!)
+  addVoxelBox(root, 19.0, 1.8, 1.8, 0, 36.2, 0, soapstone);
+  // Flowing robe drapes hanging under the arms
+  addVoxelBox(root, 3.8, 2.4, 1.8, -5.2, 34.4, 0, soapstone);
+  addVoxelBox(root, 3.8, 2.4, 1.8,  5.2, 34.4, 0, soapstone);
+  // Outstretched hands blessing the city
+  addVoxelBox(root, 1.6, 1.2, 1.6, -10.2, 36.2, 0, soapstone);
+  addVoxelBox(root, 1.6, 1.2, 1.6,  10.2, 36.2, 0, soapstone);
 
-  addVoxelBox(root, 1.6, 2.4, 1.6, 0, 29.2, 0, soapstone);
-  addVoxelBox(root, 1.8, 1.2, 1.4, 0, 29.8, -0.2, 0xe2e8f0);
-  addVoxelBox(root, 1.2, 0.4, 1.2, 0, 31.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 1.5 });
+  // Head and Face
+  addVoxelBox(root, 1.8, 2.5, 1.8, 0, 39.0, 0, soapstone);
+  addVoxelBox(root, 2.0, 1.4, 1.6, 0, 39.8, -0.2, 0xe2e8f0);
+
+  // Radiant Golden Halo / Crown at summit
+  addVoxelBox(root, 1.4, 0.4, 1.4, 0, 41.6, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.0 });
 
   parent.add(root);
   return root;
@@ -1630,12 +1638,12 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
 
   // Ancient Tomb Entrance Passage (cut into the front face facing the road)
   const entMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 4.2, 3.0), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
-  entMesh.position.set(16.5, 3.2, 0);
+  entMesh.position.set(21.2, 3.2, 0);
   khufuGroup.add(entMesh);
 
   // Heavy stone chevron lintels above the entrance
   const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 4.2), sandBaseMat);
-  lintelMesh.position.set(16.0, 5.8, 0);
+  lintelMesh.position.set(20.8, 5.6, 0);
   khufuGroup.add(lintelMesh);
 
   root.add(khufuGroup);
@@ -1776,9 +1784,9 @@ function updateCityLeftLandmark(cityTheme) {
 
   window.cityLeftLandmarkGroup.add(root);
 
-  // Set far back in the left background (Cairo pushed far into the desert at X = -68, Z = -95)
-  const targetX = isCairo ? -68.0 : -42.0;
-  const targetZ = isCairo ? -95.0 : -80.0;
+  // Set far back in the left background (Cairo pushed far into the desert at X = -56, Z = -88)
+  const targetX = isCairo ? -56.0 : -42.0;
+  const targetZ = isCairo ? -88.0 : -78.0;
   window.cityLeftLandmarkGroup.position.set(targetX, 0, targetZ);
 }
 window.updateCityLeftLandmark = updateCityLeftLandmark;
@@ -1901,11 +1909,8 @@ function createCairoAhwaTeahouse(parent, px, py, pz, rotY = 0) {
 }
 
 function addBackgroundSkyline(parent, xSign, index, cityTheme) {
-  const bgColors = [0x1e1b4b, 0x0f172a, 0x1e293b, 0x334155, 0x451a03];
-  const bgX1 = xSign * (16.0 + (index % 3) * 3.5);
-  const bgZ1 = ((index * 7) % 11) - 5;
-  const bgH1 = 18.0 + ((index * 5) % 15);
-  addVoxelBox(parent, 8.5, bgH1, 11.0, bgX1, bgH1 / 2, bgZ1, bgColors[index % bgColors.length]);
+  // Disabled: removed repeating skyscraper monoliths that were crowding the horizon
+  // and giving the illusion of dozens of duplicate landmarks.
 }
 
 // FULL REBUILD APARTMENT VISUALS
@@ -1925,8 +1930,6 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   const rotFacingStreet = apt.side === 'left' ? Math.PI / 2 : -Math.PI / 2;
   const frontX = faceX - xSign * 1.5;
   const frontZ = -3.2;
-
-  addBackgroundSkyline(apt.archGroup, xSign, index, cityTheme);
 
   // 1. TOKYO
   if (cityTheme.id === 'tokyo') {

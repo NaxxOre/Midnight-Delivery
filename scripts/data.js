@@ -415,7 +415,7 @@
         windowEmissive: 1.85,
         lightsOn: true,
         moteColor: 0xfde047,
-        moteOpacity: 0.95
+        moteOpacity: 0.0
       },
       {
         id: 'sunset_glow',
@@ -433,7 +433,7 @@
         windowEmissive: 1.35,
         lightsOn: true,
         moteColor: 0xffd166,
-        moteOpacity: 0.90
+        moteOpacity: 0.0
       },
       {
         id: 'sakura_dawn',
@@ -451,7 +451,7 @@
         windowEmissive: 0.85,
         lightsOn: false,
         moteColor: 0xf9a8d4,
-        moteOpacity: 0.88
+        moteOpacity: 0.0
       },
       {
         id: 'starry_synth',
@@ -469,7 +469,7 @@
         windowEmissive: 1.95,
         lightsOn: true,
         moteColor: 0x00f5d4,
-        moteOpacity: 1.0
+        moteOpacity: 0.0
       },
       {
         id: 'warm_afternoon',
@@ -487,7 +487,7 @@
         windowEmissive: 0.25,
         lightsOn: false,
         moteColor: 0xfef08a,
-        moteOpacity: 0.45
+        moteOpacity: 0.0
       }
     ];
 

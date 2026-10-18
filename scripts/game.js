@@ -1646,8 +1646,8 @@
       targetDirInt = t.dirInt;
       targetWindowEmissive = t.windowEmissive;
       targetLampEmissive = t.lightsOn ? 2.2 : 0.15;
-      targetMoteOpacity = t.moteOpacity;
-      moteMat.color.setHex(t.moteColor);
+      targetMoteOpacity = 0.0; // Disabled: removed floating cubes
+      if (moteMat) moteMat.opacity = 0.0;
 
       if (playerVan && playerVan.userData.beamLeft) {
         playerVan.userData.beamLeft.visible = t.lightsOn;
@@ -1673,7 +1673,7 @@
         dirLight.color.copy(targetDirColor);
         dirLight.intensity = targetDirInt;
         dirLight.position.copy(targetSunPos);
-        moteMat.opacity = targetMoteOpacity;
+        if (moteMat) moteMat.opacity = 0.0;
         streetLampBulbs.forEach(b => {
           if (b.material) b.material.emissiveIntensity = targetLampEmissive;
         });
@@ -1695,7 +1695,7 @@
       dirLight.color.lerp(targetDirColor, blendRate);
       dirLight.intensity = THREE.MathUtils.lerp(dirLight.intensity, targetDirInt, blendRate);
       dirLight.position.lerp(targetSunPos, blendRate);
-      moteMat.opacity = THREE.MathUtils.lerp(moteMat.opacity, targetMoteOpacity, blendRate);
+      if (moteMat) moteMat.opacity = 0.0;
 
       streetLampBulbs.forEach(b => {
         if (b.material) {
@@ -2378,10 +2378,12 @@
       const rawDt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      cozyMotes.forEach((cm) => {
-        cm.mesh.position.y = cm.baseY + Math.sin(now * 0.002 + cm.phase) * 0.65;
-        cm.mesh.rotation.y += rawDt * 1.2;
-      });
+      if (typeof cozyMotes !== 'undefined' && cozyMotes && cozyMotes.length > 0) {
+        cozyMotes.forEach((cm) => {
+          cm.mesh.position.y = cm.baseY + Math.sin(now * 0.002 + cm.phase) * 0.65;
+          cm.mesh.rotation.y += rawDt * 1.2;
+        });
+      }
 
       // Home Page 3D Blueprint Turntable Rotation & Always-On Blue Holographic Scan Ring
       if (gameState.mode === 'home') {
@@ -2544,8 +2546,8 @@
 
       if (window.cityLeftLandmarkGroup) {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -68.0 : -42.0;
-        const targetZ = isCairo ? -95.0 : -80.0;
+        const targetX = isCairo ? -56.0 : -42.0;
+        const targetZ = isCairo ? -88.0 : -78.0;
         window.cityLeftLandmarkGroup.position.x = targetX;
         // Subtle horizon parallax drift - stays permanently in the left background, never loops or repeats!
         const drift = Math.sin(gameState.distanceMeters * 0.003) * 6.0;
