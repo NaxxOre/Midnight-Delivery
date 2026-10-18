@@ -1,0 +1,7 @@
+{
+  "name": "midnight-delivery",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "test": "node tests/verify_build.js", "test:soak": "node tests/verify_build.js --soak=900" },
+  "devDependencies": { "playwright-core": "1.58.2" }
+}

@@ -28,7 +28,7 @@
       },
       {
         id: 2,
-        key: 'ps5',
+        key: 'digitbox',
         name: 'DigitBox 7 Pro Console',
         short: 'DIGITBOX 7',
         pts: 450,
@@ -151,7 +151,7 @@
     // 8 Expressive, Cool Voxel Characters
     const CHARACTER_TYPES = [
       { id: 'goblin',    name: 'Big-Eye Goblin',   phrase: '"Hehe!  Yes!"' },
-      { id: 'doge',      name: 'Golden Inle Chef', phrase: '"Much Parcel! Very Fast!"' },
+      { id: 'inlechef',  name: 'Golden Inle Chef', phrase: '"Fresh parcels, happy neighbors!"' },
       { id: 'banana',    name: 'Cool Banana Bro',  phrase: '"Peel Good Bro!"' },
       { id: 'neko',      name: 'Neko-Chan',        phrase: '"Meow! Toss Here!"' },
       { id: 'ledbot',    name: 'LED-Bot 9000',     phrase: '"BEEP! Drop Beat!"' },
@@ -503,7 +503,7 @@
       selectedVanIndex: 0,
       equippedVanId: 'classic',
       unlockedItems: [0, 2, 6],
-      unlockedChars: ['goblin', 'doge']
+      unlockedChars: ['goblin', 'inlechef']
     };
 
     const COURIER_RANKS = [

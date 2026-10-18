@@ -466,11 +466,11 @@
         return group;
       }
 
-      const skin = charTypeId === 'doge' ? 0xf59e0b : 0xf4be92;
+      const skin = charTypeId === 'inlechef' ? 0xf59e0b : 0xf4be92;
       addVoxelBox(group, 0.32, 0.44, 0.34, -0.22, 0.22, 0, 0x1e293b);
       addVoxelBox(group, 0.32, 0.44, 0.34,  0.22, 0.22, 0, 0x1e293b);
 
-      const coatCol = charTypeId === 'wizard' ? 0x6d28d9 : (charTypeId === 'doge' ? 0xffffff : 0xec4899);
+      const coatCol = charTypeId === 'wizard' ? 0x6d28d9 : (charTypeId === 'inlechef' ? 0xffffff : 0xec4899);
       addVoxelBox(group, 0.84, 0.78, 0.52, 0, 0.88, 0, coatCol);
 
       const rightArmPivot = new THREE.Group();
@@ -486,7 +486,7 @@
       addVoxelBox(group, 0.14, 0.20, 0.14, -0.26, 1.86, 0.51, 0x090d16);
       addVoxelBox(group, 0.14, 0.20, 0.14,  0.26, 1.86, 0.51, 0x090d16);
 
-      if (charTypeId === 'doge') {
+      if (charTypeId === 'inlechef') {
         addVoxelBox(group, 0.54, 0.34, 0.32, 0, 1.66, 0.54, 0xfef3c7);
         addVoxelBox(group, 0.20, 0.16, 0.16, 0, 1.76, 0.68, 0x090d16);
         addVoxelBox(group, 0.28, 0.36, 0.24, -0.38, 2.46, 0.08, 0xd97706);
@@ -701,7 +701,7 @@
           members.push(duck);
         }
       } else {
-        const walker = createVoxelCharacter('doge', 0.78);
+        const walker = createVoxelCharacter('inlechef', 0.78);
         walker.rotation.y = Math.PI / 2;
         walkerGroup.add(walker);
         members.push(walker);
@@ -1287,7 +1287,7 @@
 
       // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path
       // (x = ±10.95) while trees & porch pads are positioned so nobody ever walks through a tree!
-      const charIds = ['goblin', 'doge', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
+      const charIds = ['goblin', 'inlechef', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
       const dogCols = [0xd97706, 0xfef3c7, 0x78350f, 0xf97316];
       for (let i = 0; i < 12; i++) {
         const isLeft = i % 2 === 0;
