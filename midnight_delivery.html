@@ -3446,32 +3446,76 @@
     // 8B. 10 GRAND REAL-LIFE CITY LANDMARKS (Towering authentic architecture)
     // ============================================================================
 
-// 1. TOKYO
+// 1. TOKYO - Grand Tokyo Tower (Minato, Tokyo)
+// Authentic 7 alternating bands of International Orange & Aviation White
+// 2-story glass-walled Main Deck with glowing observation lights & red aviation beacon spire
 function createGrandTokyoTower(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
-  const red = 0xef4444;
-  const white = 0xf8fafc;
-  [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([lx, lz]) => {
-    addVoxelBox(root, 1.4, 1.4, 1.4, lx, 0.7, lz, 0x1e293b);
-    addVoxelBox(root, 0.9, 9.2, 0.9, lx * 0.75, 5.2, lz * 0.75, red);
+
+  const orange = 0xef4444; // International Orange
+  const white = 0xf8fafc;  // Aviation White
+  const darkNavy = 0x1e293b;
+  const glowGlass = 0x38bdf8;
+  const beaconRed = 0xff0000;
+
+  // 4 Massive Foundation Blocks in Corners
+  const legCoords = [[-4.6, -4.6], [4.6, -4.6], [-4.6, 4.6], [4.6, 4.6]];
+  legCoords.forEach(([lx, lz]) => {
+    addVoxelBox(root, 1.8, 1.2, 1.8, lx, 0.6, lz, darkNavy);
   });
-  addVoxelBox(root, 6.2, 0.6, 0.6, 0, 8.5, -2.6, white);
-  addVoxelBox(root, 6.2, 0.6, 0.6, 0, 8.5,  2.6, white);
-  addVoxelBox(root, 0.6, 0.6, 6.2, -2.6, 8.5, 0, white);
-  addVoxelBox(root, 0.6, 0.6, 6.2,  2.6, 8.5, 0, white);
-  addVoxelBox(root, 7.4, 2.6, 7.4, 0, 11.2, 0, 0x1e293b);
-  addVoxelBox(root, 7.8, 1.2, 7.8, 0, 11.2, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.75 });
-  addVoxelBox(root, 7.5, 0.4, 7.5, 0, 12.6, 0, red);
-  addVoxelBox(root, 4.2, 4.2, 4.2, 0, 14.8, 0, white);
-  addVoxelBox(root, 3.4, 4.2, 3.4, 0, 18.8, 0, red);
-  addVoxelBox(root, 2.6, 4.2, 2.6, 0, 22.8, 0, white);
-  addVoxelBox(root, 3.8, 1.6, 3.8, 0, 25.4, 0, 0xfacc15, { emissive: 0xfef08a, emissiveIntensity: 0.9 });
-  addVoxelBox(root, 4.2, 0.35, 4.2, 0, 26.3, 0, red);
-  addVoxelBox(root, 1.6, 3.5, 1.6, 0, 28.2, 0, red);
-  addVoxelBox(root, 1.0, 3.5, 1.0, 0, 31.6, 0, white);
-  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 35.0, 0, red);
-  addVoxelBox(root, 0.8, 0.8, 0.8, 0, 37.0, 0, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.2 });
+
+  // BAND 1: International Orange Sweeping Inward-Curving Lattice Pylons (height 1.2 to 7.8)
+  legCoords.forEach(([lx, lz]) => {
+    const sx = Math.sign(lx);
+    const sz = Math.sign(lz);
+    addVoxelBox(root, 1.2, 3.6, 1.2, sx * 4.0, 3.0, sz * 4.0, orange);
+    addVoxelBox(root, 1.1, 3.8, 1.1, sx * 3.1, 6.0, sz * 3.1, orange);
+  });
+
+  // Sweeping lattice arch trusses between the 4 legs (height 5.2 to 6.8)
+  addVoxelBox(root, 5.2, 0.7, 0.7, 0, 5.8, -3.1, orange);
+  addVoxelBox(root, 5.2, 0.7, 0.7, 0, 5.8,  3.1, orange);
+  addVoxelBox(root, 0.7, 0.7, 5.2, -3.1, 5.8, 0, orange);
+  addVoxelBox(root, 0.7, 0.7, 5.2,  3.1, 5.8, 0, orange);
+
+  // BAND 2: Aviation White Converging Lower Shaft (height 7.8 to 11.0)
+  legCoords.forEach(([lx, lz]) => {
+    const sx = Math.sign(lx);
+    const sz = Math.sign(lz);
+    addVoxelBox(root, 0.9, 3.2, 0.9, sx * 2.3, 9.4, sz * 2.3, white);
+  });
+  addVoxelBox(root, 3.8, 0.6, 3.8, 0, 10.6, 0, white);
+
+  // MAIN OBSERVATION DECK (2-Story Observatory, height 11.0 to 14.5)
+  addVoxelBox(root, 6.8, 0.6, 6.8, 0, 11.2, 0, darkNavy);
+  addVoxelBox(root, 5.8, 1.5, 5.8, 0, 12.2, 0, darkNavy);
+  addVoxelBox(root, 6.2, 1.1, 6.2, 0, 12.2, 0, glowGlass, { emissive: glowGlass, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 5.2, 1.3, 5.2, 0, 13.5, 0, darkNavy);
+  addVoxelBox(root, 5.5, 0.9, 5.5, 0, 13.5, 0, glowGlass, { emissive: glowGlass, emissiveIntensity: 0.75 });
+  addVoxelBox(root, 5.8, 0.4, 5.8, 0, 14.3, 0, orange);
+
+  // BAND 3: International Orange Mid Shaft (height 14.5 to 17.5)
+  addVoxelBox(root, 2.6, 3.0, 2.6, 0, 15.9, 0, orange);
+
+  // BAND 4: Aviation White Upper Shaft (height 17.5 to 20.2)
+  addVoxelBox(root, 2.0, 2.8, 2.0, 0, 18.8, 0, white);
+
+  // BAND 5: Top Deck (Special Observatory at 250m, height 20.2 to 22.2)
+  addVoxelBox(root, 3.2, 0.4, 3.2, 0, 20.4, 0, orange);
+  addVoxelBox(root, 2.8, 1.2, 2.8, 0, 21.1, 0, darkNavy);
+  addVoxelBox(root, 3.0, 0.8, 3.0, 0, 21.1, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.9 });
+  addVoxelBox(root, 2.6, 0.4, 2.6, 0, 21.8, 0, orange);
+
+  // BAND 6: Aviation White Broadcast Antenna Mast (height 22.2 to 24.8)
+  addVoxelBox(root, 1.2, 2.6, 1.2, 0, 23.4, 0, white);
+  addVoxelBox(root, 2.8, 0.25, 0.25, 0, 24.0, 0, white);
+  addVoxelBox(root, 0.25, 0.25, 2.8, 0, 24.0, 0, white);
+
+  // BAND 7: International Orange Pinnacle Spire (height 24.8 to 27.2)
+  addVoxelBox(root, 0.6, 2.4, 0.6, 0, 25.8, 0, orange);
+  addVoxelBox(root, 0.9, 0.9, 0.9, 0, 27.3, 0, beaconRed, { emissive: beaconRed, emissiveIntensity: 3.0 });
+
   parent.add(root);
   return root;
 }
@@ -3618,86 +3662,120 @@ function createCyberSpaceNeedleAndWheel(parent, px, py, pz) {
   return root;
 }
 
-// 6. PARIS
+// 6. PARIS - Grand Eiffel Tower (Champ de Mars, Paris)
+// Authentic 3-tier puddle iron lattice tower with sweeping semicircular arches,
+// double-deck observation platforms, and summit beacon spotlight
 function createGrandEiffelTower(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
-  const bronze = 0x8c6d48;
-  const darkIron = 0x523d29;
-  const goldLight = 0xfef08a;
 
-  [[-4.2, -4.2], [4.2, -4.2], [-4.2, 4.2], [4.2, 4.2]].forEach(([lx, lz]) => {
-    addVoxelBox(root, 1.8, 1.6, 1.8, lx, 0.8, lz, 0x334155);
-    addVoxelBox(root, 1.2, 9.5, 1.2, lx * 0.75, 5.5, lz * 0.75, bronze);
+  // Classic Eiffel 3-tier bronze palette (darker at base, warm puddle iron, lighter near top)
+  const baseIron = 0x453426; // Deep antique bronze iron
+  const midIron = 0x664e38;  // Warm puddle iron
+  const topIron = 0x8a6e52;  // Atmospheric golden bronze
+  const warmGlow = 0xfef08a; // Warm architectural illumination
+  const beaconCol = 0xffffff;
+
+  // 4 Massive Masonry Corner Piers (Piles de la Tour)
+  const pierCoords = [[-4.8, -4.8], [4.8, -4.8], [-4.8, 4.8], [4.8, 4.8]];
+  pierCoords.forEach(([pxx, pzz]) => {
+    addVoxelBox(root, 2.0, 1.2, 2.0, pxx, 0.6, pzz, 0x334155);
   });
-  addVoxelBox(root, 6.8, 0.8, 0.8, 0, 7.5, -3.1, darkIron);
-  addVoxelBox(root, 6.8, 0.8, 0.8, 0, 7.5,  3.1, darkIron);
-  addVoxelBox(root, 0.8, 0.8, 6.8, -3.1, 7.5, 0, darkIron);
-  addVoxelBox(root, 0.8, 0.8, 6.8,  3.1, 7.5, 0, darkIron);
 
-  addVoxelBox(root, 8.8, 1.4, 8.8, 0, 10.5, 0, darkIron);
-  addVoxelBox(root, 9.2, 0.5, 9.2, 0, 11.2, 0, bronze);
-  addVoxelBox(root, 7.2, 1.2, 7.2, 0, 11.2, 0, goldLight, { emissive: 0xfacc15, emissiveIntensity: 0.8 });
+  // TIER 1 LEGS: 4 Sweeping Inward-Curving Lattice Iron Pylons (height 1.2 to 7.8)
+  pierCoords.forEach(([pxx, pzz]) => {
+    const sx = Math.sign(pxx);
+    const sz = Math.sign(pzz);
+    addVoxelBox(root, 1.4, 3.5, 1.4, sx * 4.1, 2.9, sz * 4.1, baseIron);
+    addVoxelBox(root, 1.2, 3.8, 1.2, sx * 3.2, 5.9, sz * 3.2, baseIron);
+  });
 
-  addVoxelBox(root, 5.2, 4.2, 5.2, 0, 13.8, 0, bronze);
-  addVoxelBox(root, 4.2, 4.2, 4.2, 0, 18.0, 0, bronze);
+  // Iconic Monumental Semicircular Lattice Arches between the 4 legs (height 5.2 to 7.2)
+  addVoxelBox(root, 5.4, 0.8, 0.8, 0, 5.8, -3.2, baseIron);
+  addVoxelBox(root, 5.4, 0.8, 0.8, 0, 5.8,  3.2, baseIron);
+  addVoxelBox(root, 0.8, 0.8, 5.4, -3.2, 5.8, 0, baseIron);
+  addVoxelBox(root, 0.8, 0.8, 5.4,  3.2, 5.8, 0, baseIron);
+  addVoxelBox(root, 3.6, 0.5, 0.8, 0, 6.4, -3.2, midIron);
+  addVoxelBox(root, 3.6, 0.5, 0.8, 0, 6.4,  3.2, midIron);
+  addVoxelBox(root, 0.8, 0.5, 3.6, -3.2, 6.4, 0, midIron);
+  addVoxelBox(root, 0.8, 0.5, 3.6,  3.2, 6.4, 0, midIron);
 
-  addVoxelBox(root, 5.8, 1.2, 5.8, 0, 20.8, 0, darkIron);
-  addVoxelBox(root, 6.2, 0.4, 6.2, 0, 21.4, 0, bronze);
-  addVoxelBox(root, 4.8, 0.9, 4.8, 0, 21.6, 0, goldLight, { emissive: 0xfde047, emissiveIntensity: 1.1 });
+  // 1ST PLATFORM (Double-Deck Gallery, height 7.8 to 9.2)
+  addVoxelBox(root, 7.8, 0.6, 7.8, 0, 7.9, 0, baseIron);
+  addVoxelBox(root, 8.2, 0.5, 8.2, 0, 8.4, 0, midIron);
+  addVoxelBox(root, 7.0, 0.8, 7.0, 0, 8.8, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 0.9 });
+  addVoxelBox(root, 8.4, 0.35, 8.4, 0, 9.2, 0, midIron);
 
-  addVoxelBox(root, 2.6, 5.5, 2.6, 0, 24.8, 0, bronze);
-  addVoxelBox(root, 1.8, 5.5, 1.8, 0, 30.2, 0, bronze);
+  // TIER 2 SHAFT: 4 Converging Intermediate Legs (height 9.4 to 14.5)
+  pierCoords.forEach(([pxx, pzz]) => {
+    const sx = Math.sign(pxx);
+    const sz = Math.sign(pzz);
+    addVoxelBox(root, 1.0, 5.2, 1.0, sx * 2.2, 11.9, sz * 2.2, midIron);
+  });
+  addVoxelBox(root, 3.6, 0.5, 3.6, 0, 12.0, 0, midIron);
 
-  addVoxelBox(root, 2.4, 1.6, 2.4, 0, 33.8, 0, 0xffffff, { emissive: 0xfffbeb, emissiveIntensity: 2.0 });
-  addVoxelBox(root, 0.8, 3.5, 0.8, 0, 36.2, 0, bronze);
-  addVoxelBox(root, 0.6, 0.6, 0.6, 0, 38.0, 0, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.5 });
+  // 2ND PLATFORM (Panoramic Observation Deck, height 14.5 to 16.0)
+  addVoxelBox(root, 5.4, 0.6, 5.4, 0, 14.8, 0, midIron);
+  addVoxelBox(root, 4.4, 0.8, 4.4, 0, 15.3, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
+  addVoxelBox(root, 5.6, 0.35, 5.6, 0, 15.8, 0, topIron);
+
+  // TIER 3: Converged Tower Spire Column (height 16.0 to 21.5)
+  addVoxelBox(root, 2.4, 3.0, 2.4, 0, 17.3, 0, midIron);
+  addVoxelBox(root, 1.8, 3.2, 1.8, 0, 20.0, 0, topIron);
+
+  // SUMMIT LANTERN, DOME & REVOLVING BEACON (height 21.5 to 26.5)
+  addVoxelBox(root, 2.2, 1.2, 2.2, 0, 22.0, 0, topIron);
+  addVoxelBox(root, 1.8, 0.8, 1.8, 0, 22.0, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.5 });
+  addVoxelBox(root, 1.4, 0.7, 1.4, 0, 23.0, 0, topIron);
+  addVoxelBox(root, 0.5, 2.4, 0.5, 0, 24.5, 0, topIron);
+  addVoxelBox(root, 0.8, 0.8, 0.8, 0, 26.0, 0, beaconCol, { emissive: beaconCol, emissiveIntensity: 3.0 });
 
   parent.add(root);
   return root;
 }
 
-// 7. RIO
+// 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado
+// Calibrated height (~16.0 units) so head, serene face & golden halo are 100% visible on screen!
 function createGrandChristTheRedeemer(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
   // Turned slightly towards the street/camera to face the delivery route
   root.rotation.y = -Math.PI * 0.16;
 
-  const soapstone = 0xf1f5f9;
-  const granite = 0x64748b;
-  const jungleGreen = 0x15803d;
+  const soapstone = 0xf1f5f9; // Pale soapstone mosaic tiles
+  const granite = 0x64748b;   // Weathered granite rock
+  const jungleGreen = 0x15803d; // Tijuca forest mountain slopes
   const darkRock = 0x334155;
 
-  // Mount Corcovado Green Mountain Peak Base
-  addVoxelBox(root, 22.0, 7.0, 22.0, 0, 3.5, 0, jungleGreen);
-  addVoxelBox(root, 16.0, 5.0, 16.0, 0, 9.5, 0, darkRock);
-  addVoxelBox(root, 11.0, 4.0, 11.0, 0, 14.0, 0, granite);
+  // Mount Corcovado Peak (compact height so statue stays within screen)
+  addVoxelBox(root, 14.0, 2.4, 14.0, 0, 1.2, 0, jungleGreen);
+  addVoxelBox(root, 10.0, 2.0, 10.0, 0, 3.2, 0, darkRock);
+  addVoxelBox(root, 6.8, 1.6, 6.8, 0, 4.8, 0, granite);
 
   // Pedestal & Octagonal Chapel Base
-  addVoxelBox(root, 6.8, 4.5, 6.8, 0, 18.25, 0, 0x1e293b);
-  addVoxelBox(root, 7.4, 0.8, 7.4, 0, 20.9, 0, granite);
+  addVoxelBox(root, 4.0, 1.8, 4.0, 0, 6.3, 0, 0x1e293b);
+  addVoxelBox(root, 4.4, 0.4, 4.4, 0, 7.3, 0, granite);
 
-  // Flowing Robe Body (statue standing tall)
-  addVoxelBox(root, 3.8, 6.5, 2.8, 0, 24.5, 0, soapstone);
-  addVoxelBox(root, 3.4, 6.5, 2.5, 0, 31.0, 0, soapstone);
-  addVoxelBox(root, 4.4, 3.2, 2.4, 0, 35.8, 0, soapstone); // Shoulders
+  // Flowing Soapstone Robed Body
+  addVoxelBox(root, 2.4, 2.8, 1.8, 0, 8.8, 0, soapstone);
+  addVoxelBox(root, 2.6, 2.8, 1.6, 0, 11.4, 0, soapstone);
+  addVoxelBox(root, 3.2, 1.6, 1.4, 0, 13.4, 0, soapstone); // Shoulders
 
-  // World-Famous Outstretched Cross Arms (spanned across X axis, facing the player!)
-  addVoxelBox(root, 19.0, 1.8, 1.8, 0, 36.2, 0, soapstone);
+  // World-Famous Outstretched Cross Arms (spanned across X axis)
+  addVoxelBox(root, 11.0, 0.9, 0.9, 0, 13.6, 0, soapstone);
   // Flowing robe drapes hanging under the arms
-  addVoxelBox(root, 3.8, 2.4, 1.8, -5.2, 34.4, 0, soapstone);
-  addVoxelBox(root, 3.8, 2.4, 1.8,  5.2, 34.4, 0, soapstone);
+  addVoxelBox(root, 2.2, 1.4, 0.9, -2.6, 12.6, 0, soapstone);
+  addVoxelBox(root, 2.2, 1.4, 0.9,  2.6, 12.6, 0, soapstone);
   // Outstretched hands blessing the city
-  addVoxelBox(root, 1.6, 1.2, 1.6, -10.2, 36.2, 0, soapstone);
-  addVoxelBox(root, 1.6, 1.2, 1.6,  10.2, 36.2, 0, soapstone);
+  addVoxelBox(root, 0.9, 0.7, 0.8, -5.8, 13.6, 0, soapstone);
+  addVoxelBox(root, 0.9, 0.7, 0.8,  5.8, 13.6, 0, soapstone);
 
-  // Head and Face
-  addVoxelBox(root, 1.8, 2.5, 1.8, 0, 39.0, 0, soapstone);
-  addVoxelBox(root, 2.0, 1.4, 1.6, 0, 39.8, -0.2, 0xe2e8f0);
+  // Head and Serene Face
+  addVoxelBox(root, 1.2, 1.5, 1.1, 0, 14.8, 0, soapstone);
+  addVoxelBox(root, 1.3, 0.7, 1.2, 0, 15.2, -0.1, 0xe2e8f0);
 
-  // Radiant Golden Halo / Crown at summit
-  addVoxelBox(root, 1.4, 0.4, 1.4, 0, 41.6, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.0 });
+  // Radiant Golden Halo at Summit
+  addVoxelBox(root, 0.9, 0.25, 0.9, 0, 15.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
 
   parent.add(root);
   return root;
@@ -3782,6 +3860,7 @@ function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
 }
 
 // 10. CAIRO - Authentic Giza Plateau with Real 4-Sided Geometric Pyramids (Smooth, Non-Blocky)
+// Safe desert positioning: all components kept strictly away from road with >20 units clearance!
 function createGrandPyramidAndSphinx(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
@@ -3826,68 +3905,68 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
 
   // -------------------------------------------------------------
   // 1. THE GREAT PYRAMID OF KHUFU (Real 4-Sided Smooth Pyramid)
-  // Broad base (radius 34, height 30), authentic ~52 degree slope
+  // Centered at x = -6, well clear of the road
   // -------------------------------------------------------------
   const khufuGroup = new THREE.Group();
-  khufuGroup.position.set(0, 0, 0);
+  khufuGroup.position.set(-6, 0, 0);
 
   // Desert Plateau foundation slab
-  const base1 = new THREE.Mesh(new THREE.BoxGeometry(54, 1.4, 54), sandBaseMat);
-  base1.position.set(0, 0.7, 0);
+  const base1 = new THREE.Mesh(new THREE.BoxGeometry(32, 1.2, 32), sandBaseMat);
+  base1.position.set(0, 0.6, 0);
   base1.receiveShadow = true;
   khufuGroup.add(base1);
 
   // Main 4-Sided Geometric Pyramid (ConeGeometry with 4 radial segments)
-  const khufuGeo = new THREE.ConeGeometry(34, 30, 4);
+  const khufuGeo = new THREE.ConeGeometry(19, 20, 4);
   const khufuMesh = new THREE.Mesh(khufuGeo, khufuMat);
-  khufuMesh.position.set(0, 15.0 + 1.4, 0);
+  khufuMesh.position.set(0, 10.0 + 1.2, 0);
   khufuMesh.rotation.y = Math.PI / 4; // Align 4 triangular faces squarely with axes
   khufuMesh.castShadow = true;
   khufuMesh.receiveShadow = true;
   khufuGroup.add(khufuMesh);
 
   // Golden Pyramidion (Electrum capstone at apex)
-  const khufuCapGeo = new THREE.ConeGeometry(4.5, 4.0, 4);
+  const khufuCapGeo = new THREE.ConeGeometry(3.2, 3.2, 4);
   const khufuCap = new THREE.Mesh(khufuCapGeo, goldApexMat);
-  khufuCap.position.set(0, 30.0 + 1.4 - 2.0, 0);
+  khufuCap.position.set(0, 20.0 + 1.2 - 1.6, 0);
   khufuCap.rotation.y = Math.PI / 4;
   khufuGroup.add(khufuCap);
 
-  // Ancient Tomb Entrance Passage (cut into the front face facing the road)
-  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 4.2, 3.0), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
-  entMesh.position.set(21.2, 3.2, 0);
+  // Ancient Tomb Entrance Passage (cut into the front face)
+  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 2.4), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
+  entMesh.position.set(12.5, 2.5, 0);
   khufuGroup.add(entMesh);
 
   // Heavy stone chevron lintels above the entrance
-  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 4.2), sandBaseMat);
-  lintelMesh.position.set(20.8, 5.6, 0);
+  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.0, 3.2), sandBaseMat);
+  lintelMesh.position.set(12.2, 4.4, 0);
   khufuGroup.add(lintelMesh);
 
   root.add(khufuGroup);
 
   // -------------------------------------------------------------
   // 2. THE SECOND PYRAMID OF KHAFRE (With Signature Preserved Casing Cap)
-  // Set back deeper in the desert (offset: x = -35, z = -38)
+  // Set back deeper in the desert (offset: x = -26, z = -24)
   // -------------------------------------------------------------
   const khafreGroup = new THREE.Group();
-  khafreGroup.position.set(-35, 0, -38);
+  khafreGroup.position.set(-26, 0, -24);
 
-  const base2 = new THREE.Mesh(new THREE.BoxGeometry(44, 1.2, 44), sandBaseMat);
-  base2.position.set(0, 0.6, 0);
+  const base2 = new THREE.Mesh(new THREE.BoxGeometry(24, 1.0, 24), sandBaseMat);
+  base2.position.set(0, 0.5, 0);
   khafreGroup.add(base2);
 
-  const khafreGeo = new THREE.ConeGeometry(27, 26, 4);
+  const khafreGeo = new THREE.ConeGeometry(14, 16, 4);
   const khafreMesh = new THREE.Mesh(khafreGeo, khafreMat);
-  khafreMesh.position.set(0, 13.0 + 1.2, 0);
+  khafreMesh.position.set(0, 8.0 + 1.0, 0);
   khafreMesh.rotation.y = Math.PI / 4;
   khafreMesh.castShadow = true;
   khafreMesh.receiveShadow = true;
   khafreGroup.add(khafreMesh);
 
   // Signature White Limestone Casing Stones at Khafre's Summit
-  const casingGeo = new THREE.ConeGeometry(9.5, 9.2, 4);
+  const casingGeo = new THREE.ConeGeometry(5.2, 5.5, 4);
   const casingMesh = new THREE.Mesh(casingGeo, casingMat);
-  casingMesh.position.set(0, 26.0 + 1.2 - 4.6, 0);
+  casingMesh.position.set(0, 16.0 + 1.0 - 2.7, 0);
   casingMesh.rotation.y = Math.PI / 4;
   khafreGroup.add(casingMesh);
 
@@ -3895,48 +3974,48 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
 
   // -------------------------------------------------------------
   // 3. THE GREAT SPHINX OF GIZA
-  // Guarding the desert causeway in front of Khufu
+  // Guarding in front of Khufu (offset: x = -2, z = 14, well clear of road)
   // -------------------------------------------------------------
   const sphGroup = new THREE.Group();
-  sphGroup.position.set(24, 0, 18);
+  sphGroup.position.set(-2, 0, 14);
 
   // Raised stone causeway
-  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(8, 1.2, 16), sandBaseMat);
-  sphPlinth.position.set(0, 0.6, 0);
+  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.8, 11.0), sandBaseMat);
+  sphPlinth.position.set(0, 0.4, 0);
   sphGroup.add(sphPlinth);
 
   // Couchant Lion Body
-  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(5.5, 4.5, 9.5), khufuMat);
-  lionBody.position.set(0, 3.4, -1.0);
+  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 6.5), khufuMat);
+  lionBody.position.set(0, 2.0, -0.8);
   sphGroup.add(lionBody);
 
   // Lion Paws extending forward
-  [-1.8, 1.8].forEach(pxx => {
-    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 5.0), khufuMat);
-    paw.position.set(pxx, 1.8, 5.0);
+  [-1.2, 1.2].forEach(pxx => {
+    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 3.5), khufuMat);
+    paw.position.set(pxx, 1.1, 3.4);
     sphGroup.add(paw);
   });
 
   // Pharaoh Head with Royal Nemes Headdress
-  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.4, 3.0), khufuMat);
-  sphHead.position.set(0, 7.0, 1.5);
+  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, 2.0), khufuMat);
+  sphHead.position.set(0, 4.4, 1.0);
   sphGroup.add(sphHead);
 
   // Nemes royal headcloth (blue lapis wings)
   const nemesMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
-  [-1.9, 1.9].forEach(nx => {
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.8, 2.5), nemesMat);
-    wing.position.set(nx, 6.2, 1.2);
+  [-1.3, 1.3].forEach(nx => {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.6, 1.8), nemesMat);
+    wing.position.set(nx, 3.9, 0.8);
     sphGroup.add(wing);
   });
 
   // Nemes crown top & beard
-  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.9, 3.2), nemesMat);
-  nemesCrown.position.set(0, 9.0, 1.5);
+  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.6, 2.2), nemesMat);
+  nemesCrown.position.set(0, 5.8, 1.0);
   sphGroup.add(nemesCrown);
 
-  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.4, 0.7), nemesMat);
-  beard.position.set(0, 4.8, 2.8);
+  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.6, 0.5), nemesMat);
+  beard.position.set(0, 2.9, 1.8);
   sphGroup.add(beard);
 
   root.add(sphGroup);
@@ -3944,12 +4023,13 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
   // -------------------------------------------------------------
   // 4. DESERT SAND DUNES ACROSS THE HORIZON
   // Rolling desert dunes anchoring the pyramids into the backdrop
+  // All dunes kept strictly on the desert side (x <= +4)
   // -------------------------------------------------------------
   const duneMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.95 });
   [
-    { x: -15, z: 24, w: 35, h: 2.8, d: 20 },
-    { x: 30, z: -25, w: 40, h: 3.2, d: 22 },
-    { x: -45, z: 15, w: 32, h: 2.4, d: 18 }
+    { x: -14, z: 18, w: 22, h: 2.0, d: 14 },
+    { x: -8,  z: -18, w: 24, h: 2.0, d: 16 },
+    { x: -32, z: 4,  w: 22, h: 1.8, d: 14 }
   ].forEach(d => {
     const dune = new THREE.Mesh(new THREE.BoxGeometry(d.w, d.h, d.d), duneMat);
     dune.position.set(d.x, d.h / 2, d.z);
@@ -3972,10 +4052,7 @@ function updateCityLeftLandmark(cityTheme) {
   if (!cityTheme) return;
 
   const root = new THREE.Group();
-  const isCairo = (cityTheme.id === 'cairo');
-  // Sized appropriately: Cairo geometric pyramids are sized directly; others scaled 1.45x
-  const s = isCairo ? 1.0 : 1.45;
-  root.scale.set(s, s, s);
+  root.scale.set(1.0, 1.0, 1.0); // Exact 1:1 scale so summit is always visible
 
   if (cityTheme.id === 'tokyo') {
     createGrandTokyoTower(root, 0, 0, 0);
@@ -4001,10 +4078,12 @@ function updateCityLeftLandmark(cityTheme) {
 
   window.cityLeftLandmarkGroup.add(root);
 
-  // Set far back in the left background (Cairo pushed far into the desert at X = -68, Z = -95)
-  const targetX = isCairo ? -56.0 : -42.0;
-  const targetZ = isCairo ? -88.0 : -78.0;
-  window.cityLeftLandmarkGroup.position.set(targetX, 0, targetZ);
+  // Position on the left side of the street (well clear of the road)
+  // Starts far on the horizon at Z = -220, moving closer as the player drives!
+  const isCairo = (cityTheme.id === 'cairo');
+  const targetX = isCairo ? -34.0 : -28.0;
+  window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+  window.cityLeftLandmarkGroup.visible = true;
 }
 window.updateCityLeftLandmark = updateCityLeftLandmark;
 
@@ -7129,14 +7208,22 @@ function createApartmentBuilding(side, zPos, index) {
         }
       });
 
-      if (window.cityLeftLandmarkGroup) {
+      // Dynamic approaching perspective (အနားနီးရင်ကြီးလာတာ)
+      // Landmark starts on distant horizon (Z = -220) and smoothly approaches player with 35% parallax speed,
+      // naturally growing larger in 3D perspective until passing beside player!
+      if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -56.0 : -42.0;
-        const targetZ = isCairo ? -88.0 : -78.0;
+        const targetX = isCairo ? -34.0 : -28.0;
         window.cityLeftLandmarkGroup.position.x = targetX;
-        // Subtle horizon parallax drift - stays permanently in the left background, never loops or repeats!
-        const drift = Math.sin(gameState.distanceMeters * 0.003) * 6.0;
-        window.cityLeftLandmarkGroup.position.z = targetZ + drift;
+
+        if (window.cityLeftLandmarkGroup.visible) {
+          window.cityLeftLandmarkGroup.position.z += playerSpeed * dt * 0.35;
+
+          // When landmark passes behind the camera, hide it so only ONE exists per city
+          if (window.cityLeftLandmarkGroup.position.z > 45.0) {
+            window.cityLeftLandmarkGroup.visible = false;
+          }
+        }
       }
 
       apartments.forEach(apt => {

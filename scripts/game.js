@@ -636,6 +636,7 @@
 
         blueprintGarageGroup.visible = true;
         envGroup.visible = false;
+        if (window.cityLeftLandmarkGroup) window.cityLeftLandmarkGroup.visible = false;
         playerVan.visible = false;
         trafficVehicles.forEach(tv => (tv.mesh.visible = false));
         activeGates.forEach(g => (g.mesh.visible = false));
@@ -662,6 +663,12 @@
 
         blueprintGarageGroup.visible = false;
         envGroup.visible = true;
+        if (window.cityLeftLandmarkGroup) {
+          const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+          const targetX = isCairo ? -34.0 : -28.0;
+          window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+          window.cityLeftLandmarkGroup.visible = true;
+        }
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
@@ -2256,6 +2263,12 @@
 
       applyTimeOfDay(0, true);
       applyWeatherMode(4);
+      if (window.cityLeftLandmarkGroup) {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+        window.cityLeftLandmarkGroup.visible = true;
+      }
       updateHUD();
 
       if (forceTutorial || !gameState.tutorialCompletedOnce) {
@@ -2544,14 +2557,22 @@
         }
       });
 
-      if (window.cityLeftLandmarkGroup) {
+      // Dynamic approaching perspective (အနားနီးရင်ကြီးလာတာ)
+      // Landmark starts on distant horizon (Z = -220) and smoothly approaches player with 35% parallax speed,
+      // naturally growing larger in 3D perspective until passing beside player!
+      if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -56.0 : -42.0;
-        const targetZ = isCairo ? -88.0 : -78.0;
+        const targetX = isCairo ? -34.0 : -28.0;
         window.cityLeftLandmarkGroup.position.x = targetX;
-        // Subtle horizon parallax drift - stays permanently in the left background, never loops or repeats!
-        const drift = Math.sin(gameState.distanceMeters * 0.003) * 6.0;
-        window.cityLeftLandmarkGroup.position.z = targetZ + drift;
+
+        if (window.cityLeftLandmarkGroup.visible) {
+          window.cityLeftLandmarkGroup.position.z += playerSpeed * dt * 0.35;
+
+          // When landmark passes behind the camera, hide it so only ONE exists per city
+          if (window.cityLeftLandmarkGroup.position.z > 45.0) {
+            window.cityLeftLandmarkGroup.visible = false;
+          }
+        }
       }
 
       apartments.forEach(apt => {
