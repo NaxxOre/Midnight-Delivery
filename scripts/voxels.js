@@ -154,12 +154,7 @@
     const moteGeo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
     const moteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0 });
     function initCozyMotes() {
-      for (let i = 0; i < 100; i++) {
-        const m = new THREE.Mesh(moteGeo, moteMat);
-        m.position.set((Math.random() - 0.5) * 65, 1.5 + Math.random() * 26, 15 - Math.random() * 145);
-        scene.add(m);
-        cozyMotes.push({ mesh: m, baseY: m.position.y, phase: Math.random() * Math.PI * 2 });
-      }
+      // Disabled: removed floating cubes from the air per user request
     }
 
     // ============================================================================
@@ -1135,6 +1130,12 @@
     const envGroup = new THREE.Group();
     scene.add(envGroup);
 
+    // Singular Grand City Landmark placed in the background on the left side
+    const cityLeftLandmarkGroup = new THREE.Group();
+    cityLeftLandmarkGroup.position.set(-30.0, 0, -65.0);
+    scene.add(cityLeftLandmarkGroup);
+    window.cityLeftLandmarkGroup = cityLeftLandmarkGroup;
+
     const roadMat = new THREE.MeshStandardMaterial({ color: 0x3b4254, roughness: 0.86 });
     const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(ROAD_WIDTH, 0.4, 340), roadMat);
     roadMesh.position.set(0, -0.2, -95);
@@ -1171,7 +1172,7 @@
     const sidewalkActors = [];
 
     function initSidewalkPromenadeActors() {
-      // Streetlamps sit right on the outer road curb edge (x = ±7.95) clear of bike & walking lanes
+      // Cozy Warm Gooseneck Streetlamps on the outer road curb edge (x = ±7.95)
       for (let z = 25; z > -235; z -= 26) {
         [-7.95, 7.95].forEach((lx) => {
           const sign = lx < 0 ? 1 : -1;
@@ -1179,21 +1180,28 @@
           lampGroup.position.set(lx, 0, z);
           envGroup.add(lampGroup);
 
-          addVoxelBox(lampGroup, 0.24, 4.6, 0.24, 0, 2.5, 0, 0x1e293b);
-          addVoxelBox(lampGroup, 0.95, 0.20, 0.24, sign * 0.38, 4.75, 0, 0x1e293b);
-          const bulb = addVoxelBox(lampGroup, 0.42, 0.22, 0.36, sign * 0.68, 4.58, 0, 0xfef08a, {
-            emissive: 0xfacc15,
-            emissiveIntensity: 0.15
+          // Cast-iron base plinth and column
+          addVoxelBox(lampGroup, 0.45, 0.35, 0.45, 0, 0.18, 0, 0x0f172a);
+          addVoxelBox(lampGroup, 0.22, 4.6, 0.22, 0, 2.5, 0, 0x1e293b);
+          addVoxelBox(lampGroup, 0.36, 0.25, 0.36, 0, 4.85, 0, 0x0f172a);
+          // Curved overhanging gooseneck arm
+          addVoxelBox(lampGroup, 1.15, 0.18, 0.22, sign * 0.48, 5.05, 0, 0x1e293b);
+          addVoxelBox(lampGroup, 0.72, 0.14, 0.62, sign * 0.95, 5.12, 0, 0x0f172a);
+          // Warm incandescent glowing lantern head
+          const bulb = addVoxelBox(lampGroup, 0.52, 0.44, 0.48, sign * 0.95, 4.78, 0, 0xfffbeb, {
+            emissive: 0xfde047,
+            emissiveIntensity: 1.6
           });
           streetLampBulbs.push(bulb);
 
+          // Warm soft ambient golden light puddle on sidewalk
           const pool = new THREE.Mesh(
-            new THREE.CircleGeometry(2.6, 16),
-            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false })
+            new THREE.CircleGeometry(3.6, 24),
+            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.32, depthWrite: false })
           );
           pool.rotation.x = -Math.PI / 2;
-          pool.position.set(sign * 0.68, 0.26, 0);
-          pool.visible = false;
+          pool.position.set(sign * 0.95, 0.26, 0);
+          pool.visible = true;
           lampGroup.add(pool);
           streetLampPools.push(pool);
 
@@ -1201,8 +1209,7 @@
         });
       }
 
-      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path
-      // (x = ±10.95) while trees & porch pads are positioned so nobody ever walks through a tree!
+      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path (x = ±11.45)
       const charIds = ['goblin', 'doge', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
       const dogCols = [0xd97706, 0xfef3c7, 0x78350f, 0xf97316];
       for (let i = 0; i < 12; i++) {
@@ -1223,205 +1230,1804 @@
       }
     }
 
-    const apartments = [];
-    const BLOCK_SPACING = 26;
-    const NUM_PAIRS = 10;
-    let globalOrderCounter = 0;
+    // ============================================================================
+    // ============================================================================
+    // 8B. 10 GRAND REAL-LIFE CITY LANDMARKS (Towering authentic architecture)
+    // ============================================================================
 
-    function rebuildApartmentVisuals(apt, cityTheme, index) {
-      while (apt.archGroup.children.length > 0) {
-        apt.archGroup.remove(apt.archGroup.children[0]);
-      }
-      apt.windowMeshes = [];
+// 1. TOKYO - Grand Tokyo Tower (Minato, Tokyo)
+// Authentic 7 alternating bands of International Orange & Aviation White
+// 2-story glass-walled Main Deck with glowing observation lights & red aviation beacon spire
+function createGrandTokyoTower(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
 
-      const xSign = apt.side === 'left' ? -1 : 1;
-      const wallCol = cityTheme.walls[index % cityTheme.walls.length];
-      const roofCol = cityTheme.roofs[index % cityTheme.roofs.length];
-      const bType = index % 3;
-      const width = 8.4;
-      const depth = 13.5;
-      const faceX = -xSign * (width / 2 + 0.08);
-      const isNight = TIME_PRESETS[gameState.timeIndex].windowEmissive;
+  const orange = 0xef4444; // International Orange
+  const white = 0xf8fafc;  // Aviation White
+  const darkNavy = 0x1e293b;
+  const glowGlass = 0x38bdf8;
+  const beaconRed = 0xff0000;
 
-      // COMPLETELY UNIQUE ARCHITECTURE & LANDMARKS EXCLUSIVE TO EACH CITY THEME!
-      if (cityTheme.id === 'yangon') {
-        if (bType === 0) {
-          // 1. ICONIC SHWEDAGON GOLDEN PAGODA STUPA MONUMENT (Exclusive to Yangon!)
-          addVoxelBox(apt.archGroup, width, 3.2, depth, 0, 1.6, 0, 0xfef3c7);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.6, depth + 0.8, 0, 3.4, 0, 0xd97706);
-          // Stepped Golden Octagonal Terraces
-          addVoxelBox(apt.archGroup, 6.8, 1.6, 8.8, 0, 4.4, 0, 0xf59e0b);
-          addVoxelBox(apt.archGroup, 5.4, 1.6, 6.8, 0, 5.8, 0, 0xfacc15, { metalness: 0.55, roughness: 0.2 });
-          // Bell-Shaped Golden Stupa Dome
-          addVoxelBox(apt.archGroup, 4.0, 3.2, 4.0, 0, 8.0, 0, 0xfacc15, { metalness: 0.65, roughness: 0.18, emissive: 0xd97706, emissiveIntensity: 0.35 });
-          addVoxelBox(apt.archGroup, 2.6, 2.6, 2.6, 0, 10.6, 0, 0xfde047, { metalness: 0.7, emissive: 0xfacc15, emissiveIntensity: 0.45 });
-          // Sacred Diamond Hti Umbrella Spire
-          addVoxelBox(apt.archGroup, 1.1, 3.2, 1.1, 0, 13.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.9 });
-          addVoxelBox(apt.archGroup, 2.2, 0.35, 2.2, 0, 14.2, 0, 0xfacc15);
-          // Corner Miniature Golden Shrines
-          [[-2.6, -3.5], [-2.6, 3.5], [2.6, -3.5], [2.6, 3.5]].forEach(([sx, sz]) => {
-            addVoxelBox(apt.archGroup, 1.4, 2.4, 1.4, sx, 4.6, sz, 0xfacc15);
-          });
-        } else if (bType === 1) {
-          // 2. TRADITIONAL BURMESE TEAKWOOD PYATTHAT MONASTERY (7-Tiered Roof)
-          addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x78350f);
-          for (let tier = 0; tier < 4; tier++) {
-            const tw = width + 1.4 - tier * 1.4;
-            const td = depth + 1.2 - tier * 2.0;
-            const ty = 7.8 + tier * 1.35;
-            addVoxelBox(apt.archGroup, tw, 0.55, td, 0, ty, 0, 0xfacc15);
-            addVoxelBox(apt.archGroup, tw - 0.8, 0.9, td - 0.8, 0, ty + 0.6, 0, 0x92400e);
-          }
-          addVoxelBox(apt.archGroup, 0.8, 2.5, 0.8, 0, 14.0, 0, 0xfef08a, { emissive: 0xfacc15, emissiveIntensity: 0.6 });
-        } else {
-          // 3. BOGYOKE COLONIAL HERITAGE TEA HOUSE & PALMS
-          addVoxelBox(apt.archGroup, width, 9.5, depth, 0, 4.75, 0, 0xfde68a);
-          addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 9.8, 0, 0x059669);
-          for (let wy = 3.4; wy < 8.5; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.3, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              apt.windowMeshes.push(wm);
-            }
-          }
-        }
-      } else if (cityTheme.id === 'tokyo') {
-        if (bType === 0) {
-          // 1. ICONIC RED & WHITE TOKYO TOWER (Exclusive to Tokyo!)
-          addVoxelBox(apt.archGroup, width, 2.8, depth, 0, 1.4, 0, 0x1e293b);
-          // Stepped Red & White Lattice Tower Tiers
-          addVoxelBox(apt.archGroup, 5.8, 3.2, 5.8, 0, 4.2, 0, 0xef4444);
-          addVoxelBox(apt.archGroup, 6.6, 1.2, 6.6, 0, 6.2, 0, 0xf8fafc, { emissive: 0x38bdf8, emissiveIntensity: 0.35 }); // Main Observation Deck
-          addVoxelBox(apt.archGroup, 4.2, 3.0, 4.2, 0, 8.2, 0, 0xffffff);
-          addVoxelBox(apt.archGroup, 3.2, 2.8, 3.2, 0, 11.0, 0, 0xef4444);
-          addVoxelBox(apt.archGroup, 3.8, 0.9, 3.8, 0, 12.6, 0, 0xf8fafc, { emissive: 0xfef08a, emissiveIntensity: 0.6 }); // Top Deck
-          addVoxelBox(apt.archGroup, 1.8, 2.6, 1.8, 0, 14.2, 0, 0xffffff);
-          addVoxelBox(apt.archGroup, 0.7, 3.5, 0.7, 0, 17.0, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.2 }); // Antenna Spire
-        } else if (bType === 1) {
-          // 2. SHIBUYA NEON ARCADE SKYSCRAPER WITH VERTICAL BLADE BILLBOARDS
-          const h = 14.5;
-          addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
-          // Vertical Neon Kanji Blade Signs protruding toward the street
-          addVoxelBox(apt.archGroup, 1.2, 6.5, 0.65, faceX - xSign * 0.6, 9.2, -2.8, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 0.95 });
-          addVoxelBox(apt.archGroup, 1.2, 5.5, 0.65, faceX - xSign * 0.6, 8.0,  2.8, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.95 });
-          for (let wy = 3.6; wy < h - 1.2; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.4, 1.4, faceX, wy, wz, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: Math.max(0.45, isNight) });
-              apt.windowMeshes.push(wm);
-            }
-          }
-        } else {
-          // 3. ASAKUSA SENSŌ-JI TEMPLE & RED TORII SHRINE WITH SAKURA TREE
-          addVoxelBox(apt.archGroup, width, 8.2, depth, 0, 4.1, 0, 0xfef3c7);
-          addVoxelBox(apt.archGroup, width + 1.8, 0.8, depth + 1.6, 0, 8.5, 0, 0x1e293b);
-          addVoxelBox(apt.archGroup, width - 1.2, 2.4, depth - 1.2, 0, 10.0, 0, 0x991b1b);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, 11.4, 0, 0x1e293b);
-          // Giant Red Kaminarimon Lantern at front
-          addVoxelBox(apt.archGroup, 1.4, 1.8, 1.4, faceX - xSign * 0.8, 5.6, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.85 });
-        }
-      } else if (cityTheme.id === 'chinatown') {
-        if (bType === 0) {
-          // 1. IMPERIAL DRAGON PAVILION WITH SCULPTED 3D ROOFTOP DRAGON (Exclusive to ChinaTown!)
-          addVoxelBox(apt.archGroup, width, 9.2, depth, 0, 4.6, 0, 0x991b1b);
-          addVoxelBox(apt.archGroup, width + 1.6, 0.7, depth + 1.6, 0, 9.5, 0, 0xf59e0b);
-          // Upturned Flying Eave Horns
-          addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, faceX - xSign * 0.4, 10.2, -depth / 2, 0xfacc15);
-          addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, faceX - xSign * 0.4, 10.2,  depth / 2, 0xfacc15);
-          // Sculpted Undulating 3D Golden & Emerald Chinese Dragon on Roof!
-          [-3.6, -1.8, 0, 1.8, 3.6].forEach((dz, dIdx) => {
-            const dy = 10.5 + (dIdx % 2) * 0.75;
-            addVoxelBox(apt.archGroup, 1.3, 1.2, 1.4, 0, dy, dz, dIdx % 2 === 0 ? 0xfacc15 : 0x10b981);
-            addVoxelBox(apt.archGroup, 0.4, 0.6, 0.5, 0, dy + 0.8, dz, 0xef4444);
-          });
-          // Dragon Head facing the road
-          addVoxelBox(apt.archGroup, 1.8, 1.6, 1.8, faceX * 0.4, 11.4, -4.4, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 0.5 });
-        } else if (bType === 1) {
-          // 2. OCTAGONAL 4-TIER CRIMSON & GOLD PAGODA TOWER
-          for (let tier = 0; tier < 4; tier++) {
-            const s = 7.8 - tier * 1.4;
-            const y = 2.0 + tier * 3.1;
-            addVoxelBox(apt.archGroup, s, 2.5, s, 0, y, 0, 0xb91c1c);
-            addVoxelBox(apt.archGroup, s + 1.4, 0.65, s + 1.4, 0, y + 1.4, 0, 0xf59e0b);
-          }
-        } else {
-          // 3. GOLDEN DIM SUM TEAHOUSE WITH HANGING RED LANTERNS
-          addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0x7f1d1d);
-          addVoxelBox(apt.archGroup, width + 1.2, 0.8, depth + 1.2, 0, 10.8, 0, 0x059669);
-          [-3.5, 0, 3.5].forEach((lz) => {
-            addVoxelBox(apt.archGroup, 0.75, 0.95, 0.75, faceX - xSign * 0.8, 6.8, lz, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.95 });
-          });
-        }
-      } else if (cityTheme.id === 'littleindia') {
-        if (bType === 0) {
-          // 1. VIBRANT STEPPED HINDU GOPURAM TEMPLE TOWER (Exclusive to Little India!)
-          const tierColors = [0xf97316, 0xec4899, 0xfacc15, 0x38bdf8, 0xa855f7];
-          addVoxelBox(apt.archGroup, width, 3.2, depth, 0, 1.6, 0, 0xfde68a);
-          for (let t = 0; t < 5; t++) {
-            const tw = width - t * 1.1;
-            const td = depth - t * 1.8;
-            const ty = 3.8 + t * 2.1;
-            addVoxelBox(apt.archGroup, tw, 1.7, td, 0, ty, 0, tierColors[t]);
-            addVoxelBox(apt.archGroup, tw + 0.5, 0.4, td + 0.5, 0, ty + 0.95, 0, 0xfef08a);
-          }
-          // Row of Golden Kalasha Finials on Gopuram Barrel Roof
-          [-2.2, 0, 2.2].forEach((kz) => {
-            addVoxelBox(apt.archGroup, 0.75, 1.3, 0.75, 0, 14.2, kz, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 0.6 });
-          });
-        } else if (bType === 1) {
-          // 2. JAIPUR ROYAL PINK HAVELI PALACE WITH 3 MUGHAL ONION DOMES & JHAROKHA BALCONIES
-          addVoxelBox(apt.archGroup, width, 9.8, depth, 0, 4.9, 0, 0xfb7185);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.75, depth + 0.8, 0, 10.1, 0, 0xfef08a);
-          [-3.4, 0, 3.4].forEach((dz) => {
-            // Protruding Jharokha Balcony
-            addVoxelBox(apt.archGroup, 1.2, 1.8, 2.0, faceX - xSign * 0.5, 6.2, dz, 0xfdba74);
-            // Rooftop White & Gold Onion Dome
-            addVoxelBox(apt.archGroup, 2.4, 2.0, 2.4, 0, 11.4, dz, 0xffffff);
-            addVoxelBox(apt.archGroup, 0.9, 1.4, 0.9, 0, 12.9, dz, 0xfacc15);
-          });
-        } else {
-          // 3. SPICE BAZAAR EMPORIUM WITH MARIGOLD GARLANDS
-          addVoxelBox(apt.archGroup, width, 9.2, depth, 0, 4.6, 0, 0xfde047);
-          addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, 9.5, 0, 0xf97316);
-          for (let wy = 3.4; wy < 8.2; wy += 2.6) {
-            for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-              const wm = addVoxelBox(apt.archGroup, 0.18, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-              apt.windowMeshes.push(wm);
-            }
-          }
-        }
-      } else {
-        // PASTEL METRO: GIANT ROOFTOP DONUT BAKERY, CYBER ATRIUM & ARCADE TOWER
-        const height = 10 + (index % 3) * 2.4;
-        addVoxelBox(apt.archGroup, width, height, depth, 0, height / 2, 0, wallCol);
-        addVoxelBox(apt.archGroup, width + 0.7, 0.85, depth + 0.7, 0, height + 0.4, 0, roofCol);
-        if (bType === 0) {
-          // Giant 3D Frosted Pink Voxel Donut on the Roof!
-          addVoxelBox(apt.archGroup, 1.2, 2.8, 3.2, 0, height + 2.2, 0, 0xfde68a);
-          addVoxelBox(apt.archGroup, 1.3, 2.9, 3.3, 0, height + 2.3, 0, 0xf472b6);
-        }
-        for (let wy = 3.4; wy < height - 1.2; wy += 2.8) {
-          for (let wz = -3.8; wz <= 3.8; wz += 3.8) {
-            const wm = addVoxelBox(apt.archGroup, 0.16, 1.35, 1.35, faceX, wy, wz, 0xfef9c3, { emissive: 0xfef08a, emissiveIntensity: isNight });
-            apt.windowMeshes.push(wm);
-          }
-        }
-      }
+  // 4 Massive Foundation Blocks in Corners
+  const legCoords = [[-4.6, -4.6], [4.6, -4.6], [-4.6, 4.6], [4.6, 4.6]];
+  legCoords.forEach(([lx, lz]) => {
+    addVoxelBox(root, 1.8, 1.2, 1.8, lx, 0.6, lz, darkNavy);
+  });
 
-      // Street-Level Local Noodle / Tea / Spice Stall Awning & Native Script Signboard
-      const stallX = -xSign * (width / 2 + 1.05);
-      addVoxelBox(apt.archGroup, 1.9, 0.35, 4.8, stallX, 2.85, -3.2, cityTheme.accent);
-      const signInfo = cityTheme.signs[index % cityTheme.signs.length];
-      const signMesh = createNativeSignboardMesh(signInfo.top, signInfo.bottom, signInfo.bg, signInfo.fg, 0.28, 1.45, 3.8);
-      signMesh.position.set(stallX - xSign * 0.35, 4.15, -3.2);
-      apt.archGroup.add(signMesh);
+  // BAND 1: International Orange Sweeping Inward-Curving Lattice Pylons (height 1.2 to 7.8)
+  legCoords.forEach(([lx, lz]) => {
+    const sx = Math.sign(lx);
+    const sz = Math.sign(lz);
+    addVoxelBox(root, 1.2, 3.6, 1.2, sx * 4.0, 3.0, sz * 4.0, orange);
+    addVoxelBox(root, 1.1, 3.8, 1.1, sx * 3.1, 6.0, sz * 3.1, orange);
+  });
 
-      // City-Specific Street Tree tucked flush beside the building wall (clear of both porch & sidewalk actors!)
-      const treeX = -xSign * (width / 2 + 0.95);
-      addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
-      const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
-      addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+  // Sweeping lattice arch trusses between the 4 legs (height 5.2 to 6.8)
+  addVoxelBox(root, 5.2, 0.7, 0.7, 0, 5.8, -3.1, orange);
+  addVoxelBox(root, 5.2, 0.7, 0.7, 0, 5.8,  3.1, orange);
+  addVoxelBox(root, 0.7, 0.7, 5.2, -3.1, 5.8, 0, orange);
+  addVoxelBox(root, 0.7, 0.7, 5.2,  3.1, 5.8, 0, orange);
+
+  // BAND 2: Aviation White Converging Lower Shaft (height 7.8 to 11.0)
+  legCoords.forEach(([lx, lz]) => {
+    const sx = Math.sign(lx);
+    const sz = Math.sign(lz);
+    addVoxelBox(root, 0.9, 3.2, 0.9, sx * 2.3, 9.4, sz * 2.3, white);
+  });
+  addVoxelBox(root, 3.8, 0.6, 3.8, 0, 10.6, 0, white);
+
+  // MAIN OBSERVATION DECK (2-Story Observatory, height 11.0 to 14.5)
+  addVoxelBox(root, 6.8, 0.6, 6.8, 0, 11.2, 0, darkNavy);
+  addVoxelBox(root, 5.8, 1.5, 5.8, 0, 12.2, 0, darkNavy);
+  addVoxelBox(root, 6.2, 1.1, 6.2, 0, 12.2, 0, glowGlass, { emissive: glowGlass, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 5.2, 1.3, 5.2, 0, 13.5, 0, darkNavy);
+  addVoxelBox(root, 5.5, 0.9, 5.5, 0, 13.5, 0, glowGlass, { emissive: glowGlass, emissiveIntensity: 0.75 });
+  addVoxelBox(root, 5.8, 0.4, 5.8, 0, 14.3, 0, orange);
+
+  // BAND 3: International Orange Mid Shaft (height 14.5 to 17.5)
+  addVoxelBox(root, 2.6, 3.0, 2.6, 0, 15.9, 0, orange);
+
+  // BAND 4: Aviation White Upper Shaft (height 17.5 to 20.2)
+  addVoxelBox(root, 2.0, 2.8, 2.0, 0, 18.8, 0, white);
+
+  // BAND 5: Top Deck (Special Observatory at 250m, height 20.2 to 22.2)
+  addVoxelBox(root, 3.2, 0.4, 3.2, 0, 20.4, 0, orange);
+  addVoxelBox(root, 2.8, 1.2, 2.8, 0, 21.1, 0, darkNavy);
+  addVoxelBox(root, 3.0, 0.8, 3.0, 0, 21.1, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.9 });
+  addVoxelBox(root, 2.6, 0.4, 2.6, 0, 21.8, 0, orange);
+
+  // BAND 6: Aviation White Broadcast Antenna Mast (height 22.2 to 24.8)
+  addVoxelBox(root, 1.2, 2.6, 1.2, 0, 23.4, 0, white);
+  addVoxelBox(root, 2.8, 0.25, 0.25, 0, 24.0, 0, white);
+  addVoxelBox(root, 0.25, 0.25, 2.8, 0, 24.0, 0, white);
+
+  // BAND 7: International Orange Pinnacle Spire (height 24.8 to 27.2)
+  addVoxelBox(root, 0.6, 2.4, 0.6, 0, 25.8, 0, orange);
+  addVoxelBox(root, 0.9, 0.9, 0.9, 0, 27.3, 0, beaconRed, { emissive: beaconRed, emissiveIntensity: 3.0 });
+
+  parent.add(root);
+  return root;
+}
+
+// 2. YANGON
+// 2. YANGON - Grand Shwedagon Pagoda (ရွှေတိဂုံစေတီတော်)
+// Colossal 99m golden stupa on Singuttara Hill: 4 cardinal Pyatthat prayer halls (Tazaungs),
+// corner guardian Chinthes, 3-tier octagonal plinth, Khaunglaung-pon bell with relief rings,
+// Kyar-hmauk & Kyar-hlan lotus petals, Hnget-pyaw-bu banana bud, 7-tier filigree Hti umbrella,
+// and radiant Sein-bu diamond orb pinnacle!
+function createGrandShwedagonPagoda(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+
+  const richGold = 0xf59e0b;   // Deep 24K Burmese temple gold
+  const brightGold = 0xfacc15; // Gleaming golden leaf
+  const radiantGold = 0xfef08a;// Shimmering lotus & umbrella gold
+  const hillStone = 0xfef3c7;  // Marble terrace paving
+  const teakWood = 0x78350f;   // Carved teakwood shrines
+  const lacquerRed = 0x991b1b; // Burmese royal crimson lacquer
+  const rubyGlow = 0xef4444;
+
+  // 1. SINGUTTARA HILL & GRAND MARBLE TERRACE (ရင်ပြင်တော် ပစ္စယံ, w=22, h=2.4)
+  addVoxelBox(root, 22.0, 1.8, 22.0, 0, 0.9, 0, hillStone);
+  addVoxelBox(root, 22.8, 0.5, 22.8, 0, 2.0, 0, richGold);
+
+  // 2. FOUR CARDINAL PRAYER SHRINES (တန်ဆောင်းများ - Tazaungs with Pyatthat Multi-Tier Roofs)
+  const tazaungCoords = [
+    { x: 0, z: -10.2, rot: 0 },
+    { x: 0, z: 10.2, rot: Math.PI },
+    { x: -10.2, z: 0, rot: Math.PI / 2 },
+    { x: 10.2, z: 0, rot: -Math.PI / 2 }
+  ];
+  tazaungCoords.forEach(tz => {
+    // Teakwood colonnade hall
+    addVoxelBox(root, 4.2, 3.2, 3.4, tz.x, 3.6, tz.z, teakWood);
+    addVoxelBox(root, 3.4, 2.4, 2.8, tz.x, 3.4, tz.z, radiantGold, { emissive: richGold, emissiveIntensity: 0.6 });
+    // 3-tier Burmese Pyatthat multi-roof with golden eaves
+    addVoxelBox(root, 5.0, 0.5, 4.2, tz.x, 5.45, tz.z, lacquerRed);
+    addVoxelBox(root, 3.8, 0.5, 3.2, tz.x, 6.3, tz.z, lacquerRed);
+    addVoxelBox(root, 2.6, 0.5, 2.2, tz.x, 7.1, tz.z, lacquerRed);
+    addVoxelBox(root, 0.6, 2.2, 0.6, tz.x, 8.4, tz.z, brightGold, { emissive: radiantGold, emissiveIntensity: 1.0 });
+  });
+
+  // 3. FOUR CORNER GUARDIAN CHINTHES & SATELLITE STUPAS (ခြင်္သေ့ နှင့် အရံစေတီများ)
+  const cornerCoords = [[-9.0, -9.0], [9.0, -9.0], [-9.0, 9.0], [9.0, 9.0]];
+  cornerCoords.forEach(([cx, cz]) => {
+    // Guardian Chinthe Lion
+    addVoxelBox(root, 1.8, 2.4, 1.8, cx, 3.2, cz, brightGold);
+    addVoxelBox(root, 1.2, 1.4, 1.2, cx, 4.8, cz, richGold);
+    // Miniature Satellite Stupa (အရံစေတီ) next to corner
+    const sx = cx * 0.72;
+    const sz = cz * 0.72;
+    addVoxelBox(root, 2.6, 1.2, 2.6, sx, 2.6, sz, richGold);
+    addVoxelBox(root, 2.0, 2.2, 2.0, sx, 4.2, sz, brightGold);
+    addVoxelBox(root, 1.4, 2.2, 1.4, sx, 6.2, sz, radiantGold, { emissive: richGold, emissiveIntensity: 0.4 });
+    addVoxelBox(root, 0.5, 2.0, 0.5, sx, 8.2, sz, radiantGold, { emissive: radiantGold, emissiveIntensity: 0.9 });
+  });
+
+  // 4. STEPPED OCTAGONAL PLINTH (ရှစ်မြှောင့် ပစ္စယံ ၃ ဆင့်, height 2.2 to 8.2)
+  addVoxelBox(root, 16.0, 1.8, 16.0, 0, 3.1, 0, richGold);
+  addVoxelBox(root, 14.0, 1.8, 14.0, 0, 4.9, 0, brightGold);
+  addVoxelBox(root, 12.2, 1.8, 12.2, 0, 6.7, 0, richGold);
+  addVoxelBox(root, 10.8, 1.6, 10.8, 0, 8.4, 0, brightGold);
+
+  // 5. THE BELL (ခေါင်းလောင်းပုံ - Khaunglaung-pon, height 9.2 to 14.5)
+  // Stepped embossed waist bands (Hpaung-yit)
+  addVoxelBox(root, 9.6, 1.8, 9.6, 0, 10.1, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.35 });
+  addVoxelBox(root, 8.8, 1.8, 8.8, 0, 11.8, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.45 });
+  addVoxelBox(root, 8.0, 1.6, 8.0, 0, 13.4, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.55 });
+
+  // 6. INVERTED BOWL & LOTUS PETALS (သပိတ်မှောက် နှင့် ကြာမှောက် ကြာလှန်, height 14.2 to 19.5)
+  // Downward-turned lotus (Kyar-hmauk)
+  addVoxelBox(root, 7.2, 1.6, 7.2, 0, 15.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.65 });
+  // Glass bead molding rim (Hpan-khar-thee)
+  addVoxelBox(root, 7.6, 0.45, 7.6, 0, 16.0, 0, richGold);
+  // Upward-turned lotus (Kyar-hlan)
+  addVoxelBox(root, 6.2, 1.6, 6.2, 0, 17.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.75 });
+
+  // 7. BANANA BUD SPIRE (ငှက်ပျောဖူး - Hnget-pyaw-bu, height 18.0 to 25.5)
+  addVoxelBox(root, 5.0, 1.8, 5.0, 0, 18.6, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.7 });
+  addVoxelBox(root, 4.0, 2.0, 4.0, 0, 20.4, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.8 });
+  addVoxelBox(root, 3.0, 2.0, 3.0, 0, 22.3, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 2.0, 2.2, 2.0, 0, 24.3, 0, radiantGold, { metalness: 0.95, emissive: radiantGold, emissiveIntensity: 0.95 });
+
+  // 8. SEVEN-TIER GILDED UMBRELLA CROWN (ထီးတော် - Hti-daw, height 25.4 to 30.0)
+  // Concentric radiating umbrella tiers
+  [
+    { w: 4.8, h: 0.35, y: 25.6 },
+    { w: 4.2, h: 0.35, y: 26.3 },
+    { w: 3.5, h: 0.35, y: 27.0 },
+    { w: 2.8, h: 0.35, y: 27.7 },
+    { w: 2.2, h: 0.35, y: 28.4 },
+    { w: 1.6, h: 0.35, y: 29.1 }
+  ].forEach(hti => {
+    addVoxelBox(root, hti.w, hti.h, hti.w, 0, hti.y, 0, radiantGold, { emissive: radiantGold, emissiveIntensity: 1.4 });
+  });
+
+  // 9. VANE & SEIN-BU DIAMOND ORB (ငှက်မြတ်နား နှင့် စိန်ဖူးတော်, height 29.5 to 33.8)
+  // Golden central mast & jewel vane
+  addVoxelBox(root, 0.7, 2.8, 0.7, 0, 30.5, 0, radiantGold, { emissive: 0xffffff, emissiveIntensity: 1.8 });
+  addVoxelBox(root, 0.3, 1.4, 1.8, 0, 31.8, 0.6, richGold, { emissive: rubyGlow, emissiveIntensity: 1.5 });
+  // Dazzling diamond orb radiating supreme spiritual white light
+  addVoxelBox(root, 1.4, 1.4, 1.4, 0, 33.2, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 3.8 });
+
+  parent.add(root);
+  return root;
+}
+
+// 3. LITTLE INDIA
+function createGrandTajMahal(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const whiteMarble = 0xf8fafc;
+  const cream = 0xfef9c3;
+  const gold = 0xfacc15;
+  addVoxelBox(root, 17.5, 2.4, 15.5, 0, 1.2, 0, 0xe2e8f0);
+  addVoxelBox(root, 18.0, 0.4, 16.0, 0, 2.5, 0, whiteMarble);
+  [[-7.8, -6.8], [7.8, -6.8], [-7.8, 6.8], [7.8, 6.8]].forEach(([mx, mz]) => {
+    addVoxelBox(root, 1.8, 1.8, 1.8, mx, 1.5, mz, 0xcbd5e1);
+    addVoxelBox(root, 1.2, 7.5, 1.2, mx, 6.0, mz, whiteMarble);
+    addVoxelBox(root, 1.6, 0.4, 1.6, mx, 9.8, mz, cream);
+    addVoxelBox(root, 1.0, 6.5, 1.0, mx, 13.2, mz, whiteMarble);
+    addVoxelBox(root, 1.4, 0.4, 1.4, mx, 16.6, mz, cream);
+    addVoxelBox(root, 0.8, 5.5, 0.8, mx, 19.5, mz, whiteMarble);
+    addVoxelBox(root, 1.2, 1.4, 1.2, mx, 22.8, mz, whiteMarble);
+    addVoxelBox(root, 0.3, 1.8, 0.3, mx, 24.3, mz, gold, { emissive: gold, emissiveIntensity: 0.8 });
+  });
+  addVoxelBox(root, 11.5, 11.5, 11.5, 0, 8.4, 0, whiteMarble);
+  addVoxelBox(root, 5.5, 7.8, 1.2, 0, 7.2, 5.6, 0x1e293b);
+  addVoxelBox(root, 6.5, 0.6, 0.4, 0, 11.2, 5.8, cream);
+  addVoxelBox(root, 0.6, 8.2, 0.4, -3.2, 7.0, 5.8, cream);
+  addVoxelBox(root, 0.6, 8.2, 0.4,  3.2, 7.0, 5.8, cream);
+  [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([cx, cz]) => {
+    addVoxelBox(root, 1.8, 2.2, 1.8, cx, 15.2, cz, whiteMarble);
+    addVoxelBox(root, 2.2, 1.6, 2.2, cx, 17.0, cz, cream);
+    addVoxelBox(root, 0.3, 1.4, 0.3, cx, 18.4, cz, gold);
+  });
+  addVoxelBox(root, 7.5, 2.2, 7.5, 0, 15.2, 0, cream);
+  addVoxelBox(root, 8.6, 4.5, 8.6, 0, 18.4, 0, whiteMarble, { emissive: 0xffffff, emissiveIntensity: 0.4 });
+  addVoxelBox(root, 6.8, 3.2, 6.8, 0, 22.0, 0, whiteMarble, { emissive: 0xffffff, emissiveIntensity: 0.5 });
+  addVoxelBox(root, 4.2, 2.2, 4.2, 0, 24.5, 0, whiteMarble);
+  addVoxelBox(root, 1.2, 3.2, 1.2, 0, 27.0, 0, gold, { emissive: gold, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 0.4, 2.4, 0.4, 0, 29.5, 0, gold, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  parent.add(root);
+  return root;
+}
+
+// 4. CHINATOWN
+function createImperialTempleOfHeaven(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const crimson = 0x991b1b;
+  const imperialBlue = 0x1d4ed8;
+  const gold = 0xf59e0b;
+  const marble = 0xf8fafc;
+  addVoxelBox(root, 16.5, 1.5, 16.5, 0, 0.75, 0, marble);
+  addVoxelBox(root, 17.2, 0.4, 17.2, 0, 1.7, 0, 0xe2e8f0);
+  addVoxelBox(root, 13.5, 1.4, 13.5, 0, 2.5, 0, marble);
+  addVoxelBox(root, 14.2, 0.4, 14.2, 0, 3.3, 0, 0xe2e8f0);
+  addVoxelBox(root, 10.5, 5.5, 10.5, 0, 6.2, 0, crimson);
+  [-4.8, 4.8].forEach(pxx => {
+    addVoxelBox(root, 0.9, 5.5, 0.9, pxx, 6.2, 4.8, gold);
+    addVoxelBox(root, 0.9, 5.5, 0.9, pxx, 6.2, -4.8, gold);
+  });
+  addVoxelBox(root, 13.2, 1.2, 13.2, 0, 9.5, 0, imperialBlue);
+  addVoxelBox(root, 14.6, 0.5, 14.6, 0, 9.9, 0, gold);
+  addVoxelBox(root, 8.2, 4.8, 8.2, 0, 12.6, 0, crimson);
+  addVoxelBox(root, 10.5, 1.2, 10.5, 0, 15.5, 0, imperialBlue);
+  addVoxelBox(root, 11.6, 0.5, 11.6, 0, 15.9, 0, gold);
+  addVoxelBox(root, 6.2, 4.2, 6.2, 0, 18.5, 0, crimson);
+  addVoxelBox(root, 8.2, 1.2, 8.2, 0, 21.2, 0, imperialBlue);
+  addVoxelBox(root, 9.2, 0.5, 9.2, 0, 21.6, 0, gold);
+  addVoxelBox(root, 5.5, 3.2, 5.5, 0, 23.5, 0, imperialBlue);
+  addVoxelBox(root, 3.5, 2.6, 3.5, 0, 26.2, 0, imperialBlue);
+  addVoxelBox(root, 1.8, 2.2, 1.8, 0, 28.4, 0, gold, { emissive: gold, emissiveIntensity: 1.0 });
+  addVoxelBox(root, 2.2, 2.2, 2.2, 0, 30.2, 0, gold, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  parent.add(root);
+  return root;
+}
+
+// 5. PASTEL METRO
+function createCyberSpaceNeedleAndWheel(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const cyan = 0x00f5d4;
+  const pink = 0xff007f;
+  const violet = 0x7c3aed;
+  const dark = 0x0f172a;
+  addVoxelBox(root, 9.5, 1.5, 9.5, 0, 0.75, -2.5, dark);
+  [[-3.2, -3.2], [3.2, -3.2], [-3.2, 3.2], [3.2, 3.2]].forEach(([tx, tz]) => {
+    addVoxelBox(root, 1.2, 14.5, 1.2, tx * 0.7, 7.8, -2.5 + tz * 0.7, violet);
+  });
+  addVoxelBox(root, 2.4, 26.0, 2.4, 0, 13.0, -2.5, 0x1e1b4b);
+  addVoxelBox(root, 1.6, 26.0, 1.6, 0, 13.0, -2.5, cyan, { emissive: cyan, emissiveIntensity: 0.65 });
+  addVoxelBox(root, 11.5, 1.2, 11.5, 0, 20.8, -2.5, dark);
+  addVoxelBox(root, 12.8, 1.6, 12.8, 0, 22.0, -2.5, pink, { emissive: pink, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 10.2, 1.2, 10.2, 0, 23.3, -2.5, cyan, { emissive: cyan, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 7.5, 1.2, 7.5, 0, 24.4, -2.5, dark);
+  addVoxelBox(root, 1.6, 4.5, 1.6, 0, 27.0, -2.5, pink);
+  addVoxelBox(root, 0.9, 4.5, 0.9, 0, 31.0, -2.5, cyan);
+  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 34.5, -2.5, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+
+  const wheelZ = 4.8;
+  addVoxelBox(root, 0.8, 14.0, 0.8, -2.0, 7.0, wheelZ, dark);
+  addVoxelBox(root, 0.8, 14.0, 0.8,  2.0, 7.0, wheelZ, dark);
+  addVoxelBox(root, 0.6, 12.5, 12.5, 0, 14.0, wheelZ, cyan, { emissive: cyan, emissiveIntensity: 0.95 });
+  addVoxelBox(root, 0.6, 8.5, 8.5, 0, 14.0, wheelZ, pink, { emissive: pink, emissiveIntensity: 0.95 });
+  for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+    const gz = wheelZ + Math.cos(ang) * 5.8;
+    const gy = 14.0 + Math.sin(ang) * 5.8;
+    addVoxelBox(root, 1.2, 1.2, 1.2, 0, gy, gz, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.2 });
+  }
+  parent.add(root);
+  return root;
+}
+
+// 6. PARIS - Grand Eiffel Tower (Champ de Mars, Paris)
+// Authentic 3-tier puddle iron lattice tower with sweeping semicircular arches,
+// double-deck observation platforms, and summit beacon spotlight
+// 6. PARIS - Grand Eiffel Tower (Champ de Mars, Paris)
+// Masterclass 3-tier puddle iron lattice tower: authentic exponential curved pylon legs,
+// monumental semicircular arches spanning the 4 piers, double-deck 1st platform with
+// illuminated galleries, 2nd platform restaurant deck, soaring converged lattice shaft,
+// summit dome lantern, and le Phare revolving double-beam spotlight!
+function createGrandEiffelTower(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+
+  // Classic Eiffel bronze palette with puddle iron gradients
+  const stoneBase = 0x334155; // Masonry foundation blocks
+  const baseIron  = 0x423224; // Deep antique bronze puddle iron
+  const midIron   = 0x614a34; // Warm architectural lattice bronze
+  const topIron   = 0x82674b; // Golden summit bronze
+  const warmGlow  = 0xfef08a; // Golden floodlighting
+  const archGlow  = 0xfacc15;
+  const beaconCol = 0xffffff;
+
+  // 1. FOUR MASSIVE CORNER FOUNDATION PIERS (Piles de la Tour, w=14x14)
+  const pierCoords = [[-5.6, -5.6], [5.6, -5.6], [-5.6, 5.6], [5.6, 5.6]];
+  pierCoords.forEach(([pxx, pzz]) => {
+    addVoxelBox(root, 2.6, 1.2, 2.6, pxx, 0.6, pzz, stoneBase);
+    addVoxelBox(root, 2.2, 0.6, 2.2, pxx, 1.5, pzz, baseIron);
+  });
+
+  // 2. TIER 1: SWEEPING CURVED PYLON LEGS (Height 1.5 to 8.8)
+  // Lower sloping pylon segments
+  pierCoords.forEach(([pxx, pzz]) => {
+    const sx = Math.sign(pxx);
+    const sz = Math.sign(pzz);
+    // Lower heavy diagonal truss
+    addVoxelBox(root, 1.8, 3.8, 1.8, sx * 4.8, 3.4, sz * 4.8, baseIron);
+    // Mid curved taper
+    addVoxelBox(root, 1.5, 4.2, 1.5, sx * 3.8, 6.8, sz * 3.8, baseIron);
+    // Diagonal brace struts
+    addVoxelBox(root, 0.8, 3.0, 0.8, sx * 4.3, 4.8, sz * 4.3, midIron);
+  });
+
+  // 3. MONUMENTAL SEMICIRCULAR LATTICE ARCHES (Height 5.4 to 8.6)
+  // Stepped arched vaults connecting each pair of legs beneath the 1st platform
+  const archOffsets = [
+    { x: 0, z: -3.8, dx: 6.2, dz: 0.9 },
+    { x: 0, z:  3.8, dx: 6.2, dz: 0.9 },
+    { x: -3.8, z: 0, dx: 0.9, dz: 6.2 },
+    { x:  3.8, z: 0, dx: 0.9, dz: 6.2 }
+  ];
+  archOffsets.forEach(arc => {
+    // Outer arch rim
+    addVoxelBox(root, arc.dx, 0.9, arc.dz, arc.x, 6.2, arc.z, baseIron);
+    // Mid arch curve
+    addVoxelBox(root, arc.dx * 0.75, 0.75, arc.dz * 0.85, arc.x, 7.1, arc.z, midIron);
+    // Arch crown keystones with warm architectural illumination
+    addVoxelBox(root, arc.dx * 0.5, 0.6, arc.dz * 0.7, arc.x, 7.8, arc.z, archGlow, { emissive: archGlow, emissiveIntensity: 0.75 });
+  });
+
+  // 4. FIRST PLATFORM (La Première Plate-forme, w=10.8x10.8, Height 8.6 to 10.8)
+  addVoxelBox(root, 10.4, 0.7, 10.4, 0, 8.8, 0, baseIron);
+  addVoxelBox(root, 11.2, 0.6, 11.2, 0, 9.4, 0, midIron);
+  // Double-deck gallery with glowing panoramic pavilions & frieze
+  addVoxelBox(root, 9.8, 0.9, 9.8, 0, 10.0, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 11.4, 0.45, 11.4, 0, 10.6, 0, midIron);
+
+  // 5. TIER 2: INTERMEDIATE CONVERGING LEGS (Height 10.8 to 17.0)
+  pierCoords.forEach(([pxx, pzz]) => {
+    const sx = Math.sign(pxx);
+    const sz = Math.sign(pzz);
+    addVoxelBox(root, 1.3, 3.5, 1.3, sx * 2.8, 12.4, sz * 2.8, midIron);
+    addVoxelBox(root, 1.1, 3.5, 1.1, sx * 2.0, 15.4, sz * 2.0, midIron);
+  });
+  // Intermediate cross-brace ring
+  addVoxelBox(root, 5.8, 0.5, 5.8, 0, 14.0, 0, midIron);
+
+  // 6. SECOND PLATFORM (La Deuxième Plate-forme, w=7.6x7.6, Height 17.0 to 19.2)
+  addVoxelBox(root, 7.2, 0.6, 7.2, 0, 17.3, 0, midIron);
+  addVoxelBox(root, 7.8, 0.5, 7.8, 0, 17.8, 0, topIron);
+  // Le Jules Verne restaurant deck with warm illumination
+  addVoxelBox(root, 6.4, 0.8, 6.4, 0, 18.3, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 8.0, 0.4, 8.0, 0, 18.9, 0, topIron);
+
+  // 7. TIER 3: SOARING CONVERGED VERTICAL LATTICE TOWER (Height 19.2 to 27.0)
+  addVoxelBox(root, 3.2, 3.8, 3.2, 0, 21.0, 0, midIron);
+  addVoxelBox(root, 2.5, 4.0, 2.5, 0, 24.5, 0, topIron);
+  // Lattice side ribs
+  addVoxelBox(root, 3.4, 0.4, 0.5, 0, 22.5, 0, topIron);
+  addVoxelBox(root, 0.5, 0.4, 3.4, 0, 22.5, 0, topIron);
+
+  // 8. SUMMIT OBSERVATORY, LANTERN DOME & ANTENNA (Height 27.0 to 32.8)
+  // Double-deck summit gallery (Gustave Eiffel's private office)
+  addVoxelBox(root, 3.0, 1.2, 3.0, 0, 27.6, 0, topIron);
+  addVoxelBox(root, 2.6, 0.8, 2.6, 0, 28.4, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  // Dome cupola
+  addVoxelBox(root, 2.2, 0.9, 2.2, 0, 29.2, 0, topIron);
+  addVoxelBox(root, 1.4, 0.8, 1.4, 0, 30.0, 0, topIron);
+  // TV & Radio antenna mast
+  addVoxelBox(root, 0.6, 2.4, 0.6, 0, 31.4, 0, 0xf8fafc);
+  // Revolving summit beacon (le Phare) with brilliant spotlight
+  addVoxelBox(root, 1.1, 1.1, 1.1, 0, 32.8, 0, beaconCol, { emissive: beaconCol, emissiveIntensity: 3.8 });
+
+  parent.add(root);
+  return root;
+}
+
+// 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado
+// Calibrated height (~16.0 units) so head, serene face & golden halo are 100% visible on screen!
+// 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado (Cristo Redentor)
+// Monumental scale (height ~24.0 units, arm span 17.5 units): towering Mount Corcovado peak,
+// octagonal chapel pedestal, soapstone mosaic robes, heroic outstretched blessing arms,
+// serene face tilted towards Rio, and radiant golden halo!
+function createGrandChristTheRedeemer(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  // Angled gently towards the player's road for dramatic view
+  root.rotation.y = -Math.PI * 0.16;
+
+  const soapstone   = 0xf1f5f9; // Pale soapstone mosaic tiles
+  const soapDark    = 0xcbd5e1; // Robe shadow folds
+  const chapelBase  = 0x1e293b; // Octagonal chapel pedestal
+  const granite     = 0x64748b; // Granite cliff rock
+  const darkCliff   = 0x334155; // Weathered basalt
+  const jungleGreen = 0x15803d; // Lush Tijuca rainforest slopes
+  const haloGold    = 0xfef08a;
+
+  // 1. MOUNT CORCOVADO PEAK (Tijuca rainforest & granite cliffs, height 0 to 7.2)
+  addVoxelBox(root, 18.0, 2.8, 18.0, 0, 1.4, 0, jungleGreen);
+  addVoxelBox(root, 14.5, 2.4, 14.5, 0, 3.8, 0, darkCliff);
+  addVoxelBox(root, 11.0, 1.8, 11.0, 0, 5.8, 0, granite);
+  // Circular panoramic viewing terrace with tourist safety railings
+  addVoxelBox(root, 11.6, 0.4, 11.6, 0, 6.8, 0, 0xe2e8f0);
+
+  // 2. OCTAGONAL CHAPEL PEDESTAL (Base do Pedestal, height 7.0 to 10.8)
+  addVoxelBox(root, 5.4, 2.6, 5.4, 0, 8.3, 0, chapelBase);
+  addVoxelBox(root, 5.8, 0.5, 5.8, 0, 9.8, 0, granite);
+  addVoxelBox(root, 4.6, 0.8, 4.6, 0, 10.4, 0, soapDark);
+
+  // 3. MONUMENTAL ROBED BODY (Cristo Redentor, height 10.8 to 20.8)
+  // Stepped flowing tunic robes
+  addVoxelBox(root, 3.4, 3.4, 2.4, 0, 12.3, 0, soapstone);
+  addVoxelBox(root, 3.6, 3.2, 2.2, 0, 15.4, 0, soapstone);
+  addVoxelBox(root, 3.8, 2.8, 2.0, 0, 18.2, 0, soapstone);
+  // Robe central vertical pleats
+  addVoxelBox(root, 0.8, 7.5, 0.4, 0, 15.0, 1.1, soapDark);
+  // Broad heroic shoulders
+  addVoxelBox(root, 4.8, 2.0, 1.8, 0, 20.4, 0, soapstone);
+
+  // 4. WORLD-FAMOUS OUTSTRETCHED CROSS ARMS (17.5 units wide span!)
+  // Main horizontal arm span beam
+  addVoxelBox(root, 17.5, 1.4, 1.2, 0, 20.8, 0, soapstone);
+  // Flowing robe sleeve drapes beneath the arms
+  addVoxelBox(root, 3.8, 2.2, 1.1, -4.2, 19.2, 0, soapstone);
+  addVoxelBox(root, 3.8, 2.2, 1.1,  4.2, 19.2, 0, soapstone);
+  addVoxelBox(root, 2.0, 1.4, 1.0, -6.8, 19.6, 0, soapDark);
+  addVoxelBox(root, 2.0, 1.4, 1.0,  6.8, 19.6, 0, soapDark);
+  // Outstretched hands blessing the city & bay
+  addVoxelBox(root, 1.4, 1.0, 1.1, -9.2, 20.8, 0, soapstone);
+  addVoxelBox(root, 1.4, 1.0, 1.1,  9.2, 20.8, 0, soapstone);
+
+  // 5. SERENE HEAD, BEARD & DIGNIFIED FACE (Height 21.4 to 23.6)
+  addVoxelBox(root, 1.8, 2.0, 1.6, 0, 22.2, 0, soapstone);
+  // Hair & facial tilt slightly forward/downward
+  addVoxelBox(root, 2.0, 1.0, 1.8, 0, 22.8, -0.15, soapDark);
+  addVoxelBox(root, 1.2, 0.8, 0.4, 0, 21.6, 0.8, soapstone);
+
+  // 6. RADIANT GOLDEN HALO (Height 23.6 to 24.3)
+  addVoxelBox(root, 1.6, 0.35, 1.6, 0, 23.8, 0, haloGold, { emissive: haloGold, emissiveIntensity: 2.8 });
+
+  parent.add(root);
+  return root;
+}
+
+// 8. WASHINGTON
+function createGrandUSCapitolAndMonument(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const whiteMarble = 0xf8fafc;
+  const cream = 0xf1f5f9;
+
+  addVoxelBox(root, 17.5, 1.8, 15.5, 0, 0.9, 0, 0xe2e8f0);
+  addVoxelBox(root, 18.0, 0.4, 16.0, 0, 2.0, 0, whiteMarble);
+
+  addVoxelBox(root, 12.5, 6.5, 10.5, 0, 5.5, -2.5, whiteMarble);
+  addVoxelBox(root, 6.5, 0.8, 2.2, 0, 8.8, 2.5, whiteMarble);
+  [-2.4, -0.8, 0.8, 2.4].forEach(cx => {
+    addVoxelBox(root, 0.5, 5.5, 0.5, cx, 5.6, 2.5, cream);
+  });
+  addVoxelBox(root, 5.2, 1.4, 0.6, 0, 9.8, 2.5, whiteMarble);
+
+  addVoxelBox(root, 8.5, 5.5, 8.5, 0, 11.5, -2.5, whiteMarble);
+  [-3.8, 3.8].forEach(pxx => {
+    addVoxelBox(root, 0.5, 5.5, 0.5, pxx, 11.5, -2.5, cream);
+    addVoxelBox(root, 0.5, 5.5, 0.5, 0, 11.5, -2.5 + pxx, cream);
+  });
+
+  addVoxelBox(root, 7.5, 3.5, 7.5, 0, 16.0, -2.5, whiteMarble);
+  addVoxelBox(root, 6.2, 3.2, 6.2, 0, 19.2, -2.5, whiteMarble);
+  addVoxelBox(root, 4.5, 2.4, 4.5, 0, 21.8, -2.5, whiteMarble);
+
+  addVoxelBox(root, 2.4, 3.2, 2.4, 0, 24.5, -2.5, cream);
+  addVoxelBox(root, 0.8, 1.8, 0.8, 0, 27.0, -2.5, 0xb45309);
+
+  const obX = 0;
+  const obZ = 4.8;
+  addVoxelBox(root, 3.2, 12.0, 3.2, obX, 6.0, obZ, whiteMarble);
+  addVoxelBox(root, 2.6, 12.0, 2.6, obX, 18.0, obZ, whiteMarble);
+  addVoxelBox(root, 2.0, 7.0, 2.0, obX, 27.5, obZ, cream);
+  addVoxelBox(root, 1.4, 2.5, 1.4, obX, 32.0, obZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 0.5, 0.5, 0.5, obX, 33.8, obZ, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 2.2 });
+
+  parent.add(root);
+  return root;
+}
+
+// 9. DUBAI
+function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  const cyanGlass = 0x38bdf8;
+  const deepNavy = 0x0f172a;
+  const mirrorWhite = 0xf8fafc;
+  const gold = 0xfacc15;
+
+  const bkZ = -2.2;
+  addVoxelBox(root, 8.5, 9.5, 8.5, 0, 4.75, bkZ, deepNavy);
+  addVoxelBox(root, 7.2, 9.5, 7.2, 0, 4.75, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.65 });
+
+  addVoxelBox(root, 6.2, 9.0, 6.2, 0, 14.0, bkZ, deepNavy);
+  addVoxelBox(root, 5.2, 9.0, 5.2, 0, 14.0, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.75 });
+
+  addVoxelBox(root, 4.2, 8.0, 4.2, 0, 22.5, bkZ, deepNavy);
+  addVoxelBox(root, 3.4, 8.0, 3.4, 0, 22.5, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.85 });
+
+  addVoxelBox(root, 2.4, 7.0, 2.4, 0, 30.0, bkZ, mirrorWhite);
+  addVoxelBox(root, 1.8, 7.0, 1.8, 0, 30.0, bkZ, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 1.0 });
+
+  addVoxelBox(root, 1.0, 3.5, 1.0, 0, 35.2, bkZ, mirrorWhite);
+  addVoxelBox(root, 0.5, 3.5, 0.5, 0, 38.5, bkZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.8 });
+
+  const sailZ = 4.8;
+  addVoxelBox(root, 6.5, 1.5, 6.5, 0, 0.75, sailZ, deepNavy);
+  addVoxelBox(root, 1.4, 21.0, 7.5, 0, 11.5, sailZ, mirrorWhite);
+  addVoxelBox(root, 1.6, 18.0, 5.5, 0, 10.0, sailZ + 0.8, cyanGlass, { emissive: cyanGlass, emissiveIntensity: 0.55 });
+  addVoxelBox(root, 4.2, 0.5, 4.2, -1.8, 19.5, sailZ - 2.2, gold, { emissive: gold, emissiveIntensity: 0.8 });
+  addVoxelBox(root, 0.5, 4.5, 0.5, 0, 23.5, sailZ - 2.5, mirrorWhite);
+
+  parent.add(root);
+  return root;
+}
+
+// 10. CAIRO - Authentic Giza Plateau with Real 4-Sided Geometric Pyramids (Smooth, Non-Blocky)
+// Safe desert positioning: all components kept strictly away from road with >20 units clearance!
+function createGrandPyramidAndSphinx(parent, px, py, pz) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+
+  // Warm ancient sandstone materials with flatShading for crisp triangular faces
+  const khufuMat = new THREE.MeshStandardMaterial({
+    color: 0xd4a373,
+    roughness: 0.92,
+    metalness: 0.05,
+    flatShading: true
+  });
+
+  const khafreMat = new THREE.MeshStandardMaterial({
+    color: 0xc89658,
+    roughness: 0.92,
+    metalness: 0.05,
+    flatShading: true
+  });
+
+  const casingMat = new THREE.MeshStandardMaterial({
+    color: 0xfef9c3,
+    roughness: 0.75,
+    flatShading: true,
+    emissive: 0xfef08a,
+    emissiveIntensity: 0.25
+  });
+
+  const goldApexMat = new THREE.MeshStandardMaterial({
+    color: 0xfacc15,
+    metalness: 0.85,
+    roughness: 0.2,
+    emissive: 0xd97706,
+    emissiveIntensity: 0.8,
+    flatShading: true
+  });
+
+  const sandBaseMat = new THREE.MeshStandardMaterial({
+    color: 0xb8864f,
+    roughness: 0.95,
+    flatShading: true
+  });
+
+  // -------------------------------------------------------------
+  // 1. THE GREAT PYRAMID OF KHUFU (Real 4-Sided Smooth Pyramid)
+  // Centered at x = -6, well clear of the road
+  // -------------------------------------------------------------
+  const khufuGroup = new THREE.Group();
+  khufuGroup.position.set(-6, 0, 0);
+
+  // Desert Plateau foundation slab
+  const base1 = new THREE.Mesh(new THREE.BoxGeometry(32, 1.2, 32), sandBaseMat);
+  base1.position.set(0, 0.6, 0);
+  base1.receiveShadow = true;
+  khufuGroup.add(base1);
+
+  // Main 4-Sided Geometric Pyramid (ConeGeometry with 4 radial segments)
+  const khufuGeo = new THREE.ConeGeometry(19, 20, 4);
+  const khufuMesh = new THREE.Mesh(khufuGeo, khufuMat);
+  khufuMesh.position.set(0, 10.0 + 1.2, 0);
+  khufuMesh.rotation.y = Math.PI / 4; // Align 4 triangular faces squarely with axes
+  khufuMesh.castShadow = true;
+  khufuMesh.receiveShadow = true;
+  khufuGroup.add(khufuMesh);
+
+  // Golden Pyramidion (Electrum capstone at apex)
+  const khufuCapGeo = new THREE.ConeGeometry(3.2, 3.2, 4);
+  const khufuCap = new THREE.Mesh(khufuCapGeo, goldApexMat);
+  khufuCap.position.set(0, 20.0 + 1.2 - 1.6, 0);
+  khufuCap.rotation.y = Math.PI / 4;
+  khufuGroup.add(khufuCap);
+
+  // Ancient Tomb Entrance Passage (cut into the front face)
+  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 2.4), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
+  entMesh.position.set(12.5, 2.5, 0);
+  khufuGroup.add(entMesh);
+
+  // Heavy stone chevron lintels above the entrance
+  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.0, 3.2), sandBaseMat);
+  lintelMesh.position.set(12.2, 4.4, 0);
+  khufuGroup.add(lintelMesh);
+
+  root.add(khufuGroup);
+
+  // -------------------------------------------------------------
+  // 2. THE SECOND PYRAMID OF KHAFRE (With Signature Preserved Casing Cap)
+  // Set back deeper in the desert (offset: x = -26, z = -24)
+  // -------------------------------------------------------------
+  const khafreGroup = new THREE.Group();
+  khafreGroup.position.set(-26, 0, -24);
+
+  const base2 = new THREE.Mesh(new THREE.BoxGeometry(24, 1.0, 24), sandBaseMat);
+  base2.position.set(0, 0.5, 0);
+  khafreGroup.add(base2);
+
+  const khafreGeo = new THREE.ConeGeometry(14, 16, 4);
+  const khafreMesh = new THREE.Mesh(khafreGeo, khafreMat);
+  khafreMesh.position.set(0, 8.0 + 1.0, 0);
+  khafreMesh.rotation.y = Math.PI / 4;
+  khafreMesh.castShadow = true;
+  khafreMesh.receiveShadow = true;
+  khafreGroup.add(khafreMesh);
+
+  // Signature White Limestone Casing Stones at Khafre's Summit
+  const casingGeo = new THREE.ConeGeometry(5.2, 5.5, 4);
+  const casingMesh = new THREE.Mesh(casingGeo, casingMat);
+  casingMesh.position.set(0, 16.0 + 1.0 - 2.7, 0);
+  casingMesh.rotation.y = Math.PI / 4;
+  khafreGroup.add(casingMesh);
+
+  root.add(khafreGroup);
+
+  // -------------------------------------------------------------
+  // 3. THE GREAT SPHINX OF GIZA
+  // Guarding in front of Khufu (offset: x = -2, z = 14, well clear of road)
+  // -------------------------------------------------------------
+  const sphGroup = new THREE.Group();
+  sphGroup.position.set(-2, 0, 14);
+
+  // Raised stone causeway
+  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.8, 11.0), sandBaseMat);
+  sphPlinth.position.set(0, 0.4, 0);
+  sphGroup.add(sphPlinth);
+
+  // Couchant Lion Body
+  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 6.5), khufuMat);
+  lionBody.position.set(0, 2.0, -0.8);
+  sphGroup.add(lionBody);
+
+  // Lion Paws extending forward
+  [-1.2, 1.2].forEach(pxx => {
+    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 3.5), khufuMat);
+    paw.position.set(pxx, 1.1, 3.4);
+    sphGroup.add(paw);
+  });
+
+  // Pharaoh Head with Royal Nemes Headdress
+  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, 2.0), khufuMat);
+  sphHead.position.set(0, 4.4, 1.0);
+  sphGroup.add(sphHead);
+
+  // Nemes royal headcloth (blue lapis wings)
+  const nemesMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
+  [-1.3, 1.3].forEach(nx => {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.6, 1.8), nemesMat);
+    wing.position.set(nx, 3.9, 0.8);
+    sphGroup.add(wing);
+  });
+
+  // Nemes crown top & beard
+  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.6, 2.2), nemesMat);
+  nemesCrown.position.set(0, 5.8, 1.0);
+  sphGroup.add(nemesCrown);
+
+  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.6, 0.5), nemesMat);
+  beard.position.set(0, 2.9, 1.8);
+  sphGroup.add(beard);
+
+  root.add(sphGroup);
+
+  // -------------------------------------------------------------
+  // 4. DESERT SAND DUNES ACROSS THE HORIZON
+  // Rolling desert dunes anchoring the pyramids into the backdrop
+  // All dunes kept strictly on the desert side (x <= +4)
+  // -------------------------------------------------------------
+  const duneMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.95 });
+  [
+    { x: -14, z: 18, w: 22, h: 2.0, d: 14 },
+    { x: -8,  z: -18, w: 24, h: 2.0, d: 16 },
+    { x: -32, z: 4,  w: 22, h: 1.8, d: 14 }
+  ].forEach(d => {
+    const dune = new THREE.Mesh(new THREE.BoxGeometry(d.w, d.h, d.d), duneMat);
+    dune.position.set(d.x, d.h / 2, d.z);
+    root.add(dune);
+  });
+
+  parent.add(root);
+  return root;
+}
+
+// -------------------------------------------------------------
+// SINGULAR GRAND CITY LANDMARK MANAGER
+// Each city has ONLY ONE unique national landmark in the left background!
+// -------------------------------------------------------------
+function updateCityLeftLandmark(cityTheme) {
+  if (!window.cityLeftLandmarkGroup) return;
+  while (window.cityLeftLandmarkGroup.children.length > 0) {
+    window.cityLeftLandmarkGroup.remove(window.cityLeftLandmarkGroup.children[0]);
+  }
+  if (!cityTheme) return;
+
+  const root = new THREE.Group();
+  root.scale.set(1.0, 1.0, 1.0); // Exact 1:1 scale so summit is always visible
+
+  if (cityTheme.id === 'tokyo') {
+    createGrandTokyoTower(root, 0, 0, 0);
+  } else if (cityTheme.id === 'yangon') {
+    createGrandShwedagonPagoda(root, 0, 0, 0);
+  } else if (cityTheme.id === 'littleindia') {
+    createGrandTajMahal(root, 0, 0, 0);
+  } else if (cityTheme.id === 'chinatown') {
+    createImperialTempleOfHeaven(root, 0, 0, 0);
+  } else if (cityTheme.id === 'pastel') {
+    createCyberSpaceNeedleAndWheel(root, 0, 0, 0);
+  } else if (cityTheme.id === 'paris') {
+    createGrandEiffelTower(root, 0, 0, 0);
+  } else if (cityTheme.id === 'rio') {
+    createGrandChristTheRedeemer(root, 0, 0, 0);
+  } else if (cityTheme.id === 'washington') {
+    createGrandUSCapitolAndMonument(root, 0, 0, 0);
+  } else if (cityTheme.id === 'dubai') {
+    createGrandBurjKhalifaAndArab(root, 0, 0, 0);
+  } else if (cityTheme.id === 'cairo') {
+    createGrandPyramidAndSphinx(root, 0, 0, 0);
+  }
+
+  window.cityLeftLandmarkGroup.add(root);
+
+  // Position on the left side of the street (well clear of the road)
+  // Starts far on the horizon at Z = -220, moving closer as the player drives!
+  const isCairo = (cityTheme.id === 'cairo');
+  const targetX = isCairo ? -34.0 : -28.0;
+  window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+  window.cityLeftLandmarkGroup.visible = true;
+}
+window.updateCityLeftLandmark = updateCityLeftLandmark;
+
+// CULTURAL PROPS
+function createHachikoStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xd97706); }
+function createChintheStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xfacc15); }
+function createFooDogStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x94a3b8); }
+function createRoyalElephantStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x475569); }
+function createCyberMascotStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x00f5d4); }
+function createJapaneseVendingMachine(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 2, 1, px, py, pz, 0xef4444); }
+function createSakuraTreeWithBench(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 2, 3, 2, px, py, pz, 0xf472b6); }
+function createBurmeseTeashopSetup(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x78350f); }
+function createDimSumTeaStall(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x991b1b); }
+function createMasalaChaiCart(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x0284c7); }
+function createCozyCafePatio(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0x78350f); }
+function createRetroArcadeCabinet(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 2, 1, px, py, pz, 0x0f172a); }
+
+function createParisianCafeBistro(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.1, 0.08, 1.1, 0, 0.78, 0, 0xf8fafc);
+  addVoxelBox(root, 0.12, 0.78, 0.12, 0, 0.39, 0, 0x1e293b);
+  addVoxelBox(root, 0.65, 0.06, 0.65, 0, 0.03, 0, 0x1e293b);
+  addVoxelBox(root, 0.15, 0.16, 0.15, -0.22, 0.86, -0.15, 0xffffff);
+  addVoxelBox(root, 0.24, 0.12, 0.16,  0.22, 0.84,  0.15, 0xd97706);
+  [-0.75, 0.75].forEach(cx => {
+    addVoxelBox(root, 0.48, 0.06, 0.48, cx, 0.45, 0, 0x78350f);
+    addVoxelBox(root, 0.08, 0.55, 0.48, cx + (cx < 0 ? -0.22 : 0.22), 0.72, 0, 0x15803d);
+    [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]].forEach(([lx, lz]) => {
+      addVoxelBox(root, 0.06, 0.45, 0.06, cx + lx, 0.22, lz, 0x1e293b);
+    });
+  });
+  const colX = 1.35;
+  addVoxelBox(root, 0.85, 0.45, 0.85, colX, 0.22, 0, 0x166534);
+  addVoxelBox(root, 0.72, 2.2, 0.72, colX, 1.55, 0, 0xfacc15, { emissive: 0xfde047, emissiveIntensity: 0.4 });
+  addVoxelBox(root, 0.95, 0.35, 0.95, colX, 2.75, 0, 0x166534);
+  addVoxelBox(root, 0.45, 0.45, 0.45, colX, 3.12, 0, 0x14532d);
+  parent.add(root);
+  return root;
+}
+
+function createCopacabanaCoconutKiosk(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.45, 0.85, 0.95, 0, 0.48, 0, 0x78350f);
+  addVoxelBox(root, 1.55, 0.08, 1.05, 0, 0.92, 0, 0xfef08a);
+  for (let c = -1; c <= 1; c++) {
+    addVoxelBox(root, 0.28, 0.28, 0.28, c * 0.32, 1.08, 0, 0x22c55e);
+  }
+  addVoxelBox(root, 0.08, 2.4, 0.08, 0, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 2.4, 0.35, 2.4, 0, 2.45, 0, 0xfacc15);
+  addVoxelBox(root, 1.8, 0.25, 1.8, 0, 2.70, 0, 0x16a34a);
+  addVoxelBox(root, 0.45, 1.9, 0.08, 1.15, 0.95, 0.25, 0x06b6d4);
+  addVoxelBox(root, 0.22, 0.16, 0.22, 0.65, 0.98, 0.25, 0x701a75);
+  parent.add(root);
+  return root;
+}
+
+function createAmericanHotDogCart(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.35, 0.85, 0.95, 0, 0.55, 0, 0x94a3b8);
+  addVoxelBox(root, 1.45, 0.08, 1.05, 0, 0.98, 0, 0xe2e8f0);
+  [-0.65, 0.65].forEach(wx => {
+    addVoxelBox(root, 0.12, 0.65, 0.65, wx, 0.35, 0, 0x1e293b);
+  });
+  addVoxelBox(root, 0.12, 0.35, 0.12, -0.25, 1.18, 0.15, 0xef4444);
+  addVoxelBox(root, 0.12, 0.35, 0.12, -0.05, 1.18, 0.15, 0xfacc15);
+  addVoxelBox(root, 0.45, 0.45, 0.45,  0.35, 1.20, 0, 0xd97706);
+  addVoxelBox(root, 0.08, 2.2, 0.08, 0, 1.45, 0, 0x1e293b);
+  addVoxelBox(root, 2.2, 0.32, 2.2, 0, 2.45, 0, 0xef4444);
+  addVoxelBox(root, 1.5, 0.25, 1.5, 0, 2.70, 0, 0xfacc15);
+  addVoxelBox(root, 0.55, 0.95, 0.55, 1.25, 0.48, 0, 0x1d4ed8);
+  parent.add(root);
+  return root;
+}
+
+function createDubaiGahwaMajlis(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 2.2, 0.08, 2.2, 0, 0.04, 0, 0x991b1b);
+  addVoxelBox(root, 2.4, 0.04, 2.4, 0, 0.02, 0, 0xfacc15);
+  addVoxelBox(root, 1.05, 0.42, 1.05, 0, 0.25, 0, 0xd97706);
+  addVoxelBox(root, 0.28, 0.55, 0.28, 0, 0.68, 0, 0xfacc15, { metalness: 0.8, emissive: 0xf59e0b, emissiveIntensity: 0.6 });
+  addVoxelBox(root, 0.12, 0.22, 0.12, 0, 0.98, 0, 0xfef08a);
+  addVoxelBox(root, 0.35, 0.08, 0.35, 0.32, 0.48, 0, 0x451a03);
+  addVoxelBox(root, 0.10, 0.12, 0.10, -0.28, 0.50, 0.15, 0xffffff);
+  [-0.85, 0.85].forEach(cx => {
+    addVoxelBox(root, 0.55, 0.25, 1.15, cx, 0.15, 0, 0x0284c7);
+  });
+  addVoxelBox(root, 0.45, 0.45, 0.25, -0.65, 0.45, 0.85, 0xfacc15);
+  parent.add(root);
+  return root;
+}
+
+function createCairoAhwaTeahouse(parent, px, py, pz, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(px, py, pz);
+  root.rotation.y = rotY;
+  addVoxelBox(root, 1.15, 0.08, 1.15, 0, 0.55, 0, 0xf59e0b);
+  addVoxelBox(root, 0.12, 0.55, 0.12, 0, 0.28, 0, 0x78350f);
+  addVoxelBox(root, 0.24, 0.45, 0.24, -0.28, 0.82, -0.15, 0x0284c7);
+  addVoxelBox(root, 0.08, 0.52, 0.08, -0.28, 1.25, -0.15, 0xd97706);
+  addVoxelBox(root, 0.18, 0.18, 0.18, -0.28, 1.55, -0.15, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 0.14, 0.22, 0.14, 0.25, 0.68, 0.15, 0x15803d, { emissive: 0x22c55e, emissiveIntensity: 0.6 });
+  [-0.68, 0.68].forEach(sx => {
+    addVoxelBox(root, 0.42, 0.32, 0.42, sx, 0.18, 0, 0x92400e);
+    addVoxelBox(root, 0.46, 0.06, 0.46, sx, 0.35, 0, 0xd97706);
+  });
+  addVoxelBox(root, 0.08, 2.2, 0.08, -0.65, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 0.08, 2.2, 0.08,  0.65, 1.2, 0, 0x1e293b);
+  addVoxelBox(root, 1.65, 0.12, 1.25, 0, 2.25, 0, 0xb91c1c);
+  parent.add(root);
+  return root;
+}
+
+function addBackgroundSkyline(parent, xSign, index, cityTheme) {
+  // Disabled: removed repeating skyscraper monoliths that were crowding the horizon
+  // and giving the illusion of dozens of duplicate landmarks.
+}
+
+// FULL REBUILD APARTMENT VISUALS WITH AUTHENTIC MULTI-PART ARCHITECTURE
+function rebuildApartmentVisuals(apt, cityTheme, index) {
+  while (apt.archGroup.children.length > 0) {
+    apt.archGroup.remove(apt.archGroup.children[0]);
+  }
+  apt.windowMeshes = [];
+
+  const xSign = apt.side === 'left' ? -1 : 1;
+  const bType = index % 6;
+  const width = 8.4;
+  const depth = 13.5;
+  const faceX = -xSign * (width / 2 + 0.08);
+  const rotFacingStreet = apt.side === 'left' ? Math.PI / 2 : -Math.PI / 2;
+  const frontX = faceX - xSign * 1.5;
+  const frontZ = -3.2;
+
+  // =============================================================
+  // 1. TOKYO (JAPAN)
+  // =============================================================
+  if (cityTheme.id === 'tokyo') {
+    if (bType === 0) {
+      // Cyberpunk Neon Commercial Mid-Rise (h=13.5)
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x1e293b);
+      // Recessed glass ground floor shop
+      addVoxelBox(apt.archGroup, 1.2, 3.2, depth * 0.75, faceX - xSign * 0.3, 1.6, 0, 0x0f172a);
+      addVoxelBox(apt.archGroup, 0.4, 2.6, depth * 0.7, faceX - xSign * 0.6, 1.6, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.65 });
+      // Red storefront canopy
+      addVoxelBox(apt.archGroup, 2.0, 0.35, depth * 0.8, faceX - xSign * 0.8, 3.3, 0, 0xef4444);
+      // Upper floor illuminated ribbon windows
+      [6.2, 9.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.5, depth * 0.75, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.8 });
+        addVoxelBox(apt.archGroup, 0.6, 0.25, depth * 0.8, faceX - xSign * 0.15, wy - 0.9, 0, 0xf8fafc);
+      });
+      // Vertical neon blade sign
+      addVoxelBox(apt.archGroup, 0.6, 7.5, 0.8, faceX - xSign * 0.7, 8.5, depth * 0.35, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 1.2 });
+      // Roof parapet & HVAC cooling units
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0x334155);
+      addVoxelBox(apt.archGroup, 3.2, 1.6, 2.8, -1.2, h + 0.8, 1.5, 0x64748b);
+      addVoxelBox(apt.archGroup, 0.3, 3.2, 0.3, 1.5, h + 1.6, -2.0, 0x94a3b8);
+      createHachikoStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Traditional Japanese Machiya Townhouse (h=8.5)
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0x271e18); // Dark timber
+      // Cream plaster upper facade
+      addVoxelBox(apt.archGroup, 0.4, 3.2, depth * 0.85, faceX - xSign * 0.1, 5.0, 0, 0xfef9c3);
+      // Traditional wooden lattice shoji sliding windows
+      addVoxelBox(apt.archGroup, 0.3, 2.2, depth * 0.65, faceX - xSign * 0.2, 5.0, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      addVoxelBox(apt.archGroup, 0.5, 0.2, depth * 0.7, faceX - xSign * 0.25, 3.8, 0, 0x78350f);
+      // Sloping dark tiled kawara eaves over ground floor
+      addVoxelBox(apt.archGroup, 2.2, 0.45, depth + 0.4, faceX - xSign * 0.6, 3.6, 0, 0x334155);
+      // Tiled roof ridge
+      addVoxelBox(apt.archGroup, width * 0.85, 1.6, depth * 0.85, 0, 8.0, 0, 0x334155);
+      addVoxelBox(apt.archGroup, width * 0.6, 0.6, depth * 0.88, 0, 8.9, 0, 0x1e293b);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Akihabara Commercial Electric High-Rise (h=18.5)
+      const h = 18.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x09090b);
+      // Floor slabs
+      [4.5, 9.0, 13.5].forEach(fy => {
+        addVoxelBox(apt.archGroup, width + 0.6, 0.5, depth + 0.6, 0, fy, 0, 0x334155);
+      });
+      // Giant glowing cyber billboard panel
+      addVoxelBox(apt.archGroup, 0.4, 5.5, depth * 0.55, faceX - xSign * 0.1, 11.5, 0, 0xec4899, { emissive: 0xec4899, emissiveIntensity: 0.85 });
+      // Illuminated windows
+      [6.5, 15.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.6, depth * 0.65, faceX - xSign * 0.1, wy, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.7 });
+      });
+      // Roof penthouse & antenna
+      addVoxelBox(apt.archGroup, 4.5, 2.5, 5.5, 0, h + 1.25, 0, 0x1e293b);
+      addVoxelBox(apt.archGroup, 0.3, 4.2, 0.3, 1.2, h + 2.5, 1.5, 0xef4444);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Ramen & Izakaya Alley Tavern (h=7.5)
+      addVoxelBox(apt.archGroup, width, 7.0, depth, 0, 3.5, 0, 0x27272a);
+      // Red chochin lanterns and wooden entry awning
+      addVoxelBox(apt.archGroup, 1.8, 0.4, depth * 0.75, faceX - xSign * 0.6, 3.2, 0, 0x78350f);
+      [-2.5, 0, 2.5].forEach(lz => {
+        addVoxelBox(apt.archGroup, 0.6, 0.8, 0.6, faceX - xSign * 1.2, 2.6, lz, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.2 });
+      });
+      // 2nd floor balcony with warm shoji windows
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, 5.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.8 });
+      addVoxelBox(apt.archGroup, 1.4, 0.8, depth * 0.7, faceX - xSign * 0.5, 4.3, 0, 0x3f3f46);
+      // Traditional roof
+      addVoxelBox(apt.archGroup, width + 0.8, 1.2, depth + 0.8, 0, 7.5, 0, 0x18181b);
+      createSakuraTreeWithBench(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Modern Minimalist Shibuya Boutique (h=14.5)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf8fafc);
+      // Dark cantilevered geometric box volume protruding forward
+      addVoxelBox(apt.archGroup, 2.2, 5.5, depth * 0.6, faceX - xSign * 0.8, 9.5, -1.0, 0x09090b);
+      // Floor-to-ceiling glass display windows
+      addVoxelBox(apt.archGroup, 0.4, 4.2, depth * 0.5, faceX - xSign * 1.8, 9.5, -1.0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.6 });
+      // Ground floor glass storefront
+      addVoxelBox(apt.archGroup, 0.4, 2.6, depth * 0.75, faceX - xSign * 0.2, 1.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.75 });
+      // Roof parapet
+      addVoxelBox(apt.archGroup, width + 0.4, 0.6, depth + 0.4, 0, h + 0.3, 0, 0x09090b);
+      createJapaneseVendingMachine(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Showa Retro Mid-Rise with Rooftop Water Tower (h=13.0)
+      const h = 13.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x334155);
+      // Window bands with white concrete frames
+      [4.2, 8.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.5, depth * 0.75, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+        addVoxelBox(apt.archGroup, 0.6, 0.25, depth * 0.8, faceX - xSign * 0.15, wy - 0.85, 0, 0xe2e8f0);
+      });
+      // Rooftop water tower on stilts
+      addVoxelBox(apt.archGroup, 2.6, 2.8, 2.6, -1.2, h + 2.5, 0, 0x78350f);
+      addVoxelBox(apt.archGroup, 0.4, 2.0, 0.4, -2.0, h + 1.0, -1.0, 0x475569);
+      addVoxelBox(apt.archGroup, 0.4, 2.0, 0.4, -0.4, h + 1.0, -1.0, 0x475569);
+      addVoxelBox(apt.archGroup, 0.4, 2.0, 0.4, -2.0, h + 1.0,  1.0, 0x475569);
+      addVoxelBox(apt.archGroup, 0.4, 2.0, 0.4, -0.4, h + 1.0,  1.0, 0x475569);
+      createSakuraTreeWithBench(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     }
 
-    function createApartmentBuilding(side, zPos, index) {
+  // =============================================================
+  // 2. YANGON (MYANMAR)
+  // =============================================================
+  } else if (cityTheme.id === 'yangon') {
+    if (bType === 0) {
+      // British-Colonial Heritage Arcade (h=11.5)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b); // Red brick
+      // Ground floor arched colonnade
+      addVoxelBox(apt.archGroup, 1.4, 3.8, depth * 0.85, faceX - xSign * 0.5, 1.9, 0, 0xfef3c7);
+      [-3.0, 0, 3.0].forEach(az => {
+        addVoxelBox(apt.archGroup, 1.6, 2.8, 1.2, faceX - xSign * 0.55, 1.4, az, 0x1e293b);
+      });
+      // 2nd floor shuttered teak French windows
+      [-2.8, 0, 2.8].forEach(wz => {
+        addVoxelBox(apt.archGroup, 0.4, 2.2, 1.4, faceX - xSign * 0.1, 7.2, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+        addVoxelBox(apt.archGroup, 0.5, 2.2, 0.35, faceX - xSign * 0.15, 7.2, wz - 0.85, 0x78350f);
+        addVoxelBox(apt.archGroup, 0.5, 2.2, 0.35, faceX - xSign * 0.15, 7.2, wz + 0.85, 0x78350f);
+      });
+      // Classical roof cornice & urn finials
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width * 0.8, 1.4, depth * 0.8, 0, h + 1.2, 0, 0xfacc15);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Golden Teak Multi-Tier Townhouse (h=10.5)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0x5c2c16);
+      // Carved teakwood veranda & golden eaves trim
+      addVoxelBox(apt.archGroup, 1.8, 0.5, depth * 0.85, faceX - xSign * 0.6, 4.2, 0, 0xfacc15);
+      addVoxelBox(apt.archGroup, 1.6, 1.2, depth * 0.8, faceX - xSign * 0.5, 4.8, 0, 0x78350f);
+      // Shaded green canvas teashop awning
+      addVoxelBox(apt.archGroup, 2.2, 0.35, depth * 0.75, faceX - xSign * 0.8, 2.8, 0, 0x065f46);
+      // Multi-pitch Burmese roof with golden spire finial
+      addVoxelBox(apt.archGroup, width * 0.9, 1.4, depth * 0.85, 0, 9.2, 0, 0x78350f);
+      addVoxelBox(apt.archGroup, width * 0.65, 1.2, depth * 0.65, 0, 10.4, 0, 0xfacc15);
+      addVoxelBox(apt.archGroup, 0.6, 2.2, 0.6, 0, 11.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 1.5 });
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Pansodan Heritage Colonial Mid-Rise (h=13.5)
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfde68a); // Warm ochre
+      // White stucco window quoins and arched lintels
+      [4.5, 9.0].forEach(wy => {
+        [-3.2, 0, 3.2].forEach(wz => {
+          addVoxelBox(apt.archGroup, 0.4, 2.0, 1.6, faceX - xSign * 0.1, wy, wz, 0x1e3a8a);
+          addVoxelBox(apt.archGroup, 0.5, 0.4, 2.0, faceX - xSign * 0.15, wy + 1.1, wz, 0xf8fafc);
+          addVoxelBox(apt.archGroup, 0.7, 0.8, 1.8, faceX - xSign * 0.25, wy - 0.7, wz, 0x1e293b); // Wrought-iron railing
+        });
+      });
+      // Classical triangular pediment roof
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 1.2, 2.0, depth * 0.5, faceX - xSign * 0.2, h + 1.2, 0, 0xf8fafc);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Golden Burmese Gable Shophouse (h=9.5)
+      addVoxelBox(apt.archGroup, width, 8.0, depth, 0, 4.0, 0, 0x78350f);
+      // Gilded fretwork frieze
+      addVoxelBox(apt.archGroup, 0.4, 1.0, depth * 0.8, faceX - xSign * 0.15, 7.5, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.6 });
+      // Shaded ground floor teashop veranda
+      addVoxelBox(apt.archGroup, 2.0, 0.35, depth * 0.8, faceX - xSign * 0.7, 3.2, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, width * 0.85, 1.5, depth * 0.85, 0, 8.8, 0, 0xfacc15);
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Downtown Rangoon Pastel Turquoise Shophouse (h=11.5)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x38bdf8);
+      // White decorative moldings and shuttered arched windows
+      [4.2, 8.2].forEach(wy => {
+        [-2.8, 2.8].forEach(wz => {
+          addVoxelBox(apt.archGroup, 0.4, 2.0, 1.5, faceX - xSign * 0.1, wy, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+          addVoxelBox(apt.archGroup, 0.5, 2.0, 0.35, faceX - xSign * 0.15, wy, wz - 0.9, 0x065f46);
+          addVoxelBox(apt.archGroup, 0.5, 2.0, 0.35, faceX - xSign * 0.15, wy, wz + 0.9, 0x065f46);
+        });
+      });
+      // Year plaque pediment on roof
+      addVoxelBox(apt.archGroup, width + 0.6, 0.6, depth + 0.6, 0, h + 0.3, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 0.8, 1.6, depth * 0.45, faceX - xSign * 0.2, h + 0.9, 0, 0xf8fafc);
+      createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Grand Colonial Heritage Apartment (h=14.5)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b);
+      // Continuous wooden balcony veranda on 2nd and 3rd floors
+      [5.5, 10.5].forEach(vy => {
+        addVoxelBox(apt.archGroup, 1.8, 0.4, depth * 0.85, faceX - xSign * 0.6, vy, 0, 0x78350f);
+        addVoxelBox(apt.archGroup, 1.6, 1.0, depth * 0.8, faceX - xSign * 0.5, vy + 0.6, 0, 0xfacc15);
+      });
+      // Rooftop water tank
+      addVoxelBox(apt.archGroup, 2.5, 2.5, 2.5, -1.5, h + 1.4, 0, 0x0284c7);
+      createBurmeseTeashopSetup(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 3. CHINATOWN
+  // =============================================================
+  } else if (cityTheme.id === 'chinatown') {
+    if (bType === 0) {
+      // Traditional Flying Eaves Pavilion Shophouse (h=11)
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x991b1b); // Crimson
+      // Sweeping jade green tiled eaves over ground floor
+      addVoxelBox(apt.archGroup, 2.2, 0.5, depth + 0.6, faceX - xSign * 0.6, 3.8, 0, 0x059669);
+      // Upper floor carved wooden lattice windows
+      [-2.8, 2.8].forEach(wz => {
+        addVoxelBox(apt.archGroup, 0.4, 1.8, 1.6, faceX - xSign * 0.1, 5.6, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      });
+      // Traditional sweeping hip-and-gable roof with upturned eaves
+      addVoxelBox(apt.archGroup, width * 0.95, 1.6, depth * 0.95, 0, 8.2, 0, 0x059669);
+      addVoxelBox(apt.archGroup, width * 0.7, 0.6, depth * 0.98, 0, 9.2, 0, 0xfacc15); // Gold ridge
+      // Hanging red lanterns
+      [-3.0, 3.0].forEach(lz => {
+        addVoxelBox(apt.archGroup, 0.7, 0.9, 0.7, faceX - xSign * 1.2, 3.0, lz, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.2 });
+      });
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Heritage Lingnan Shophouse with Five-Foot-Way (h=12.5)
+      const h = 12.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x78716c);
+      // Sheltered pedestrian arcade walkway
+      addVoxelBox(apt.archGroup, 1.8, 3.6, depth * 0.8, faceX - xSign * 0.5, 1.8, 0, 0x1c1917);
+      // 2nd and 3rd floor green ceramic balustrades
+      [5.2, 9.2].forEach(by => {
+        addVoxelBox(apt.archGroup, 1.4, 0.9, depth * 0.75, faceX - xSign * 0.5, by, 0, 0x059669);
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, by + 1.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      });
+      // Pediment gable with Chinese character plaque
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xb91c1c);
+      addVoxelBox(apt.archGroup, 0.8, 1.6, depth * 0.4, faceX - xSign * 0.2, h + 1.2, 0, 0xfacc15);
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Red Lantern Tea Merchant Mansion (h=14.5)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b);
+      // Golden dougong bracket cornices under each floor
+      [4.8, 9.5].forEach(dy => {
+        addVoxelBox(apt.archGroup, 2.0, 0.4, depth * 0.85, faceX - xSign * 0.6, dy, 0, 0xfacc15);
+        addVoxelBox(apt.archGroup, 1.6, 0.5, depth * 0.9, faceX - xSign * 0.5, dy + 0.4, 0, 0x059669);
+      });
+      // Windows with gold lattice frames
+      [7.2, 12.0].forEach(wy => {
+        [-2.8, 2.8].forEach(wz => {
+          addVoxelBox(apt.archGroup, 0.4, 1.8, 1.6, faceX - xSign * 0.1, wy, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+        });
+      });
+      // Pagoda roof
+      addVoxelBox(apt.archGroup, width + 0.8, 1.4, depth + 0.8, 0, h + 0.7, 0, 0x059669);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Traditional Herbal Medicine Apothecary (h=9.0)
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x7f1d1d);
+      // Carved gold apothecary signboard and wooden screens
+      addVoxelBox(apt.archGroup, 0.5, 1.2, depth * 0.75, faceX - xSign * 0.2, 3.2, 0, 0xfacc15);
+      // Green glazed tile roof ridge
+      addVoxelBox(apt.archGroup, width * 0.9, 1.5, depth * 0.9, 0, 8.2, 0, 0x059669);
+      addVoxelBox(apt.archGroup, width * 0.6, 0.6, depth * 0.92, 0, 9.1, 0, 0xfacc15);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Canton Merchant Guild Hall (h=12.0)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b);
+      // Two-tier upturned tiled eaves
+      addVoxelBox(apt.archGroup, 2.2, 0.5, depth * 0.85, faceX - xSign * 0.6, 5.5, 0, 0x059669);
+      addVoxelBox(apt.archGroup, width + 0.8, 1.4, depth + 0.8, 0, h + 0.7, 0, 0x059669);
+      // Gold fretwork balconies
+      addVoxelBox(apt.archGroup, 1.4, 0.9, depth * 0.7, faceX - xSign * 0.5, 6.2, 0, 0xfacc15);
+      createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Modern High-Rise Chinatown Tower (h=18.5)
+      const h = 18.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x44403c);
+      // Gold structural pagoda framework
+      [5.5, 11.5, 16.5].forEach(by => {
+        addVoxelBox(apt.archGroup, width + 0.6, 0.5, depth + 0.6, 0, by, 0, 0xfacc15);
+      });
+      // Illuminated windows
+      [8.0, 14.0].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 2.2, depth * 0.7, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      });
+      // Pagoda tiered crown
+      addVoxelBox(apt.archGroup, width * 0.8, 1.5, depth * 0.8, 0, h + 0.75, 0, 0xb91c1c);
+      addVoxelBox(apt.archGroup, width * 0.5, 1.2, depth * 0.5, 0, h + 2.0, 0, 0xfacc15);
+      createDimSumTeaStall(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 4. LITTLE INDIA
+  // =============================================================
+  } else if (cityTheme.id === 'littleindia') {
+    if (bType === 0) {
+      // Peacock-Blue Heritage Shophouse (h=11.0)
+      const h = 10.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0284c7);
+      // Ground-floor arched colonnade in cream marble
+      addVoxelBox(apt.archGroup, 1.4, 3.6, depth * 0.85, faceX - xSign * 0.5, 1.8, 0, 0xf8fafc);
+      // Ornate carved jharokha bay balconies with golden brackets
+      [-2.8, 2.8].forEach(bz => {
+        addVoxelBox(apt.archGroup, 1.6, 2.2, 1.8, faceX - xSign * 0.6, 6.2, bz, 0xf59e0b);
+        addVoxelBox(apt.archGroup, 0.4, 1.4, 1.2, faceX - xSign * 1.3, 6.2, bz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      });
+      // Tiered roof parapet with miniature decorative chhatri pavilions
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 1.8, 1.4, 1.8, faceX - xSign * 0.2, h + 1.2, 0, 0xfacc15);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Saffron Spice Merchant Haveli (h=13.0)
+      const h = 12.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfde68a); // Saffron sandstone
+      // Projecting multi-bay jharokha oriel windows
+      addVoxelBox(apt.archGroup, 1.6, 3.5, depth * 0.65, faceX - xSign * 0.5, 7.5, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, 0.4, 2.2, depth * 0.55, faceX - xSign * 1.2, 7.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      // Striped textile fabric sun-canopy over ground floor
+      addVoxelBox(apt.archGroup, 2.2, 0.35, depth * 0.8, faceX - xSign * 0.8, 3.2, 0, 0xef4444);
+      // Fluted sandstone pilasters and carved floral friezes
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xf59e0b);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Rose-Pink Sandstone Palace Mid-Rise (h=14.5)
+      const h = 14.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfb7185); // Jaipur pink
+      // 2 tiers of cusped Mughal horseshoe arches framing windows
+      [4.8, 9.5].forEach(wy => {
+        [-2.8, 2.8].forEach(wz => {
+          addVoxelBox(apt.archGroup, 0.4, 2.2, 1.6, faceX - xSign * 0.1, wy, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+          addVoxelBox(apt.archGroup, 0.6, 0.4, 1.8, faceX - xSign * 0.15, wy + 1.2, wz, 0xf8fafc);
+        });
+      });
+      // Rooftop corner chhatri cupolas
+      [-2.8, 2.8].forEach(cz => {
+        addVoxelBox(apt.archGroup, 1.8, 2.0, 1.8, faceX - xSign * 0.2, h + 1.2, cz, 0xf8fafc);
+        addVoxelBox(apt.archGroup, 1.4, 1.0, 1.4, faceX - xSign * 0.2, h + 2.4, cz, 0xfacc15);
+      });
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Sari & Spice Merchant Bazaar (h=9.5)
+      addVoxelBox(apt.archGroup, width, 8.0, depth, 0, 4.0, 0, 0xfde047);
+      // Colorful fabric shop awnings
+      addVoxelBox(apt.archGroup, 2.2, 0.35, depth * 0.85, faceX - xSign * 0.8, 3.2, 0, 0xef4444);
+      addVoxelBox(apt.archGroup, 2.0, 0.25, depth * 0.75, faceX - xSign * 0.7, 3.5, 0, 0x06b6d4);
+      // Carved wooden brackets & decorative parapet
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, 5.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 8.4, 0, 0xd97706);
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Amber Gold Sandstone Haveli (h=11.5)
+      addVoxelBox(apt.archGroup, width, 10.0, depth, 0, 5.0, 0, 0xf59e0b);
+      // Projecting bay balconies with carved brackets
+      addVoxelBox(apt.archGroup, 1.6, 1.2, depth * 0.65, faceX - xSign * 0.5, 5.5, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.55, faceX - xSign * 1.1, 6.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      // Stepped parapet with brass pinnacles
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 10.4, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, 0, 11.2, 0, 0xfacc15);
+      createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Grand Indian Heritage Residence (h=16.0)
+      const h = 15.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x06b6d4);
+      // Continuous wrap-around verandas
+      [5.5, 10.5].forEach(vy => {
+        addVoxelBox(apt.archGroup, 1.8, 0.4, depth * 0.85, faceX - xSign * 0.6, vy, 0, 0xf8fafc);
+        addVoxelBox(apt.archGroup, 1.6, 1.0, depth * 0.8, faceX - xSign * 0.5, vy + 0.6, 0, 0xfacc15);
+      });
+      // Polished brass corner cupola
+      addVoxelBox(apt.archGroup, 2.4, 2.2, 2.4, -xSign * 1.5, h + 1.1, 0, 0xfacc15);
+      createMasalaChaiCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 5. PASTEL METRO (CYBERPUNK)
+  // =============================================================
+  } else if (cityTheme.id === 'pastel') {
+    if (bType === 0) {
+      // Cyberpunk Neon Capsule Modular (h=12.5)
+      const h = 12.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x1e1b4b);
+      // Glowing neon edge strips
+      addVoxelBox(apt.archGroup, 0.3, h, 0.3, faceX - xSign * 0.1, h / 2, -depth * 0.48, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 1.2 });
+      addVoxelBox(apt.archGroup, 0.3, h, 0.3, faceX - xSign * 0.1, h / 2,  depth * 0.48, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 1.2 });
+      // Stacked living pods with glowing viewports
+      [3.8, 8.2].forEach(py => {
+        addVoxelBox(apt.archGroup, 1.4, 2.2, 3.2, faceX - xSign * 0.5, py, 0, 0x0f172a);
+        addVoxelBox(apt.archGroup, 0.4, 1.2, 2.2, faceX - xSign * 1.1, py, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.8 });
+      });
+      createCyberMascotStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Holographic High-Rise (h=18.5)
+      const h = 18.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      // Holographic billboard frame & glowing glass
+      addVoxelBox(apt.archGroup, 0.4, 6.5, depth * 0.6, faceX - xSign * 0.1, 10.5, 0, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 0.95 });
+      // Illuminated windows
+      [5.5, 15.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.7, faceX - xSign * 0.1, wy, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.75 });
+      });
+      addVoxelBox(apt.archGroup, 0.3, 4.5, 0.3, 1.2, h + 2.2, 0, 0x00f5d4);
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Retro Arcade Cyber Center (h=14.5)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x1e1b4b);
+      // Glowing neon marquee canopy
+      addVoxelBox(apt.archGroup, 2.2, 0.4, depth * 0.85, faceX - xSign * 0.8, 3.8, 0, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 1.0 });
+      // Illuminated arcade windows
+      addVoxelBox(apt.archGroup, 0.4, 2.2, depth * 0.7, faceX - xSign * 0.1, 1.8, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.85 });
+      [7.5, 11.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.6, depth * 0.6, faceX - xSign * 0.1, wy, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.8 });
+      });
+      createRetroArcadeCabinet(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Minimalist Glass Penthouse (h=15.0)
+      const h = 15.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x18181b);
+      // Cyan glowing wrap-around glass curtain walls
+      [4.5, 9.5, 13.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 2.0, depth * 0.7, faceX - xSign * 0.1, wy, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.7 });
+      });
+      // Rooftop sky-lounge terrace with glass rail
+      addVoxelBox(apt.archGroup, width + 0.4, 0.6, depth + 0.4, 0, h + 0.3, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.4 });
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Cantilevered Poly-Cube Mid-Rise (h=13.5)
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      addVoxelBox(apt.archGroup, 2.2, 4.5, depth * 0.55, faceX - xSign * 0.8, 8.5, 1.0, 0x7c3aed);
+      addVoxelBox(apt.archGroup, 0.4, 2.8, depth * 0.45, faceX - xSign * 1.8, 8.5, 1.0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.8 });
+      // Ground floor lounge
+      addVoxelBox(apt.archGroup, 0.4, 2.5, depth * 0.75, faceX - xSign * 0.2, 1.8, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.7 });
+      createRetroArcadeCabinet(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Sky-Bridge Cyber Skyscraper (h=19.5)
+      const h = 19.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x09090b);
+      // Neon structural bands
+      [5.5, 11.5, 16.5].forEach(by => {
+        addVoxelBox(apt.archGroup, width + 0.4, 0.4, depth + 0.4, 0, by, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.8 });
+      });
+      // Cantilevered glowing skybridge pod
+      addVoxelBox(apt.archGroup, 2.0, 3.2, 4.5, faceX - xSign * 0.8, 13.0, 0, 0xff007f, { emissive: 0xff007f, emissiveIntensity: 0.9 });
+      createCozyCafePatio(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 6. PARIS (FRANCE)
+  // =============================================================
+  } else if (cityTheme.id === 'paris') {
+    if (bType === 0) {
+      // Haussmannian Corner Rotunda (h=13.5)
+      addVoxelBox(apt.archGroup, width, 10.0, depth, 0, 5.0, 0, 0xfef3c7);
+      // Charcoal zinc mansard roof with dormers
+      addVoxelBox(apt.archGroup, width - 0.8, 3.2, depth - 0.8, 0, 11.6, 0, 0x334155);
+      [-2.5, 2.5].forEach(dz => {
+        addVoxelBox(apt.archGroup, 1.2, 1.5, 1.2, faceX - xSign * 0.4, 11.5, dz, 0xfef3c7);
+      });
+      // Continuous wrought-iron balconies on 2nd floor
+      addVoxelBox(apt.archGroup, 1.2, 0.7, depth * 0.85, faceX - xSign * 0.6, 5.2, 0, 0x1e293b);
+      // Windows with warm illumination
+      [4.2, 7.8].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.6, depth * 0.65, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      });
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Grand Boulevard Cut-Limestone Residence (h=15.5)
+      const h = 15.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width - 0.8, 3.2, depth - 0.8, 0, h + 1.6, 0, 0x475569);
+      [6.0, 12.0].forEach(by => {
+        addVoxelBox(apt.archGroup, 1.2, 0.7, depth * 0.85, faceX - xSign * 0.6, by, 0, 0x1e293b);
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.75, faceX - xSign * 0.1, by + 1.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      });
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Montmartre Atelier (h=13.5)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xf8fafc);
+      // Large artists' glass atelier window
+      addVoxelBox(apt.archGroup, 0.4, 3.8, depth * 0.6, faceX - xSign * 0.1, 5.0, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.6 });
+      // Zinc mansard roof with terracotta chimney pots
+      addVoxelBox(apt.archGroup, width - 0.6, 3.5, depth - 0.6, 0, 10.25, 0, 0x334155);
+      addVoxelBox(apt.archGroup, 0.8, 1.8, 0.8, 1.5, 12.8, -2.0, 0xb45309);
+      addVoxelBox(apt.archGroup, 1.4, 0.35, depth * 0.7, faceX - xSign * 0.6, 3.0, 0, 0x1e3a8a);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Latin Quarter Boulangerie Shophouse (h=9.5)
+      const h = 8.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0x1e293b);
+      addVoxelBox(apt.archGroup, 1.6, 0.35, depth * 0.75, faceX - xSign * 0.8, 3.2, 0, 0x1e3a8a);
+      // Upper casement windows with warm glow
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, 5.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Beaux-Arts Grand Apartment (h=15.5)
+      const h = 15.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, width + 0.6, 1.0, depth + 0.6, 0, h + 0.5, 0, 0x334155);
+      // Windows with wrought-iron railings
+      [5.5, 10.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+        addVoxelBox(apt.archGroup, 0.6, 0.5, depth * 0.7, faceX - xSign * 0.2, wy - 0.7, 0, 0x1e293b);
+      });
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Seine Riverside Palace (h=14.5)
+      const h = 13.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width + 1.2, 1.2, depth + 1.2, 0, h + 0.6, 0, 0xd4a373);
+      // Windows and roof pavilion
+      addVoxelBox(apt.archGroup, 0.4, 2.0, depth * 0.7, faceX - xSign * 0.1, 7.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      addVoxelBox(apt.archGroup, 4.5, 2.5, 5.5, 0, h + 1.8, 0, 0x475569);
+      createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 7. RIO DE JANEIRO (BRASIL)
+  // =============================================================
+  } else if (cityTheme.id === 'rio') {
+    if (bType === 0) {
+      // Ipanema Coastal Apartment (h=11.5)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x67e8f9); // Ocean turquoise
+      // Sun-shading horizontal brise-soleil louvers & open balconies
+      [4.2, 8.2].forEach(by => {
+        addVoxelBox(apt.archGroup, 1.6, 0.35, depth * 0.8, faceX - xSign * 0.6, by, 0, 0xfacc15);
+        addVoxelBox(apt.archGroup, 1.4, 0.9, depth * 0.75, faceX - xSign * 0.5, by + 0.5, 0, 0xf8fafc);
+        addVoxelBox(apt.archGroup, 0.4, 1.4, depth * 0.65, faceX - xSign * 0.1, by + 1.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      });
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Santa Teresa Bohemian Villa (h=12.0)
+      const h = 12.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfef08a);
+      // Emerald green shuttered windows & terracotta roof
+      [4.5, 8.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+        addVoxelBox(apt.archGroup, 0.5, 1.8, 0.4, faceX - xSign * 0.15, wy, -2.5, 0x15803d);
+        addVoxelBox(apt.archGroup, 0.5, 1.8, 0.4, faceX - xSign * 0.15, wy,  2.5, 0x15803d);
+      });
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0xb45309);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Multilevel Staggered Favela Terraces (h=14)
+      const favCols = [0xf59e0b, 0xec4899, 0x06b6d4, 0x10b981, 0x8b5cf6];
+      for (let f = 0; f < 5; f++) {
+        const fw = 4.5;
+        const fh = 3.2;
+        const fd = 5.2;
+        const fx = ((f % 2) - 0.5) * 3.5;
+        const fy = 1.6 + f * 2.8;
+        const fz = ((f % 3) - 1.0) * 3.8;
+        addVoxelBox(apt.archGroup, fw, fh, fd, fx, fy, fz, favCols[f % favCols.length]);
+        // Windows on favela blocks
+        addVoxelBox(apt.archGroup, 0.3, 1.0, 1.2, fx + (apt.side === 'left' ? -fw/2 : fw/2), fy, fz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+        // Blue rooftop water tank (caixa d'água)
+        addVoxelBox(apt.archGroup, 1.1, 0.8, 1.1, fx, fy + fh / 2 + 0.4, fz, 0x0284c7);
+      }
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Copacabana Art Deco Ziggurat (h=11.5)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf8fafc);
+      // Rounded corner balconies & blue accents
+      addVoxelBox(apt.archGroup, 1.6, 0.8, depth * 0.7, faceX - xSign * 0.6, 5.5, 0, 0x0284c7);
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.6, faceX - xSign * 0.1, 8.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      addVoxelBox(apt.archGroup, width * 0.7, 2.0, depth * 0.7, 0, h + 1.0, 0, 0xfacc15);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Tropical Modernist Villa with Cobogó Breeze-Blocks (h=11.0)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0x334155);
+      // White cobogó breeze-block decorative wall
+      addVoxelBox(apt.archGroup, 0.4, 4.0, depth * 0.65, faceX - xSign * 0.2, 5.5, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 0.3, 3.2, depth * 0.55, faceX - xSign * 0.1, 5.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      // Cantilevered roof garden terrace
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 8.8, 0, 0x16a34a);
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Carnaval Coastal High-Rise (h=15.5)
+      const h = 15.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      // Wave-shaped balconies
+      [4.5, 9.0, 13.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 1.6, 0.4, depth * 0.8, faceX - xSign * 0.6, wy, 0, 0x06b6d4);
+        addVoxelBox(apt.archGroup, 1.4, 0.8, depth * 0.75, faceX - xSign * 0.5, wy + 0.5, 0, 0xf8fafc);
+        addVoxelBox(apt.archGroup, 0.4, 1.4, depth * 0.65, faceX - xSign * 0.1, wy + 1.2, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.7 });
+      });
+      createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 8. WASHINGTON D.C. (USA)
+  // =============================================================
+  } else if (cityTheme.id === 'washington') {
+    if (bType === 0) {
+      // Georgetown Federal Red-Brick Rowhouse (h=11.5)
+      const h = 11.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b); // Red brick
+      // White limestone entrance stoop staircase & black iron railings
+      addVoxelBox(apt.archGroup, 1.8, 1.2, 2.2, faceX - xSign * 0.8, 0.6, -1.0, 0xe2e8f0);
+      addVoxelBox(apt.archGroup, 0.2, 1.4, 2.2, faceX - xSign * 1.6, 1.2, -1.0, 0x1e293b);
+      // Sash windows with contrasting white stone lintels and shutters
+      [4.5, 8.5].forEach(wy => {
+        [-2.8, 2.8].forEach(wz => {
+          addVoxelBox(apt.archGroup, 0.4, 1.8, 1.4, faceX - xSign * 0.1, wy, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+          addVoxelBox(apt.archGroup, 0.5, 0.35, 1.8, faceX - xSign * 0.15, wy + 1.0, wz, 0xf8fafc);
+        });
+      });
+      // Dentil roof cornice
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xf8fafc);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Neoclassical Limestone Mid-Rise (h=14.5)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xe2e8f0); // Indiana limestone
+      // Classical fluted pilasters on facade
+      [-3.5, -1.2, 1.2, 3.5].forEach(pz => {
+        addVoxelBox(apt.archGroup, 0.4, h, 0.6, faceX - xSign * 0.1, h / 2, pz, 0xf8fafc);
+      });
+      // Windows with warm illumination
+      [5.2, 10.2].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.65, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      });
+      // Classical triangular pediment roof
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, 1.2, 1.8, depth * 0.5, faceX - xSign * 0.2, h + 1.2, 0, 0xf8fafc);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Victorian Brownstone Rowhouse with Bay Windows (h=12.0)
+      const h = 12.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x6e3c23); // Brownstone
+      // Projecting 3-story polygonal bay window
+      addVoxelBox(apt.archGroup, 1.6, 8.5, 3.8, faceX - xSign * 0.6, 5.5, 0, 0x542d1a);
+      [3.5, 7.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.6, 2.6, faceX - xSign * 1.4, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      });
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0x3e2012);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Capitol Hill Federal Townhouse (h=10.5)
+      const h = 10.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x1e3a8a); // Federal blue
+      // Entrance stoop and striped red canopy
+      addVoxelBox(apt.archGroup, 1.6, 0.8, 2.0, faceX - xSign * 0.7, 0.4, 0, 0xe2e8f0);
+      addVoxelBox(apt.archGroup, 1.8, 0.35, depth * 0.65, faceX - xSign * 0.8, 3.2, 0, 0xef4444);
+      // Windows with white shutters
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.6, faceX - xSign * 0.1, 6.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      addVoxelBox(apt.archGroup, width + 0.8, 0.8, depth + 0.8, 0, h + 0.4, 0, 0xf8fafc);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Embassy Row Beaux-Arts Mansion (h=13.5)
+      const h = 13.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xf1f5f9);
+      // Juliette balconies and large piano nobile windows
+      addVoxelBox(apt.archGroup, 1.4, 0.8, depth * 0.7, faceX - xSign * 0.5, 5.5, 0, 0x1e293b);
+      addVoxelBox(apt.archGroup, 0.4, 2.0, depth * 0.65, faceX - xSign * 0.1, 6.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      // Mansard slate roof with dormers
+      addVoxelBox(apt.archGroup, width - 0.6, 2.8, depth - 0.6, 0, h + 1.4, 0, 0x059669);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Dupont Circle Heritage Red-Brick Apartment (h=15.5)
+      const h = 15.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x991b1b);
+      // White limestone beltcourses and grid of glowing windows
+      [4.5, 8.5, 12.5].forEach(wy => {
+        addVoxelBox(apt.archGroup, 0.4, 1.6, depth * 0.75, faceX - xSign * 0.1, wy, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+        addVoxelBox(apt.archGroup, 0.6, 0.3, depth * 0.8, faceX - xSign * 0.15, wy - 0.9, 0, 0xe2e8f0);
+      });
+      // Classical roof cornice & copper water tank
+      addVoxelBox(apt.archGroup, width + 0.8, 1.0, depth + 0.8, 0, h + 0.5, 0, 0xe2e8f0);
+      addVoxelBox(apt.archGroup, 2.5, 2.5, 2.5, -1.2, h + 1.8, 0, 0x059669);
+      createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 9. DUBAI (UAE)
+  // =============================================================
+  } else if (cityTheme.id === 'dubai') {
+    if (bType === 0) {
+      // Al Fahidi Historic Wind-Tower House (h=12.0)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xd4a373); // Desert coral stone
+      // Traditional architectural wind tower (barjeel) rising on roof
+      const twX = -xSign * 1.5;
+      const twZ = 2.0;
+      addVoxelBox(apt.archGroup, 3.4, 5.5, 3.4, twX, 10.5, twZ, 0xd4a373);
+      // Wind-catch cross vents
+      addVoxelBox(apt.archGroup, 3.6, 1.2, 0.4, twX, 11.5, twZ, 0x1e293b);
+      addVoxelBox(apt.archGroup, 0.4, 1.2, 3.6, twX, 11.5, twZ, 0x1e293b);
+      // Mashrabiya wooden lattice bay windows
+      addVoxelBox(apt.archGroup, 1.2, 2.0, 2.4, faceX - xSign * 0.4, 5.0, -2.5, 0x5c2c16);
+      addVoxelBox(apt.archGroup, 0.4, 1.2, 1.6, faceX - xSign * 0.9, 5.0, -2.5, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Marina Aerodynamic Glass Skyscraper (h=18.5)
+      const h = 17.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      // Reflective cyan curtain walls & white structural ribs
+      addVoxelBox(apt.archGroup, 0.4, h * 0.85, depth * 0.75, faceX - xSign * 0.1, h * 0.5, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.75 });
+      [-3.5, 3.5].forEach(rz => {
+        addVoxelBox(apt.archGroup, 0.6, h, 0.6, faceX - xSign * 0.15, h / 2, rz, 0xf8fafc);
+      });
+      // Illuminated crown
+      addVoxelBox(apt.archGroup, width * 0.75, 1.6, depth * 0.75, 0, h + 0.8, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.9 });
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Twisted Infinity Tower (h=20.0)
+      const h = 19.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x1e293b);
+      for (let s = 0; s < 6; s++) {
+        const mesh = addVoxelBox(apt.archGroup, width - 0.6, 2.8, depth - 0.8, 0, 1.8 + s * 3.0, 0, 0x0284c7, { emissive: 0x38bdf8, emissiveIntensity: 0.4 });
+        mesh.rotation.y = s * 0.12;
+      }
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Luxury Arabian Oasis Villa (h=10.5)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xfde047);
+      // Horseshoe arch portico with brass geometric screens
+      addVoxelBox(apt.archGroup, 1.8, 3.5, depth * 0.65, faceX - xSign * 0.6, 1.8, 0, 0xd4a373);
+      // Upper veranda with golden dome cupola
+      addVoxelBox(apt.archGroup, 2.0, 2.2, 2.0, -xSign * 1.5, 10.0, 0, 0xfacc15);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Cantilevered Sky-Villa Tower (h=17.5)
+      const h = 17.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x0f172a);
+      // Cantilevered glass suites protruding forward
+      addVoxelBox(apt.archGroup, 2.2, 3.6, depth * 0.55, faceX - xSign * 0.8, 10.5, 0, 0x0284c7);
+      addVoxelBox(apt.archGroup, 0.4, 2.2, depth * 0.45, faceX - xSign * 1.8, 10.5, 0, 0x38bdf8, { emissive: 0x38bdf8, emissiveIntensity: 0.8 });
+      // Golden vertical accent strips
+      addVoxelBox(apt.archGroup, 0.4, h, 0.4, faceX - xSign * 0.1, h / 2, -3.5, 0xfacc15);
+      addVoxelBox(apt.archGroup, 0.4, h, 0.4, faceX - xSign * 0.1, h / 2,  3.5, 0xfacc15);
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Twin Spire High-Rise with Skybridge (h=18.5)
+      const h = 18.5;
+      addVoxelBox(apt.archGroup, width * 0.42, h, depth * 0.42, 0, h / 2, -depth * 0.26, 0x0f172a);
+      addVoxelBox(apt.archGroup, width * 0.42, h, depth * 0.42, 0, h / 2,  depth * 0.26, 0x0284c7);
+      // Skybridge connecting towers
+      addVoxelBox(apt.archGroup, width * 0.45, 2.5, depth * 0.35, 0, 13.0, 0, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 0.85 });
+      createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+
+  // =============================================================
+  // 10. CAIRO (EGYPT)
+  // =============================================================
+  } else {
+    if (bType === 0) {
+      // Fatimid Historic Sandstone Townhouse with Mashrabiya (h=10.5)
+      const h = 10.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xdfb887); // Warm sandstone
+      // Projecting dark wooden mashrabiya lattice oriel bay windows
+      [-2.8, 2.8].forEach(wz => {
+        addVoxelBox(apt.archGroup, 1.2, 2.2, 2.0, faceX - xSign * 0.4, 6.0, wz, 0x5c3818);
+        addVoxelBox(apt.archGroup, 0.8, 1.2, 1.2, faceX - xSign * 0.5, 6.0, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      });
+      // Crenelated desert roof battlements
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xc89658);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 1) {
+      // Mamluk Residence with Octagonal Minaret Turret (h=17.8)
+      const h = 11.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xdfb887);
+      // Corner minaret turret with domed cupola
+      const mx = -xSign * 1.8;
+      const mz = -depth * 0.3;
+      addVoxelBox(apt.archGroup, 2.8, 14.5, 2.8, mx, 7.25, mz, 0xc89658);
+      addVoxelBox(apt.archGroup, 3.2, 0.6, 3.2, mx, 14.8, mz, 0xdfb887); // Balcony
+      addVoxelBox(apt.archGroup, 2.0, 2.2, 2.0, mx, 16.2, mz, 0xc89658);
+      addVoxelBox(apt.archGroup, 1.2, 1.2, 1.2, mx, 17.8, mz, 0xfacc15); // Golden dome
+      // Windows with warm illumination
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.5, faceX - xSign * 0.1, 6.5, depth * 0.15, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 2) {
+      // Desert Terraced Citadel Residence (h=12.0)
+      addVoxelBox(apt.archGroup, width, 8.5, depth, 0, 4.25, 0, 0xc89658);
+      // Stepped upper terrace with shaded wooden pergola
+      addVoxelBox(apt.archGroup, width * 0.7, 3.2, depth * 0.7, -xSign * 1.0, 10.1, 0, 0xdfb887);
+      addVoxelBox(apt.archGroup, 2.4, 0.3, depth * 0.6, faceX - xSign * 0.4, 11.8, 0, 0x78350f);
+      // Arched recessed windows
+      addVoxelBox(apt.archGroup, 0.4, 1.8, depth * 0.55, faceX - xSign * 0.1, 5.2, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 3) {
+      // Islamic Cairo Shophouse with Striped Awning (h=10.0)
+      addVoxelBox(apt.archGroup, width, 8.0, depth, 0, 4.0, 0, 0xdfb887);
+      // Striped awning over ground-floor ahwa
+      addVoxelBox(apt.archGroup, 2.2, 0.35, depth * 0.8, faceX - xSign * 0.8, 3.2, 0, 0x064e3b);
+      addVoxelBox(apt.archGroup, 1.2, 1.8, depth * 0.55, faceX - xSign * 0.4, 5.5, 0, 0x5c3818); // Mashrabiya
+      addVoxelBox(apt.archGroup, 0.4, 1.2, depth * 0.45, faceX - xSign * 0.9, 5.5, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.6 });
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, 8.4, 0, 0xc89658);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else if (bType === 4) {
+      // Khan el-Khalili Merchant House (h=13.0)
+      const h = 12.0;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xb8864f);
+      // Ground floor arched merchant arcade
+      addVoxelBox(apt.archGroup, 1.4, 3.5, depth * 0.75, faceX - xSign * 0.5, 1.75, 0, 0x5c3818);
+      addVoxelBox(apt.archGroup, 0.4, 2.2, depth * 0.65, faceX - xSign * 1.1, 1.75, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.7 });
+      // 2nd and 3rd floor mashrabiya lattice oriels
+      [-2.8, 2.8].forEach(wz => {
+        addVoxelBox(apt.archGroup, 1.2, 2.2, 1.8, faceX - xSign * 0.4, 7.5, wz, 0x5c3818);
+        addVoxelBox(apt.archGroup, 0.4, 1.4, 1.2, faceX - xSign * 0.9, 7.5, wz, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      });
+      // Crenelated roof
+      addVoxelBox(apt.archGroup, width + 0.6, 0.8, depth + 0.6, 0, h + 0.4, 0, 0xdfb887);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+
+    } else {
+      // Nile Corniche Grand Residence (h=15.0)
+      const h = 14.5;
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0x8c5e34);
+      // Multi-tiered wooden verandas & windows
+      [4.8, 9.8].forEach(vy => {
+        addVoxelBox(apt.archGroup, 1.6, 0.4, depth * 0.8, faceX - xSign * 0.6, vy, 0, 0x78350f);
+        addVoxelBox(apt.archGroup, 1.4, 0.8, depth * 0.75, faceX - xSign * 0.5, vy + 0.5, 0, 0xdfb887);
+        addVoxelBox(apt.archGroup, 0.4, 1.6, depth * 0.65, faceX - xSign * 0.1, vy + 1.4, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 0.65 });
+      });
+      // Overhanging roof cornice
+      addVoxelBox(apt.archGroup, width + 0.8, 1.0, depth + 0.8, 0, h + 0.5, 0, 0xdfb887);
+      createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
+    }
+  }
+
+  // Street-Level Native Signboard
+  const stallX = -xSign * (width / 2 + 1.05);
+  addVoxelBox(apt.archGroup, 1.9, 0.35, 4.8, stallX, 2.85, -3.2, cityTheme.accent);
+  const signInfo = cityTheme.signs[index % cityTheme.signs.length];
+  const signMesh = createNativeSignboardMesh(signInfo.top, signInfo.bottom, signInfo.bg, signInfo.fg, 0.28, 1.45, 3.8);
+  signMesh.position.set(stallX - xSign * 0.35, 4.15, -3.2);
+  apt.archGroup.add(signMesh);
+
+  // Lush City Tree
+  const treeX = -xSign * (width / 2 + 0.95);
+  addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
+  const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
+  addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+}
+
+var apartments = [];
+var BLOCK_SPACING = 26;
+var NUM_PAIRS = 10;
+var globalOrderCounter = 0;
+window.apartments = apartments;
+window.NUM_PAIRS = NUM_PAIRS;
+window.BLOCK_SPACING = BLOCK_SPACING;
+
+function createApartmentBuilding(side, zPos, index) {
       const group = new THREE.Group();
       const xSign = side === 'left' ? -1 : 1;
       const xCenter = xSign * 16.2;
@@ -1536,5 +3142,9 @@
       apartments.forEach((apt, idx) => {
         rebuildApartmentVisuals(apt, cityTheme, idx);
       });
+      if (typeof updateCityLeftLandmark === 'function') {
+        updateCityLeftLandmark(cityTheme);
+      }
     }
+    window.transformAllApartmentsToCity = transformAllApartmentsToCity;
 

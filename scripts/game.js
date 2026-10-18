@@ -636,6 +636,7 @@
 
         blueprintGarageGroup.visible = true;
         envGroup.visible = false;
+        if (window.cityLeftLandmarkGroup) window.cityLeftLandmarkGroup.visible = false;
         playerVan.visible = false;
         trafficVehicles.forEach(tv => (tv.mesh.visible = false));
         activeGates.forEach(g => (g.mesh.visible = false));
@@ -662,6 +663,12 @@
 
         blueprintGarageGroup.visible = false;
         envGroup.visible = true;
+        if (window.cityLeftLandmarkGroup) {
+          const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+          const targetX = isCairo ? -34.0 : -28.0;
+          window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+          window.cityLeftLandmarkGroup.visible = true;
+        }
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
@@ -1550,15 +1557,7 @@
     }
 
     function triggerSpeedLines() {
-      const overlay = document.getElementById('speed-lines-overlay');
-      if (overlay) {
-        overlay.classList.remove('active-speed-lines');
-        void overlay.offsetWidth;
-        overlay.classList.add('active-speed-lines');
-        setTimeout(() => {
-          overlay.classList.remove('active-speed-lines');
-        }, 380);
-      }
+      // Disabled: screen light-up and overlay effects removed per user request
     }
 
     function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
@@ -1679,8 +1678,8 @@
       targetDirInt = t.dirInt;
       targetWindowEmissive = t.windowEmissive;
       targetLampEmissive = t.lightsOn ? 2.2 : 0.15;
-      targetMoteOpacity = t.moteOpacity;
-      moteMat.color.setHex(t.moteColor);
+      targetMoteOpacity = 0.0; // Disabled: removed floating cubes
+      if (moteMat) moteMat.opacity = 0.0;
 
       if (playerVan && playerVan.userData.beamLeft) {
         playerVan.userData.beamLeft.visible = t.lightsOn;
@@ -1706,7 +1705,7 @@
         dirLight.color.copy(targetDirColor);
         dirLight.intensity = targetDirInt;
         dirLight.position.copy(targetSunPos);
-        moteMat.opacity = targetMoteOpacity;
+        if (moteMat) moteMat.opacity = 0.0;
         streetLampBulbs.forEach(b => {
           if (b.material) b.material.emissiveIntensity = targetLampEmissive;
         });
@@ -1732,7 +1731,7 @@
       dirLight.color.lerp(targetDirColor, blendRate);
       dirLight.intensity = THREE.MathUtils.lerp(dirLight.intensity, targetDirInt, blendRate);
       dirLight.position.lerp(targetSunPos, blendRate);
-      moteMat.opacity = THREE.MathUtils.lerp(moteMat.opacity, targetMoteOpacity, blendRate);
+      if (moteMat) moteMat.opacity = 0.0;
 
       streetLampBulbs.forEach(b => {
         if (b.material) {
@@ -1765,6 +1764,9 @@
         showCityToast(nextTheme);
         if (nextTheme.id === 'tokyo') applyWeatherMode(4);
         else if (nextTheme.id === 'chinatown') applyWeatherMode(1);
+        else if (nextTheme.id === 'yangon') applyWeatherMode(1);
+        else if (nextTheme.id === 'littleindia') applyWeatherMode(1);
+        else if (nextTheme.id === 'pastel') applyWeatherMode(4);
       }
     }
 
@@ -2125,6 +2127,7 @@
       if (m) {
         m.classList.remove('hidden');
         m.classList.add('flex');
+        if (id === 'modal-settings') renderCitySelectorUI();
       }
     }
     function closeModal(id) {
@@ -2293,7 +2296,13 @@
       slowmoVignette.style.opacity = '0';
 
       applyTimeOfDay(0, true);
-      applyWeatherMode(0);
+      applyWeatherMode(4);
+      if (window.cityLeftLandmarkGroup) {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+        window.cityLeftLandmarkGroup.visible = true;
+      }
       updateHUD();
 
       if (forceTutorial || !gameState.tutorialCompletedOnce) {
@@ -2396,6 +2405,9 @@
       apartments.push(createApartmentBuilding('left', zPos, i * 2));
       apartments.push(createApartmentBuilding('right', zPos, i * 2 + 1));
     }
+    if (typeof updateCityLeftLandmark === 'function' && CITY_THEMES[gameState.cityIndex]) {
+      updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
+    }
     renderBottomParcelHandUI();
     setHomePageMode(true);
     updateHomeGarageUI();
@@ -2413,10 +2425,12 @@
       const rawDt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      cozyMotes.forEach((cm) => {
-        cm.mesh.position.y = cm.baseY + Math.sin(now * 0.002 + cm.phase) * 0.65;
-        cm.mesh.rotation.y += rawDt * 1.2;
-      });
+      if (typeof cozyMotes !== 'undefined' && cozyMotes && cozyMotes.length > 0) {
+        cozyMotes.forEach((cm) => {
+          cm.mesh.position.y = cm.baseY + Math.sin(now * 0.002 + cm.phase) * 0.65;
+          cm.mesh.rotation.y += rawDt * 1.2;
+        });
+      }
 
       // Home Page 3D Blueprint Turntable Rotation & Always-On Blue Holographic Scan Ring
       if (gameState.mode === 'home') {
@@ -2577,6 +2591,24 @@
         }
       });
 
+      // Dynamic approaching perspective (အနားနီးရင်ကြီးလာတာ)
+      // Landmark starts on distant horizon (Z = -220) and smoothly approaches player with 35% parallax speed,
+      // naturally growing larger in 3D perspective until passing beside player!
+      if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.x = targetX;
+
+        if (window.cityLeftLandmarkGroup.visible) {
+          window.cityLeftLandmarkGroup.position.z += playerSpeed * dt * 0.35;
+
+          // When landmark passes behind the camera, hide it so only ONE exists per city
+          if (window.cityLeftLandmarkGroup.position.z > 45.0) {
+            window.cityLeftLandmarkGroup.visible = false;
+          }
+        }
+      }
+
       apartments.forEach(apt => {
         apt.group.position.z += playerSpeed * dt;
 
@@ -2592,6 +2624,7 @@
 
         if (apt.group.position.z > 32) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
+          apt.index += NUM_PAIRS;
           rebuildApartmentVisuals(apt, CITY_THEMES[gameState.cityIndex], apt.index);
           // Spawn delivery orders after ~150m warm-up (or immediately if in tutorial mode)
           configureApartmentCustomer(apt, gameState.tutorialActive || gameState.distanceMeters >= 55);
@@ -2647,6 +2680,9 @@
 
             if (newTheme.id === 'tokyo') applyWeatherMode(4);
             else if (newTheme.id === 'chinatown') applyWeatherMode(1);
+            else if (newTheme.id === 'yangon') applyWeatherMode(1);
+            else if (newTheme.id === 'littleindia') applyWeatherMode(1);
+            else if (newTheme.id === 'pastel') applyWeatherMode(4);
           }
 
           if (g.mesh.position.z > 38) {
@@ -2897,8 +2933,7 @@
               updateContractProgress('combo_max', gameState.combo, true);
 
               soundFX.playNearMissWhoosh();
-              triggerSpeedLines();
-              triggerScreenShake(0.18, 0.85);
+              // Screen shake, speed-lines, and light-up overlays removed for clean, smooth near-misses
 
               const popupPos = playerVan.position.clone().add(new THREE.Vector3(
                 tv.mesh.position.x > playerVan.position.x ? 1.6 : -1.6,
@@ -3120,3 +3155,60 @@
       requestAnimationFrame(animate);
       hideLoadingOverlay();
     };
+
+
+    function switchCityByIndex(targetIdx) {
+      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
+      const theme = CITY_THEMES[gameState.cityIndex];
+      transformAllApartmentsToCity(theme);
+      soundFX.playCityGateChime();
+      showCityToast(theme);
+      if (theme.id === 'tokyo') applyWeatherMode(4);
+      else if (theme.id === 'chinatown') applyWeatherMode(1);
+      else if (theme.id === 'yangon') applyWeatherMode(1);
+      else if (theme.id === 'littleindia') applyWeatherMode(1);
+      else if (theme.id === 'pastel') applyWeatherMode(4);
+      else if (theme.id === 'paris') applyWeatherMode(4);
+      else if (theme.id === 'rio') applyWeatherMode(1);
+      else if (theme.id === 'washington') applyWeatherMode(4);
+      else if (theme.id === 'dubai') applyWeatherMode(1);
+      else if (theme.id === 'cairo') applyWeatherMode(1);
+      renderCitySelectorUI();
+    }
+
+    function renderCitySelectorUI() {
+      const container = document.getElementById('setting-city-buttons');
+      const label = document.getElementById('setting-current-city');
+      if (label && CITY_THEMES[gameState.cityIndex]) {
+        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
+      }
+      if (!container) return;
+      container.innerHTML = '';
+      const cityIcons = {
+        tokyo: '🗼',
+        chinatown: '🏮',
+        littleindia: '🛕',
+        yangon: '🇲🇲',
+        pastel: '🌆',
+        paris: '🥐',
+        rio: '🌴',
+        washington: '🏛️',
+        dubai: '🏙️',
+        cairo: '🐪'
+      };
+      CITY_THEMES.forEach((ct, idx) => {
+        const isCur = idx === gameState.cityIndex;
+        const btn = document.createElement('button');
+        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
+          isCur
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
+            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
+        );
+        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
+        btn.addEventListener('click', () => {
+          soundFX.init();
+          switchCityByIndex(idx);
+        });
+        container.appendChild(btn);
+      });
+    }
