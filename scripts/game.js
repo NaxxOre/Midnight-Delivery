@@ -1539,6 +1539,7 @@
         targetApt: apt,
         targetOrderId: apt.orderId,
         cargoMultiplier: getRoofScoreMultiplier(),
+        nightMultiplier: nightState.remaining > 0 ? 1.5 : 1,
         endPos: new THREE.Vector3(),
         parcelType: parcelTypeId,
         modifier: slotModifier,
@@ -2594,6 +2595,7 @@
       gameState.currentX = LANES[2];
       gameState.lateralVelocity = 0;
       resetCargoRun();
+      resetNightRun();
       gameState.throttle = 0.72;
       gameState.boostTimer = 0;
 
@@ -3571,6 +3573,7 @@
 
               soundFX.playCrash();
               gameState.hearts -= 1;
+              damageHeadlight();
               gameState.combo = 1;
               gameState.invulnerableTimer = 1.65;
               updateHUD();
@@ -3648,7 +3651,7 @@
                   triggerScreenShake(0.18, 0.7);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 24);
 
-                  const vipHalfPts = Math.round(pInfo.pts * 2 * engScoreMult * fp.cargoMultiplier * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfPts = Math.round(pInfo.pts * 2 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier * (gameState.overdriveActive ? 2 : 1));
                   const vipHalfCoins = Math.round(baseCoinGain * 2 * (gameState.overdriveActive ? 2 : 1));
                   gameState.score += vipHalfPts;
                   gameState.coins += vipHalfCoins;
@@ -3657,7 +3660,7 @@
                   updateHUD();
 
                   updateContractProgress('deliveries_run', 1);
-                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! x2 • VIP 1/2', 'combat-text-gold');
+                  showFloatingCombatText(liveEnd, fp.nightMultiplier > 1 ? '🌙 NIGHT VISION BONUS x1.5 • VIP 1/2' : '🎯 EXACT ORDER! x2 • VIP 1/2', 'combat-text-gold');
 
                   // Guarantee matching parcel for 2nd throw in player's hand!
                   ensureParcelAvailableInHand(apt.wantedType);
@@ -3695,7 +3698,7 @@
                 const vipMultiplier = isVipJackpot ? 3.0 : 1.0;
                 const matchMultiplier = 2; // +100% exact order bonus
                 const multiplier = (isPerfect ? 2 : 1) * matchMultiplier * modMultiplier * vipMultiplier;
-                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult * fp.cargoMultiplier);
+                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier);
                 const vipCoinBonus = isVipJackpot ? 100 : 0;
                 const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier);
 
@@ -3739,9 +3742,10 @@
                   const bannerText = modText ? `🎯 EXACT ORDER! x2 • ${modText}` : '🎯 EXACT ORDER! x2';
                   showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
                 }
+                if (fp.nightMultiplier > 1) showActionToast('🌙 EXACT ORDER • NIGHT VISION BONUS x1.5', 'bonus');
               } else {
                 // WRONG PARCEL! Player receives 50% points & combo resets to 1
-                const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier));
+                const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier));
                 const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5));
 
                 apt.delivered = true;
@@ -3805,6 +3809,7 @@
       }
 
       updateFallenCargo(rawDt);
+      updateNightSystems(rawDt, dt, playerSpeed);
       renderer.render(scene, camera);
     }
 
@@ -3851,6 +3856,7 @@
           apartments.push(createApartmentBuilding('right', zPos, pairIndex * 2 + 1));
         }
         renderBottomParcelHandUI();
+        initializeNightSystems();
         setHomePageMode(true);
         updateHomeGarageUI();
         startAnimationLoop();

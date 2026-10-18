@@ -46,6 +46,7 @@ exports.run = async root => {
         gameState.tutorialCompletedOnce = true;
       });
       await page.locator('#btn-start-play').click();
+      await require('./mechanics.js').verify(page);
       await page.evaluate(() => {
         window.smokeFrames = [];
         let previous = performance.now();

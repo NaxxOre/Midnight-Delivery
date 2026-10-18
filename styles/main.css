@@ -324,6 +324,9 @@
     }
 
 /* High-Performance Loading Indicator Overlay (<10s requirement) */
+.blackout-active .resident-order-badge { border-color: #fcd34d; background: #071020f5; box-shadow: 0 0 16px #ff573388; }
+.blackout-active .parcel-key-badge { color: #071020; background: #fde047; }
+
 #loading-overlay {
   position: fixed;
   inset: 0;
