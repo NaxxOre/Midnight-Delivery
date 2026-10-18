@@ -1695,8 +1695,9 @@
       }).join('');
     }
 
+    const MAX_ACTIVE_BURST_PARTICLES = 60;
     function spawnVoxelBurst(pos, colorHex, count = 18) {
-      const availableCount = Math.min(count, Math.max(0, 256 - particles.length));
+      const availableCount = Math.min(count, Math.max(0, MAX_ACTIVE_BURST_PARTICLES - particles.length));
       for (let i = 0; i < availableCount; i++) {
         const s = 0.22 + Math.random() * 0.26;
         const p = new THREE.Mesh(unitBoxGeo, getMat(colorHex, { emissive: colorHex, emissiveIntensity: 0.45 }));
@@ -1958,7 +1959,7 @@
         if (tooClose) continue;
 
         const type = vehiclePool[Math.floor(Math.random() * vehiclePool.length)];
-        const mesh = createTrafficVehicle(type);
+        const mesh = acquireTrafficVehicle(type);
         mesh.position.set(laneX, 0, spawnZ);
         scene.add(mesh);
 
@@ -1971,22 +1972,11 @@
 
         // 25% chance of Lane-Switch AI with turn signal indicators
         const canSwitchLane = Math.random() < 0.25;
-        let leftBlinker = null;
-        let rightBlinker = null;
+        let leftBlinker = mesh.userData.leftBlinker || null;
+        let rightBlinker = mesh.userData.rightBlinker || null;
         if (canSwitchLane) {
-          const halfX = mesh.userData.halfX || 1.1;
-          const halfZ = mesh.userData.halfZ || 1.8;
-          leftBlinker = new THREE.Mesh(unitBoxGeo, trafficBlinkerMat);
-          leftBlinker.scale.set(0.28, 0.22, 0.28);
-          leftBlinker.position.set(-halfX - 0.06, 0.75, -halfZ + 0.25);
-          leftBlinker.visible = false;
-          mesh.add(leftBlinker);
-
-          rightBlinker = new THREE.Mesh(unitBoxGeo, trafficBlinkerMat);
-          rightBlinker.scale.set(0.28, 0.22, 0.28);
-          rightBlinker.position.set(halfX + 0.06, 0.75, -halfZ + 0.25);
-          rightBlinker.visible = false;
-          mesh.add(rightBlinker);
+          if (leftBlinker) leftBlinker.visible = false;
+          if (rightBlinker) rightBlinker.visible = false;
         }
 
         trafficVehicles.push({
@@ -2597,7 +2587,7 @@
         gameState.tutorialActive = false;
       }
 
-      trafficVehicles.forEach(v => scene.remove(v.mesh));
+      trafficVehicles.forEach(v => releaseTrafficVehicle(v.mesh));
       trafficVehicles.length = 0;
 
       flyingParcels.forEach(fp => {
@@ -2673,7 +2663,7 @@
       for (let z = -65; z >= -165; z -= 48) {
         const laneIdx = Math.floor(Math.random() * 4);
         const type = startVehicleTypes[Math.floor(Math.random() * startVehicleTypes.length)];
-        const mesh = createTrafficVehicle(type);
+        const mesh = acquireTrafficVehicle(type);
         mesh.position.set(LANES[laneIdx], 0, z);
         scene.add(mesh);
         trafficVehicles.push({
@@ -2727,10 +2717,20 @@
 
     function animate(now) {
       requestAnimationFrame(animate);
-      if (!Number.isFinite(now)) now = performance.now();
-      const elapsed = (now - lastTime) / 1000;
-      const rawDt = Number.isFinite(elapsed) ? Math.min(Math.max(elapsed, 0.001), 0.05) : 0.001;
-      lastTime = now;
+      try {
+        if (!Number.isFinite(now)) now = performance.now();
+        const elapsed = (now - lastTime) / 1000;
+        const rawDt = Number.isFinite(elapsed) ? Math.min(Math.max(elapsed, 0.001), 0.05) : 0.001;
+        lastTime = now;
+
+        if (playerVan) {
+          if (isNaN(playerVan.position.x) || isNaN(playerVan.position.y) || isNaN(playerVan.position.z)) {
+            console.warn('[Midnight Delivery] NaN detected on playerVan position, resetting to safe coordinates');
+            playerVan.position.set(0, 0, gameState.vanZ || -5.4);
+            gameState.currentX = 0;
+            gameState.lateralVelocity = 0;
+          }
+        }
 
       cozyMotes.forEach((cm) => {
         cm.mesh.position.y = cm.baseY + Math.sin(now * 0.002 + cm.phase) * 0.65;
@@ -3500,7 +3500,7 @@
                 updateHUD();
                 spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 28);
                 showFloatingCombatText(tv.mesh.position.clone().add(new THREE.Vector3(0, 2.5, 0)), gameState.overdriveActive ? '⚡ OVERDRIVE SMASH! +300' : 'IMMORTAL SMASH! +150', 'combat-text-gold');
-                scene.remove(tv.mesh);
+                releaseTrafficVehicle(tv.mesh);
                 trafficVehicles.splice(i, 1);
                 continue;
               }
@@ -3556,7 +3556,7 @@
           }
 
           if (tv.mesh.position.z > 38) {
-            scene.remove(tv.mesh);
+            releaseTrafficVehicle(tv.mesh);
             trafficVehicles.splice(i, 1);
           }
         }
@@ -3765,12 +3765,19 @@
           particles.splice(i, 1);
         }
       }
+      while (particles.length > 60) {
+        const excess = particles.shift();
+        scene.remove(excess.mesh);
+      }
 
       updateFallenCargo(rawDt);
       updateNightSystems(rawDt, dt, playerSpeed);
       updateRivalSystems(rawDt, dt, playerSpeed);
       updateCourierPersistence(rawDt);
       renderer.render(scene, camera);
+      } catch (err) {
+        console.error("Game loop error:", err);
+      }
     }
 
     window.addEventListener('resize', updateCameraForViewport);

@@ -1,6 +1,6 @@
     const matCache = {};
     function getMat(colorHex, opts = {}) {
-      const key = `${colorHex}_${opts.emissive || 0}_${opts.emissiveIntensity || 0}_${opts.opacity || 1}`;
+      const key = `${colorHex}_${opts.emissive || 0}_${opts.emissiveIntensity || 0}_${opts.opacity ?? 1}_${opts.roughness ?? 0.5}_${opts.metalness ?? 0.08}`;
       if (!matCache[key]) {
         matCache[key] = new THREE.MeshStandardMaterial({
           color: colorHex,
@@ -8,8 +8,8 @@
           metalness: opts.metalness !== undefined ? opts.metalness : 0.08,
           emissive: opts.emissive || 0x000000,
           emissiveIntensity: opts.emissiveIntensity || 0,
-          transparent: !!opts.opacity,
-          opacity: opts.opacity || 1.0
+          transparent: opts.opacity !== undefined,
+          opacity: opts.opacity ?? 1.0
         });
       }
       return matCache[key];
@@ -625,6 +625,7 @@
       });
 
       iconRenderer.dispose();
+      iconRenderer.forceContextLoss();
     }
 
     const gateSignGeo = new THREE.BoxGeometry(12.6, 2.4, 0.45);
@@ -790,6 +791,9 @@
 
       return [bL, bR];
     }
+
+    const immortalAuraGeometry = new THREE.RingGeometry(2.5, 3.2, 32);
+    const immortalAuraMaterial = new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
 
     function createPlayableVanMesh(vanId = 'classic', includeCargoGift = true) {
       const spec = PLAYABLE_VANS.find(v => v.id === vanId) || PLAYABLE_VANS[0];
@@ -992,8 +996,8 @@
 
       // Rainbow Immortal Aura Shield Ring around the vehicle (Visible when Immortal Power-Up is active)
       const immortalAura = new THREE.Mesh(
-        new THREE.RingGeometry(2.5, 3.2, 32),
-        new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+        immortalAuraGeometry,
+        immortalAuraMaterial
       );
       immortalAura.rotation.x = -Math.PI / 2;
       immortalAura.position.y = 0.18;
@@ -1022,10 +1026,6 @@
     function replaceActivePlayerVan(vanId) {
       gameState.equippedVanId = vanId;
       if (playerVan) {
-        if (playerVan.userData.immortalAura) {
-          playerVan.userData.immortalAura.geometry.dispose();
-          playerVan.userData.immortalAura.material.dispose();
-        }
         scene.remove(playerVan);
       }
       playerVan = createPlayableVanMesh(vanId, true);
@@ -1256,6 +1256,8 @@
     const windowMeshes = [];
     const sidewalkActors = [];
 
+    const streetLampPoolGeometry = new THREE.CircleGeometry(2.6, 16);
+    const streetLampPoolMaterial = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false });
     function initSidewalkPromenadeActors() {
       // Streetlamps sit right on the outer road curb edge (x = ±7.95) clear of bike & walking lanes
       for (let z = 25; z > -235; z -= 26) {
@@ -1274,8 +1276,8 @@
           streetLampBulbs.push(bulb);
 
           const pool = new THREE.Mesh(
-            new THREE.CircleGeometry(2.6, 16),
-            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false })
+            streetLampPoolGeometry,
+            streetLampPoolMaterial
           );
           pool.rotation.x = -Math.PI / 2;
           pool.position.set(sign * 0.68, 0.26, 0);

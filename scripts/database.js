@@ -160,6 +160,10 @@ const courierRun = { id: null, startedAt: null, completed: true, saveTimer: 0, r
 
 function saveCourierProfile() {
   const profile = courierDB.profile(gameState);
+  if (gameState.mode === 'playing' || gameState.mode === 'paused' || gameState.mode === 'countdown') {
+    courierDB.data.profile = profile;
+    return;
+  }
   courierDB.commit({ ...courierDB.data, profile });
 }
 

@@ -9,21 +9,31 @@
         this.step = 0;
         this.activeVoices = new Set();
         this.maxVoices = 32;
+        this.availableGains = [];
+        this.gainsCreated = 0;
       }
 
       createVoice() {
         if (!this.ctx || this.ctx.state !== 'running' || this.activeVoices.size >= this.maxVoices) return null;
         const oscillator = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const gain = this.availableGains.pop() || this.createPooledGain();
+        gain.gain.cancelScheduledValues(this.ctx.currentTime);
+        gain.gain.setValueAtTime(0, this.ctx.currentTime);
         const voice = { oscillator, gain };
         this.activeVoices.add(voice);
         oscillator.onended = () => {
           oscillator.disconnect();
           gain.disconnect();
           this.activeVoices.delete(voice);
+          if (this.availableGains.length < this.maxVoices) this.availableGains.push(gain);
           oscillator.onended = null;
         };
         return voice;
+      }
+
+      createPooledGain() {
+        this.gainsCreated++;
+        return this.ctx.createGain();
       }
 
       init() {
