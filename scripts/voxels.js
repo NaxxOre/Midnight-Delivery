@@ -1304,35 +1304,106 @@ function createGrandTokyoTower(parent, px, py, pz) {
 }
 
 // 2. YANGON
+// 2. YANGON - Grand Shwedagon Pagoda (ရွှေတိဂုံစေတီတော်)
+// Colossal 99m golden stupa on Singuttara Hill: 4 cardinal Pyatthat prayer halls (Tazaungs),
+// corner guardian Chinthes, 3-tier octagonal plinth, Khaunglaung-pon bell with relief rings,
+// Kyar-hmauk & Kyar-hlan lotus petals, Hnget-pyaw-bu banana bud, 7-tier filigree Hti umbrella,
+// and radiant Sein-bu diamond orb pinnacle!
 function createGrandShwedagonPagoda(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
-  const gold = 0xfacc15;
-  const deepGold = 0xd97706;
-  const brightGold = 0xfef08a;
-  addVoxelBox(root, 16.5, 1.8, 16.5, 0, 0.9, 0, 0xfef3c7);
-  addVoxelBox(root, 17.0, 0.4, 17.0, 0, 1.9, 0, deepGold);
-  [[-6.2, -6.2], [6.2, -6.2], [-6.2, 6.2], [6.2, 6.2]].forEach(([cx, cz]) => {
-    addVoxelBox(root, 2.2, 2.4, 2.2, cx, 3.1, cz, gold);
-    addVoxelBox(root, 1.4, 1.8, 1.4, cx, 5.0, cz, brightGold, { emissive: deepGold, emissiveIntensity: 0.5 });
-    addVoxelBox(root, 0.4, 1.8, 0.4, cx, 6.6, cz, brightGold, { emissive: brightGold, emissiveIntensity: 0.8 });
+
+  const richGold = 0xf59e0b;   // Deep 24K Burmese temple gold
+  const brightGold = 0xfacc15; // Gleaming golden leaf
+  const radiantGold = 0xfef08a;// Shimmering lotus & umbrella gold
+  const hillStone = 0xfef3c7;  // Marble terrace paving
+  const teakWood = 0x78350f;   // Carved teakwood shrines
+  const lacquerRed = 0x991b1b; // Burmese royal crimson lacquer
+  const rubyGlow = 0xef4444;
+
+  // 1. SINGUTTARA HILL & GRAND MARBLE TERRACE (ရင်ပြင်တော် ပစ္စယံ, w=22, h=2.4)
+  addVoxelBox(root, 22.0, 1.8, 22.0, 0, 0.9, 0, hillStone);
+  addVoxelBox(root, 22.8, 0.5, 22.8, 0, 2.0, 0, richGold);
+
+  // 2. FOUR CARDINAL PRAYER SHRINES (တန်ဆောင်းများ - Tazaungs with Pyatthat Multi-Tier Roofs)
+  const tazaungCoords = [
+    { x: 0, z: -10.2, rot: 0 },
+    { x: 0, z: 10.2, rot: Math.PI },
+    { x: -10.2, z: 0, rot: Math.PI / 2 },
+    { x: 10.2, z: 0, rot: -Math.PI / 2 }
+  ];
+  tazaungCoords.forEach(tz => {
+    // Teakwood colonnade hall
+    addVoxelBox(root, 4.2, 3.2, 3.4, tz.x, 3.6, tz.z, teakWood);
+    addVoxelBox(root, 3.4, 2.4, 2.8, tz.x, 3.4, tz.z, radiantGold, { emissive: richGold, emissiveIntensity: 0.6 });
+    // 3-tier Burmese Pyatthat multi-roof with golden eaves
+    addVoxelBox(root, 5.0, 0.5, 4.2, tz.x, 5.45, tz.z, lacquerRed);
+    addVoxelBox(root, 3.8, 0.5, 3.2, tz.x, 6.3, tz.z, lacquerRed);
+    addVoxelBox(root, 2.6, 0.5, 2.2, tz.x, 7.1, tz.z, lacquerRed);
+    addVoxelBox(root, 0.6, 2.2, 0.6, tz.x, 8.4, tz.z, brightGold, { emissive: radiantGold, emissiveIntensity: 1.0 });
   });
-  addVoxelBox(root, 12.5, 1.6, 12.5, 0, 2.8, 0, deepGold);
-  addVoxelBox(root, 10.8, 1.6, 10.8, 0, 4.4, 0, gold, { metalness: 0.6, roughness: 0.2 });
-  addVoxelBox(root, 9.2, 1.6, 9.2, 0, 6.0, 0, gold, { metalness: 0.65, roughness: 0.18 });
-  addVoxelBox(root, 7.8, 1.4, 7.8, 0, 7.5, 0, gold, { metalness: 0.7, emissive: deepGold, emissiveIntensity: 0.3 });
-  addVoxelBox(root, 6.6, 3.8, 6.6, 0, 10.1, 0, gold, { metalness: 0.75, roughness: 0.15, emissive: deepGold, emissiveIntensity: 0.4 });
-  addVoxelBox(root, 5.2, 3.2, 5.2, 0, 13.5, 0, gold, { metalness: 0.8, roughness: 0.12, emissive: gold, emissiveIntensity: 0.5 });
-  addVoxelBox(root, 4.0, 2.4, 4.0, 0, 16.2, 0, brightGold, { metalness: 0.85, emissive: gold, emissiveIntensity: 0.6 });
-  addVoxelBox(root, 3.0, 2.4, 3.0, 0, 18.5, 0, brightGold, { metalness: 0.85, emissive: gold, emissiveIntensity: 0.7 });
-  addVoxelBox(root, 2.2, 2.2, 2.2, 0, 20.7, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.8 });
-  addVoxelBox(root, 1.4, 3.6, 1.4, 0, 23.5, 0, brightGold, { emissive: brightGold, emissiveIntensity: 1.0 });
-  addVoxelBox(root, 3.8, 0.4, 3.8, 0, 26.2, 0, gold);
-  addVoxelBox(root, 3.0, 0.35, 3.0, 0, 27.2, 0, gold);
-  addVoxelBox(root, 2.2, 0.3, 2.2, 0, 28.1, 0, gold);
-  addVoxelBox(root, 1.5, 0.25, 1.5, 0, 28.9, 0, gold);
-  addVoxelBox(root, 0.8, 3.2, 0.8, 0, 30.6, 0, 0xffffff, { emissive: 0xfffbeb, emissiveIntensity: 1.8 });
-  addVoxelBox(root, 1.2, 1.2, 1.2, 0, 32.8, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+
+  // 3. FOUR CORNER GUARDIAN CHINTHES & SATELLITE STUPAS (ခြင်္သေ့ နှင့် အရံစေတီများ)
+  const cornerCoords = [[-9.0, -9.0], [9.0, -9.0], [-9.0, 9.0], [9.0, 9.0]];
+  cornerCoords.forEach(([cx, cz]) => {
+    // Guardian Chinthe Lion
+    addVoxelBox(root, 1.8, 2.4, 1.8, cx, 3.2, cz, brightGold);
+    addVoxelBox(root, 1.2, 1.4, 1.2, cx, 4.8, cz, richGold);
+    // Miniature Satellite Stupa (အရံစေတီ) next to corner
+    const sx = cx * 0.72;
+    const sz = cz * 0.72;
+    addVoxelBox(root, 2.6, 1.2, 2.6, sx, 2.6, sz, richGold);
+    addVoxelBox(root, 2.0, 2.2, 2.0, sx, 4.2, sz, brightGold);
+    addVoxelBox(root, 1.4, 2.2, 1.4, sx, 6.2, sz, radiantGold, { emissive: richGold, emissiveIntensity: 0.4 });
+    addVoxelBox(root, 0.5, 2.0, 0.5, sx, 8.2, sz, radiantGold, { emissive: radiantGold, emissiveIntensity: 0.9 });
+  });
+
+  // 4. STEPPED OCTAGONAL PLINTH (ရှစ်မြှောင့် ပစ္စယံ ၃ ဆင့်, height 2.2 to 8.2)
+  addVoxelBox(root, 16.0, 1.8, 16.0, 0, 3.1, 0, richGold);
+  addVoxelBox(root, 14.0, 1.8, 14.0, 0, 4.9, 0, brightGold);
+  addVoxelBox(root, 12.2, 1.8, 12.2, 0, 6.7, 0, richGold);
+  addVoxelBox(root, 10.8, 1.6, 10.8, 0, 8.4, 0, brightGold);
+
+  // 5. THE BELL (ခေါင်းလောင်းပုံ - Khaunglaung-pon, height 9.2 to 14.5)
+  // Stepped embossed waist bands (Hpaung-yit)
+  addVoxelBox(root, 9.6, 1.8, 9.6, 0, 10.1, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.35 });
+  addVoxelBox(root, 8.8, 1.8, 8.8, 0, 11.8, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.45 });
+  addVoxelBox(root, 8.0, 1.6, 8.0, 0, 13.4, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.55 });
+
+  // 6. INVERTED BOWL & LOTUS PETALS (သပိတ်မှောက် နှင့် ကြာမှောက် ကြာလှန်, height 14.2 to 19.5)
+  // Downward-turned lotus (Kyar-hmauk)
+  addVoxelBox(root, 7.2, 1.6, 7.2, 0, 15.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.65 });
+  // Glass bead molding rim (Hpan-khar-thee)
+  addVoxelBox(root, 7.6, 0.45, 7.6, 0, 16.0, 0, richGold);
+  // Upward-turned lotus (Kyar-hlan)
+  addVoxelBox(root, 6.2, 1.6, 6.2, 0, 17.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.75 });
+
+  // 7. BANANA BUD SPIRE (ငှက်ပျောဖူး - Hnget-pyaw-bu, height 18.0 to 25.5)
+  addVoxelBox(root, 5.0, 1.8, 5.0, 0, 18.6, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.7 });
+  addVoxelBox(root, 4.0, 2.0, 4.0, 0, 20.4, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.8 });
+  addVoxelBox(root, 3.0, 2.0, 3.0, 0, 22.3, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.85 });
+  addVoxelBox(root, 2.0, 2.2, 2.0, 0, 24.3, 0, radiantGold, { metalness: 0.95, emissive: radiantGold, emissiveIntensity: 0.95 });
+
+  // 8. SEVEN-TIER GILDED UMBRELLA CROWN (ထီးတော် - Hti-daw, height 25.4 to 30.0)
+  // Concentric radiating umbrella tiers
+  [
+    { w: 4.8, h: 0.35, y: 25.6 },
+    { w: 4.2, h: 0.35, y: 26.3 },
+    { w: 3.5, h: 0.35, y: 27.0 },
+    { w: 2.8, h: 0.35, y: 27.7 },
+    { w: 2.2, h: 0.35, y: 28.4 },
+    { w: 1.6, h: 0.35, y: 29.1 }
+  ].forEach(hti => {
+    addVoxelBox(root, hti.w, hti.h, hti.w, 0, hti.y, 0, radiantGold, { emissive: radiantGold, emissiveIntensity: 1.4 });
+  });
+
+  // 9. VANE & SEIN-BU DIAMOND ORB (ငှက်မြတ်နား နှင့် စိန်ဖူးတော်, height 29.5 to 33.8)
+  // Golden central mast & jewel vane
+  addVoxelBox(root, 0.7, 2.8, 0.7, 0, 30.5, 0, radiantGold, { emissive: 0xffffff, emissiveIntensity: 1.8 });
+  addVoxelBox(root, 0.3, 1.4, 1.8, 0, 31.8, 0.6, richGold, { emissive: rubyGlow, emissiveIntensity: 1.5 });
+  // Dazzling diamond orb radiating supreme spiritual white light
+  addVoxelBox(root, 1.4, 1.4, 1.4, 0, 33.2, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 3.8 });
+
   parent.add(root);
   return root;
 }
@@ -1448,70 +1519,103 @@ function createCyberSpaceNeedleAndWheel(parent, px, py, pz) {
 // 6. PARIS - Grand Eiffel Tower (Champ de Mars, Paris)
 // Authentic 3-tier puddle iron lattice tower with sweeping semicircular arches,
 // double-deck observation platforms, and summit beacon spotlight
+// 6. PARIS - Grand Eiffel Tower (Champ de Mars, Paris)
+// Masterclass 3-tier puddle iron lattice tower: authentic exponential curved pylon legs,
+// monumental semicircular arches spanning the 4 piers, double-deck 1st platform with
+// illuminated galleries, 2nd platform restaurant deck, soaring converged lattice shaft,
+// summit dome lantern, and le Phare revolving double-beam spotlight!
 function createGrandEiffelTower(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
 
-  // Classic Eiffel 3-tier bronze palette (darker at base, warm puddle iron, lighter near top)
-  const baseIron = 0x453426; // Deep antique bronze iron
-  const midIron = 0x664e38;  // Warm puddle iron
-  const topIron = 0x8a6e52;  // Atmospheric golden bronze
-  const warmGlow = 0xfef08a; // Warm architectural illumination
+  // Classic Eiffel bronze palette with puddle iron gradients
+  const stoneBase = 0x334155; // Masonry foundation blocks
+  const baseIron  = 0x423224; // Deep antique bronze puddle iron
+  const midIron   = 0x614a34; // Warm architectural lattice bronze
+  const topIron   = 0x82674b; // Golden summit bronze
+  const warmGlow  = 0xfef08a; // Golden floodlighting
+  const archGlow  = 0xfacc15;
   const beaconCol = 0xffffff;
 
-  // 4 Massive Masonry Corner Piers (Piles de la Tour)
-  const pierCoords = [[-4.8, -4.8], [4.8, -4.8], [-4.8, 4.8], [4.8, 4.8]];
+  // 1. FOUR MASSIVE CORNER FOUNDATION PIERS (Piles de la Tour, w=14x14)
+  const pierCoords = [[-5.6, -5.6], [5.6, -5.6], [-5.6, 5.6], [5.6, 5.6]];
   pierCoords.forEach(([pxx, pzz]) => {
-    addVoxelBox(root, 2.0, 1.2, 2.0, pxx, 0.6, pzz, 0x334155);
+    addVoxelBox(root, 2.6, 1.2, 2.6, pxx, 0.6, pzz, stoneBase);
+    addVoxelBox(root, 2.2, 0.6, 2.2, pxx, 1.5, pzz, baseIron);
   });
 
-  // TIER 1 LEGS: 4 Sweeping Inward-Curving Lattice Iron Pylons (height 1.2 to 7.8)
-  pierCoords.forEach(([pxx, pzz]) => {
-    const sx = Math.sign(pxx);
-    const sz = Math.sign(pzz);
-    addVoxelBox(root, 1.4, 3.5, 1.4, sx * 4.1, 2.9, sz * 4.1, baseIron);
-    addVoxelBox(root, 1.2, 3.8, 1.2, sx * 3.2, 5.9, sz * 3.2, baseIron);
-  });
-
-  // Iconic Monumental Semicircular Lattice Arches between the 4 legs (height 5.2 to 7.2)
-  addVoxelBox(root, 5.4, 0.8, 0.8, 0, 5.8, -3.2, baseIron);
-  addVoxelBox(root, 5.4, 0.8, 0.8, 0, 5.8,  3.2, baseIron);
-  addVoxelBox(root, 0.8, 0.8, 5.4, -3.2, 5.8, 0, baseIron);
-  addVoxelBox(root, 0.8, 0.8, 5.4,  3.2, 5.8, 0, baseIron);
-  addVoxelBox(root, 3.6, 0.5, 0.8, 0, 6.4, -3.2, midIron);
-  addVoxelBox(root, 3.6, 0.5, 0.8, 0, 6.4,  3.2, midIron);
-  addVoxelBox(root, 0.8, 0.5, 3.6, -3.2, 6.4, 0, midIron);
-  addVoxelBox(root, 0.8, 0.5, 3.6,  3.2, 6.4, 0, midIron);
-
-  // 1ST PLATFORM (Double-Deck Gallery, height 7.8 to 9.2)
-  addVoxelBox(root, 7.8, 0.6, 7.8, 0, 7.9, 0, baseIron);
-  addVoxelBox(root, 8.2, 0.5, 8.2, 0, 8.4, 0, midIron);
-  addVoxelBox(root, 7.0, 0.8, 7.0, 0, 8.8, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 0.9 });
-  addVoxelBox(root, 8.4, 0.35, 8.4, 0, 9.2, 0, midIron);
-
-  // TIER 2 SHAFT: 4 Converging Intermediate Legs (height 9.4 to 14.5)
+  // 2. TIER 1: SWEEPING CURVED PYLON LEGS (Height 1.5 to 8.8)
+  // Lower sloping pylon segments
   pierCoords.forEach(([pxx, pzz]) => {
     const sx = Math.sign(pxx);
     const sz = Math.sign(pzz);
-    addVoxelBox(root, 1.0, 5.2, 1.0, sx * 2.2, 11.9, sz * 2.2, midIron);
+    // Lower heavy diagonal truss
+    addVoxelBox(root, 1.8, 3.8, 1.8, sx * 4.8, 3.4, sz * 4.8, baseIron);
+    // Mid curved taper
+    addVoxelBox(root, 1.5, 4.2, 1.5, sx * 3.8, 6.8, sz * 3.8, baseIron);
+    // Diagonal brace struts
+    addVoxelBox(root, 0.8, 3.0, 0.8, sx * 4.3, 4.8, sz * 4.3, midIron);
   });
-  addVoxelBox(root, 3.6, 0.5, 3.6, 0, 12.0, 0, midIron);
 
-  // 2ND PLATFORM (Panoramic Observation Deck, height 14.5 to 16.0)
-  addVoxelBox(root, 5.4, 0.6, 5.4, 0, 14.8, 0, midIron);
-  addVoxelBox(root, 4.4, 0.8, 4.4, 0, 15.3, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
-  addVoxelBox(root, 5.6, 0.35, 5.6, 0, 15.8, 0, topIron);
+  // 3. MONUMENTAL SEMICIRCULAR LATTICE ARCHES (Height 5.4 to 8.6)
+  // Stepped arched vaults connecting each pair of legs beneath the 1st platform
+  const archOffsets = [
+    { x: 0, z: -3.8, dx: 6.2, dz: 0.9 },
+    { x: 0, z:  3.8, dx: 6.2, dz: 0.9 },
+    { x: -3.8, z: 0, dx: 0.9, dz: 6.2 },
+    { x:  3.8, z: 0, dx: 0.9, dz: 6.2 }
+  ];
+  archOffsets.forEach(arc => {
+    // Outer arch rim
+    addVoxelBox(root, arc.dx, 0.9, arc.dz, arc.x, 6.2, arc.z, baseIron);
+    // Mid arch curve
+    addVoxelBox(root, arc.dx * 0.75, 0.75, arc.dz * 0.85, arc.x, 7.1, arc.z, midIron);
+    // Arch crown keystones with warm architectural illumination
+    addVoxelBox(root, arc.dx * 0.5, 0.6, arc.dz * 0.7, arc.x, 7.8, arc.z, archGlow, { emissive: archGlow, emissiveIntensity: 0.75 });
+  });
 
-  // TIER 3: Converged Tower Spire Column (height 16.0 to 21.5)
-  addVoxelBox(root, 2.4, 3.0, 2.4, 0, 17.3, 0, midIron);
-  addVoxelBox(root, 1.8, 3.2, 1.8, 0, 20.0, 0, topIron);
+  // 4. FIRST PLATFORM (La Première Plate-forme, w=10.8x10.8, Height 8.6 to 10.8)
+  addVoxelBox(root, 10.4, 0.7, 10.4, 0, 8.8, 0, baseIron);
+  addVoxelBox(root, 11.2, 0.6, 11.2, 0, 9.4, 0, midIron);
+  // Double-deck gallery with glowing panoramic pavilions & frieze
+  addVoxelBox(root, 9.8, 0.9, 9.8, 0, 10.0, 0, warmGlow, { emissive: 0xfacc15, emissiveIntensity: 1.1 });
+  addVoxelBox(root, 11.4, 0.45, 11.4, 0, 10.6, 0, midIron);
 
-  // SUMMIT LANTERN, DOME & REVOLVING BEACON (height 21.5 to 26.5)
-  addVoxelBox(root, 2.2, 1.2, 2.2, 0, 22.0, 0, topIron);
-  addVoxelBox(root, 1.8, 0.8, 1.8, 0, 22.0, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.5 });
-  addVoxelBox(root, 1.4, 0.7, 1.4, 0, 23.0, 0, topIron);
-  addVoxelBox(root, 0.5, 2.4, 0.5, 0, 24.5, 0, topIron);
-  addVoxelBox(root, 0.8, 0.8, 0.8, 0, 26.0, 0, beaconCol, { emissive: beaconCol, emissiveIntensity: 3.0 });
+  // 5. TIER 2: INTERMEDIATE CONVERGING LEGS (Height 10.8 to 17.0)
+  pierCoords.forEach(([pxx, pzz]) => {
+    const sx = Math.sign(pxx);
+    const sz = Math.sign(pzz);
+    addVoxelBox(root, 1.3, 3.5, 1.3, sx * 2.8, 12.4, sz * 2.8, midIron);
+    addVoxelBox(root, 1.1, 3.5, 1.1, sx * 2.0, 15.4, sz * 2.0, midIron);
+  });
+  // Intermediate cross-brace ring
+  addVoxelBox(root, 5.8, 0.5, 5.8, 0, 14.0, 0, midIron);
+
+  // 6. SECOND PLATFORM (La Deuxième Plate-forme, w=7.6x7.6, Height 17.0 to 19.2)
+  addVoxelBox(root, 7.2, 0.6, 7.2, 0, 17.3, 0, midIron);
+  addVoxelBox(root, 7.8, 0.5, 7.8, 0, 17.8, 0, topIron);
+  // Le Jules Verne restaurant deck with warm illumination
+  addVoxelBox(root, 6.4, 0.8, 6.4, 0, 18.3, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.2 });
+  addVoxelBox(root, 8.0, 0.4, 8.0, 0, 18.9, 0, topIron);
+
+  // 7. TIER 3: SOARING CONVERGED VERTICAL LATTICE TOWER (Height 19.2 to 27.0)
+  addVoxelBox(root, 3.2, 3.8, 3.2, 0, 21.0, 0, midIron);
+  addVoxelBox(root, 2.5, 4.0, 2.5, 0, 24.5, 0, topIron);
+  // Lattice side ribs
+  addVoxelBox(root, 3.4, 0.4, 0.5, 0, 22.5, 0, topIron);
+  addVoxelBox(root, 0.5, 0.4, 3.4, 0, 22.5, 0, topIron);
+
+  // 8. SUMMIT OBSERVATORY, LANTERN DOME & ANTENNA (Height 27.0 to 32.8)
+  // Double-deck summit gallery (Gustave Eiffel's private office)
+  addVoxelBox(root, 3.0, 1.2, 3.0, 0, 27.6, 0, topIron);
+  addVoxelBox(root, 2.6, 0.8, 2.6, 0, 28.4, 0, warmGlow, { emissive: 0xfef08a, emissiveIntensity: 1.8 });
+  // Dome cupola
+  addVoxelBox(root, 2.2, 0.9, 2.2, 0, 29.2, 0, topIron);
+  addVoxelBox(root, 1.4, 0.8, 1.4, 0, 30.0, 0, topIron);
+  // TV & Radio antenna mast
+  addVoxelBox(root, 0.6, 2.4, 0.6, 0, 31.4, 0, 0xf8fafc);
+  // Revolving summit beacon (le Phare) with brilliant spotlight
+  addVoxelBox(root, 1.1, 1.1, 1.1, 0, 32.8, 0, beaconCol, { emissive: beaconCol, emissiveIntensity: 3.8 });
 
   parent.add(root);
   return root;
@@ -1519,46 +1623,66 @@ function createGrandEiffelTower(parent, px, py, pz) {
 
 // 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado
 // Calibrated height (~16.0 units) so head, serene face & golden halo are 100% visible on screen!
+// 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado (Cristo Redentor)
+// Monumental scale (height ~24.0 units, arm span 17.5 units): towering Mount Corcovado peak,
+// octagonal chapel pedestal, soapstone mosaic robes, heroic outstretched blessing arms,
+// serene face tilted towards Rio, and radiant golden halo!
 function createGrandChristTheRedeemer(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
-  // Turned slightly towards the street/camera to face the delivery route
+  // Angled gently towards the player's road for dramatic view
   root.rotation.y = -Math.PI * 0.16;
 
-  const soapstone = 0xf1f5f9; // Pale soapstone mosaic tiles
-  const granite = 0x64748b;   // Weathered granite rock
-  const jungleGreen = 0x15803d; // Tijuca forest mountain slopes
-  const darkRock = 0x334155;
+  const soapstone   = 0xf1f5f9; // Pale soapstone mosaic tiles
+  const soapDark    = 0xcbd5e1; // Robe shadow folds
+  const chapelBase  = 0x1e293b; // Octagonal chapel pedestal
+  const granite     = 0x64748b; // Granite cliff rock
+  const darkCliff   = 0x334155; // Weathered basalt
+  const jungleGreen = 0x15803d; // Lush Tijuca rainforest slopes
+  const haloGold    = 0xfef08a;
 
-  // Mount Corcovado Peak (compact height so statue stays within screen)
-  addVoxelBox(root, 14.0, 2.4, 14.0, 0, 1.2, 0, jungleGreen);
-  addVoxelBox(root, 10.0, 2.0, 10.0, 0, 3.2, 0, darkRock);
-  addVoxelBox(root, 6.8, 1.6, 6.8, 0, 4.8, 0, granite);
+  // 1. MOUNT CORCOVADO PEAK (Tijuca rainforest & granite cliffs, height 0 to 7.2)
+  addVoxelBox(root, 18.0, 2.8, 18.0, 0, 1.4, 0, jungleGreen);
+  addVoxelBox(root, 14.5, 2.4, 14.5, 0, 3.8, 0, darkCliff);
+  addVoxelBox(root, 11.0, 1.8, 11.0, 0, 5.8, 0, granite);
+  // Circular panoramic viewing terrace with tourist safety railings
+  addVoxelBox(root, 11.6, 0.4, 11.6, 0, 6.8, 0, 0xe2e8f0);
 
-  // Pedestal & Octagonal Chapel Base
-  addVoxelBox(root, 4.0, 1.8, 4.0, 0, 6.3, 0, 0x1e293b);
-  addVoxelBox(root, 4.4, 0.4, 4.4, 0, 7.3, 0, granite);
+  // 2. OCTAGONAL CHAPEL PEDESTAL (Base do Pedestal, height 7.0 to 10.8)
+  addVoxelBox(root, 5.4, 2.6, 5.4, 0, 8.3, 0, chapelBase);
+  addVoxelBox(root, 5.8, 0.5, 5.8, 0, 9.8, 0, granite);
+  addVoxelBox(root, 4.6, 0.8, 4.6, 0, 10.4, 0, soapDark);
 
-  // Flowing Soapstone Robed Body
-  addVoxelBox(root, 2.4, 2.8, 1.8, 0, 8.8, 0, soapstone);
-  addVoxelBox(root, 2.6, 2.8, 1.6, 0, 11.4, 0, soapstone);
-  addVoxelBox(root, 3.2, 1.6, 1.4, 0, 13.4, 0, soapstone); // Shoulders
+  // 3. MONUMENTAL ROBED BODY (Cristo Redentor, height 10.8 to 20.8)
+  // Stepped flowing tunic robes
+  addVoxelBox(root, 3.4, 3.4, 2.4, 0, 12.3, 0, soapstone);
+  addVoxelBox(root, 3.6, 3.2, 2.2, 0, 15.4, 0, soapstone);
+  addVoxelBox(root, 3.8, 2.8, 2.0, 0, 18.2, 0, soapstone);
+  // Robe central vertical pleats
+  addVoxelBox(root, 0.8, 7.5, 0.4, 0, 15.0, 1.1, soapDark);
+  // Broad heroic shoulders
+  addVoxelBox(root, 4.8, 2.0, 1.8, 0, 20.4, 0, soapstone);
 
-  // World-Famous Outstretched Cross Arms (spanned across X axis)
-  addVoxelBox(root, 11.0, 0.9, 0.9, 0, 13.6, 0, soapstone);
-  // Flowing robe drapes hanging under the arms
-  addVoxelBox(root, 2.2, 1.4, 0.9, -2.6, 12.6, 0, soapstone);
-  addVoxelBox(root, 2.2, 1.4, 0.9,  2.6, 12.6, 0, soapstone);
-  // Outstretched hands blessing the city
-  addVoxelBox(root, 0.9, 0.7, 0.8, -5.8, 13.6, 0, soapstone);
-  addVoxelBox(root, 0.9, 0.7, 0.8,  5.8, 13.6, 0, soapstone);
+  // 4. WORLD-FAMOUS OUTSTRETCHED CROSS ARMS (17.5 units wide span!)
+  // Main horizontal arm span beam
+  addVoxelBox(root, 17.5, 1.4, 1.2, 0, 20.8, 0, soapstone);
+  // Flowing robe sleeve drapes beneath the arms
+  addVoxelBox(root, 3.8, 2.2, 1.1, -4.2, 19.2, 0, soapstone);
+  addVoxelBox(root, 3.8, 2.2, 1.1,  4.2, 19.2, 0, soapstone);
+  addVoxelBox(root, 2.0, 1.4, 1.0, -6.8, 19.6, 0, soapDark);
+  addVoxelBox(root, 2.0, 1.4, 1.0,  6.8, 19.6, 0, soapDark);
+  // Outstretched hands blessing the city & bay
+  addVoxelBox(root, 1.4, 1.0, 1.1, -9.2, 20.8, 0, soapstone);
+  addVoxelBox(root, 1.4, 1.0, 1.1,  9.2, 20.8, 0, soapstone);
 
-  // Head and Serene Face
-  addVoxelBox(root, 1.2, 1.5, 1.1, 0, 14.8, 0, soapstone);
-  addVoxelBox(root, 1.3, 0.7, 1.2, 0, 15.2, -0.1, 0xe2e8f0);
+  // 5. SERENE HEAD, BEARD & DIGNIFIED FACE (Height 21.4 to 23.6)
+  addVoxelBox(root, 1.8, 2.0, 1.6, 0, 22.2, 0, soapstone);
+  // Hair & facial tilt slightly forward/downward
+  addVoxelBox(root, 2.0, 1.0, 1.8, 0, 22.8, -0.15, soapDark);
+  addVoxelBox(root, 1.2, 0.8, 0.4, 0, 21.6, 0.8, soapstone);
 
-  // Radiant Golden Halo at Summit
-  addVoxelBox(root, 0.9, 0.25, 0.9, 0, 15.8, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
+  // 6. RADIANT GOLDEN HALO (Height 23.6 to 24.3)
+  addVoxelBox(root, 1.6, 0.35, 1.6, 0, 23.8, 0, haloGold, { emissive: haloGold, emissiveIntensity: 2.8 });
 
   parent.add(root);
   return root;
