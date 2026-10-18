@@ -11,7 +11,7 @@
 ## 📖 Executive Summary
 **Midnight Delivery** is a high-octane 3D arcade voxel delivery runner developed for Myanmar's **Digit7 competition**. Players pilot customizable delivery rigs across global metropolitan highways (featuring **Yangon**, Tokyo, Chinatown, Little India, and Pastel Metro), dodging traffic hazards, navigating pedestrian crosswalks, and slinging tiered meme parcels to quirky roadside voxel residents.
 
-The game is built as a self-contained, zero-dependency, single-file HTML5 web application (`midnight_delivery.html`) utilizing Three.js and procedural Web Audio chiptune synthesis.
+The game is a modular static HTML5 application utilizing Three.js and procedural Web Audio chiptune synthesis. `index.html` and `midnight_delivery.html` are identical entry points; gameplay lives in the shared `scripts/` files.
 
 ---
 
@@ -30,6 +30,16 @@ npx serve .
 ```
 Then visit: **`http://localhost:8000/midnight_delivery.html`**
 
+`http://localhost:8000/` opens the same game. Keep `index.html` and `midnight_delivery.html` identical; both load the active code from `scripts/` and styles from `styles/`.
+
+Three.js r128 is bundled locally in `scripts/vendor/` with its license. Fonts are optional and never block startup. The ordered deferred scripts initialize after the DOM is parsed; `scripts/startup.js` registers error reporting and an eight-second loader watchdog before dependencies load. Optional visual-helper failures are logged without blocking the menu. Critical failures dismiss the loader and show a retry screen rather than pretending the game is playable. Startup script versions must stay synchronized between both entry points.
+
+Utility styles are bundled in `styles/utilities.css`, so layout and SVG sizing do not require the Tailwind CDN. After changing utility classes in HTML or JavaScript, rebuild the stylesheet from the project directory:
+
+```powershell
+npx --yes --package tailwindcss@3.4.17 tailwindcss -i styles/utilities.input.css -o styles/utilities.css --content "./*.html,./scripts/*.js" --minify
+```
+
 ---
 
 ## 🎮 Gameplay & Controls
@@ -37,7 +47,7 @@ Then visit: **`http://localhost:8000/midnight_delivery.html`**
 | Action | Desktop Keyboard | Mobile / Touch |
 | :--- | :--- | :--- |
 | **Steer / Switch Lanes** | `A` / `D` or `←` / `→` Arrow Keys | Swipe Left / Right on road |
-| **Deliver Parcel** | Drag parcel slot & release left or right | Touch & drag parcel card from dock to roadside target |
+| **Deliver Parcel** | Left slot: `Q` / `1`; middle: `W` / `2`; right: `E` / `3`, or click a card | Tap a parcel card once; drag aiming is also supported |
 | **⚡ Sweet-Spot Perfect Drop** | Release parcel when roadside ring shrinks to center | Release in golden pulsing zone for 2x pts & +10 coins |
 | **🔥 Traffic Near-Miss** | Pass close in adjacent lane or dodge at last second | Close-pass traffic to build combo & trigger speed lines |
 | **Slow-Mo Aiming** | Hold parcel while dragging | Hold parcel while dragging |
@@ -47,6 +57,19 @@ Then visit: **`http://localhost:8000/midnight_delivery.html`**
 ---
 
 ## 🗺️ Codebase Architecture & System Map
+
+Residents lock on between 40 world units ahead and 12 units behind the van. Their ground ring and parcel badge show the matching dock key. Exact orders earn x2 points and coins before additional modifiers; wrong items award 50% of base points and coins. Throws track the resident's moving hands, and a resident's active flight completes before their building is recycled.
+
+### Signature Mechanics — Phase 1
+
+- Each shift starts with three physical roof crates. Every throw consumes one; capacity is six. Q/W/E choose the parcel type, not an unlimited inventory.
+- Drive through the glowing green lane marked `SUPPLY / +2 CRATES` to reload. Empty cargo prevents throws until another depot is collected.
+- Delivery scores use the stack size at launch: one crate gives x1.0, three x1.8, and six x3.0. The small upper-right cargo readout shows stock, multiplier, and sway danger.
+- Rapid opposite lane changes destabilize tall stacks. When the sway meter fills, the top crate tumbles off. Smooth steering lets the stack settle.
+- Orange `LOW / MAX N CRATES` gantries shear off cargo above their clearance. The green `HIGH / CLEARANCE` lane preserves a full stack. Crossing is checked against the van's physical position, including movement between lanes.
+- Restarting clears road gates, fallen cargo, and sway state. Crate geometry, materials, and signs are shared; six fallen-crate objects are reused.
+
+Phases 2 and 3 remain planned: blackout/headlight repair and SOS flares, followed by Shadow Express rivals and express/safe route forks.
 
 The project is structured into the official **Digit7 Jam Modular Architecture** with shared global scope:
 
@@ -58,8 +81,9 @@ The project is structured into the official **Digit7 Jam Modular Architecture** 
 │   ├── audio.js               : SoundSystem Web Audio synth with iOS/Safari try/catch compatibility (~300 lines)
 │   ├── data.js                : Registries (PARCEL_TYPES, CHARACTER_TYPES, PLAYABLE_VANS, CITY_THEMES, gameState) (~475 lines)
 │   ├── voxels.js              : Three.js Scene, Camera, Lights, and procedural Voxel Geometry builders (~1,520 lines)
+│   ├── cargo.js               : Roof cargo, sway physics, supply depots, overpasses, and pooled fallen crates
 │   └── game.js                : Showroom Garage, UI handlers, Traffic, Crosswalks, Controls, and Game Loop (~2,520 lines)
-└── midnight_delivery.html     : Single-file source backup (preserved)
+└── midnight_delivery.html     : Identical alternate entry point using the same scripts and styles
 ```
 
 ---

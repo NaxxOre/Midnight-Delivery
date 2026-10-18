@@ -16,6 +16,7 @@
     }
 
     const unitBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const trafficBlinkerMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
     function addVoxelBox(parent, sx, sy, sz, px, py, pz, colorHex, opts = {}) {
       const mesh = new THREE.Mesh(unitBoxGeo, getMat(colorHex, opts));
       mesh.scale.set(sx, sy, sz);
@@ -24,6 +25,29 @@
       mesh.receiveShadow = true;
       parent.add(mesh);
       return mesh;
+    }
+
+    function batchStaticVoxelBoxes(group) {
+      const materialGroups = new Map();
+      group.children.forEach(child => {
+        if (!child.isMesh || child.geometry !== unitBoxGeo || child.children.length > 0) return;
+        if (!materialGroups.has(child.material)) materialGroups.set(child.material, []);
+        materialGroups.get(child.material).push(child);
+      });
+      materialGroups.forEach((meshes, material) => {
+        if (meshes.length < 2) return;
+        const batch = new THREE.InstancedMesh(unitBoxGeo, material, meshes.length);
+        batch.castShadow = true;
+        batch.receiveShadow = true;
+        batch.frustumCulled = false;
+        meshes.forEach((mesh, index) => {
+          mesh.updateMatrix();
+          batch.setMatrixAt(index, mesh.matrix);
+          group.remove(mesh);
+        });
+        batch.instanceMatrix.needsUpdate = true;
+        group.add(batch);
+      });
     }
 
     // Native Script 3D Signboard Generator for Authentic Local Shops & Stalls
@@ -601,6 +625,9 @@
       iconRenderer.dispose();
     }
 
+    const gateSignGeo = new THREE.BoxGeometry(12.6, 2.4, 0.45);
+    const gateSignMatCache = {};
+
     function createCityWelcomeGate(cityTheme) {
       const group = new THREE.Group();
       const pillarX = 8.8;
@@ -621,24 +648,26 @@
         addVoxelBox(group, 0.75, 0.95, 0.75, lx, 8.3, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.95 });
       });
 
-      const signCanvas = document.createElement('canvas');
-      signCanvas.width = 512;
-      signCanvas.height = 128;
-      const ctx = signCanvas.getContext('2d');
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 512, 128);
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(6, 6, 500, 116);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(cityTheme.banner, 256, 64);
+      if (!gateSignMatCache[cityTheme.id]) {
+        const signCanvas = document.createElement('canvas');
+        signCanvas.width = 512;
+        signCanvas.height = 128;
+        const ctx = signCanvas.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 512, 128);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(6, 6, 500, 116);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cityTheme.banner, 256, 64);
 
-      const signTex = new THREE.CanvasTexture(signCanvas);
-      const signMat = new THREE.MeshBasicMaterial({ map: signTex });
-      const signMesh = new THREE.Mesh(new THREE.BoxGeometry(12.6, 2.4, 0.45), signMat);
+        const signTex = new THREE.CanvasTexture(signCanvas);
+        gateSignMatCache[cityTheme.id] = new THREE.MeshBasicMaterial({ map: signTex });
+      }
+      const signMesh = new THREE.Mesh(gateSignGeo, gateSignMatCache[cityTheme.id]);
       signMesh.position.set(0, 9.8, 0.95);
       group.add(signMesh);
 
@@ -991,6 +1020,10 @@
     function replaceActivePlayerVan(vanId) {
       gameState.equippedVanId = vanId;
       if (playerVan) {
+        if (playerVan.userData.immortalAura) {
+          playerVan.userData.immortalAura.geometry.dispose();
+          playerVan.userData.immortalAura.material.dispose();
+        }
         scene.remove(playerVan);
       }
       playerVan = createPlayableVanMesh(vanId, true);
@@ -999,6 +1032,57 @@
       if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = isLightsOn;
       if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = isLightsOn;
       scene.add(playerVan);
+      playerVan.add(overdriveAuraMesh);
+      playerVan.add(shieldBumperMesh);
+      attachRoofCargoToVan(playerVan);
+    }
+
+    function createCargoCrateMesh() {
+      const crate = new THREE.Group();
+      addVoxelBox(crate, 1.05, CARGO_CONFIG.crateHeight, 1.05, 0, 0, 0, 0xc58b4a);
+      addVoxelBox(crate, 0.14, CARGO_CONFIG.crateHeight + 0.02, 1.07, 0, 0, 0, 0xffedba);
+      addVoxelBox(crate, 1.07, CARGO_CONFIG.crateHeight + 0.02, 0.14, 0, 0, 0, 0xffedba);
+      addVoxelBox(crate, 0.28, 0.22, 0.02, 0.27, 0.02, 0.54, 0xffffff);
+      return crate;
+    }
+
+    function createSupplyDepotMesh(laneIndex) {
+      const depot = new THREE.Group();
+      const laneX = LANES[laneIndex];
+      const glow = { emissive: 0x22c55e, emissiveIntensity: 0.9 };
+      for (const side of [-1, 1]) {
+        addVoxelBox(depot, 0.24, 9.2, 0.5, laneX + side * 1.65, 4.6, 0, 0x22c55e, glow);
+      }
+      addVoxelBox(depot, 3.55, 0.35, 0.6, laneX, 9.1, 0, 0x22c55e, glow);
+      addVoxelBox(depot, 3.15, 0.04, 4.0, laneX, 0.06, 0, 0x22c55e, glow);
+      const sign = createNativeSignboardMesh('SUPPLY', '+2 CRATES', '#064e3b', '#86efac', 3.2, 1.1, 0.2);
+      sign.position.set(laneX, 9.9, 0.4);
+      depot.add(sign);
+      return depot;
+    }
+
+    function createCargoOverpassMesh(safeLaneIndex, rackHeight) {
+      const bridge = new THREE.Group();
+      const clearances = LANES.map((laneX, laneIndex) => {
+        const allowedCrates = laneIndex === safeLaneIndex ? CARGO_CONFIG.capacity : 1 + laneIndex % 3;
+        const clearance = rackHeight + 0.18 + allowedCrates * CARGO_CONFIG.spacing;
+        const safe = laneIndex === safeLaneIndex;
+        const color = safe ? 0x22c55e : 0xf97316;
+        const glow = { emissive: color, emissiveIntensity: 0.65 };
+        for (const side of [-1, 1]) {
+          addVoxelBox(bridge, 0.18, safe ? 9 : clearance, 0.55, laneX + side * 1.7, (safe ? 9 : clearance) / 2, 0, 0x475569);
+        }
+        if (!safe) {
+          addVoxelBox(bridge, 3.4, 0.3, 1.0, laneX, clearance + 0.15, 0, color, glow);
+          addVoxelBox(bridge, 3.4, 0.06, 1.04, laneX, clearance, 0, 0xfde047, { emissive: 0xfde047, emissiveIntensity: 0.8 });
+        }
+        const sign = createNativeSignboardMesh(safe ? 'HIGH' : 'LOW', safe ? 'CLEARANCE' : `MAX ${allowedCrates} CRATES`, safe ? '#064e3b' : '#431407', safe ? '#86efac' : '#fed7aa', 3.1, 1.0, 0.2);
+        sign.position.set(laneX, safe ? 9.3 : clearance + 0.95, 0.65);
+        bridge.add(sign);
+        return safe ? Infinity : clearance;
+      });
+      bridge.userData.clearances = clearances;
+      return bridge;
     }
 
     function createTrafficVehicle(type) {
@@ -1231,7 +1315,9 @@
     function rebuildApartmentVisuals(apt, cityTheme, index) {
       apt.currentThemeId = cityTheme.id;
       while (apt.archGroup.children.length > 0) {
-        apt.archGroup.remove(apt.archGroup.children[0]);
+        const child = apt.archGroup.children[0];
+        if (child.isInstancedMesh) child.dispose();
+        apt.archGroup.remove(child);
       }
       apt.windowMeshes = [];
 
@@ -1420,6 +1506,7 @@
       addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
       const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
       addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+      batchStaticVoxelBoxes(apt.archGroup);
     }
 
     function createApartmentBuilding(side, zPos, index) {
@@ -1484,6 +1571,17 @@
         delivered: false,
         orderId: 0
       };
+
+      cloudEl.addEventListener('click', event => {
+        if (!event.target.closest('.quick-throw-cloud-btn') || !isResidentInThrowRange(aptData)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const matchingSlot = gameState.handSlots.indexOf(aptData.wantedType);
+        if (matchingSlot !== -1) {
+          gameState.lockedTargetApt = aptData;
+          throwFromSlot(matchingSlot);
+        }
+      });
 
       rebuildApartmentVisuals(aptData, CITY_THEMES[gameState.cityIndex], index);
       configureApartmentCustomer(aptData, zPos < -42);
@@ -1567,7 +1665,8 @@
         apt.customerSlot.add(crown);
       }
 
-      apt.ringGroup.visible = true;
+      apt.ringGroup.visible = false;
+      ensureParcelAvailableInHand(apt.wantedType);
     }
 
     function transformAllApartmentsToCity(cityTheme) {

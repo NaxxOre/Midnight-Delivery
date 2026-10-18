@@ -4,6 +4,7 @@
     let playerVan = createPlayerDeliveryVan();
     playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
     scene.add(playerVan);
+    attachRoofCargoToVan(playerVan);
 
     // Neon Overdrive Aura Shell
     const overdriveAuraMesh = new THREE.Mesh(
@@ -359,11 +360,13 @@
       let updated = false;
       gameState.shiftContracts.forEach((c) => {
         if (c.type === type && !c.completed) {
+          const previousProgress = c.current;
           if (isMaxCheck) {
-            c.current = Math.max(c.current, amount);
+            c.current = Math.min(c.target, Math.max(c.current, amount));
           } else {
             c.current = Math.min(c.target, c.current + amount);
           }
+          if (c.current === previousProgress) return;
           if (c.current >= c.target) {
             c.completed = true;
             c.claimed = true;
@@ -371,7 +374,6 @@
             gameState.runCoinsEarned += c.rewardCoins;
             soundFX.playCityGateChime();
             showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), `MISSION COMPLETE! +${c.rewardCoins}`, 'combat-text-gold');
-            showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 4.4, 0)), `+${c.rewardXP} COURIER XP`, 'text-cyan-300 font-extrabold');
             addCourierXP(c.rewardXP);
           }
           updated = true;
@@ -667,6 +669,7 @@
       if (enable) {
         gameState.mode = 'home';
         endParcelDrag();
+        clearHudFeedback();
         homeScreen.classList.remove('hidden');
         homeScreen.classList.add('flex');
         uiLayer.classList.add('hidden');
@@ -745,14 +748,8 @@
     });
 
     function triggerDiscoveryToast(title, iconSrc) {
-      const toast = document.getElementById('unlock-toast');
-      document.getElementById('unlock-toast-name').textContent = title;
-      document.getElementById('unlock-toast-img').src = iconSrc || '';
       document.getElementById('hall-new-dot').classList.remove('hidden');
-      toast.classList.remove('hidden', 'city-toast-anim');
-      void toast.offsetWidth;
-      toast.classList.add('city-toast-anim');
-      setTimeout(() => toast.classList.add('hidden'), 3100);
+      showActionToast(`Unlocked: ${title}`, 'info');
     }
 
     function tryRandomDiscoveryOnDelivery(deliveredParcelId, customerCharId) {
@@ -937,7 +934,7 @@
 
     function pickSmartParcelType() {
       const upcomingOrders = apartments
-        .filter(a => a.hasOrder && !a.delivered && (gameState.vanZ - a.group.position.z) >= -4)
+        .filter(a => a.hasOrder && !a.delivered && getResidentRelativeZ(a) <= THROW_RANGE_MAX)
         .sort((a, b) => (gameState.vanZ - a.group.position.z) - (gameState.vanZ - b.group.position.z));
 
       for (const apt of upcomingOrders) {
@@ -960,170 +957,144 @@
       return null;
     }
 
+    const SLOT_KEYS = ['Q', 'W', 'E'];
+    const THROW_RANGE_MIN = -40;
+    const THROW_RANGE_MAX = 12;
+    const orderBadgePosition = new THREE.Vector3();
+    const aimStartPosition = new THREE.Vector3();
+    const aimEndPosition = new THREE.Vector3();
+
+    function getResidentRelativeZ(apt) {
+      return apt.group.position.z + apt.customerSlot.position.z - playerVan.position.z;
+    }
+
+    function isResidentInThrowRange(apt) {
+      if (!apt || !apt.hasOrder || apt.delivered || !apt.charMesh) return false;
+      const relativeZ = getResidentRelativeZ(apt);
+      return Number.isFinite(relativeZ) && relativeZ >= THROW_RANGE_MIN && relativeZ <= THROW_RANGE_MAX;
+    }
+
+    function getResidentHandPosition(apt, position) {
+      position.set(0, 1.2 + (apt.charMesh ? apt.charMesh.position.y : 0), 0);
+      return apt.customerSlot.localToWorld(position);
+    }
+
     function ensureParcelAvailableInHand(wantedType) {
-      if (!gameState.handSlots.includes(wantedType)) {
-        const candidates = [0, 1, 2].filter(i => i !== gameState.selectedSlotIndex);
-        const replaceIdx = candidates.length > 0
-          ? candidates[Math.floor(Math.random() * candidates.length)]
-          : 1;
-        gameState.handSlots[replaceIdx] = wantedType;
-        if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
-        gameState.handModifiers[replaceIdx] = rollParcelModifier();
-        renderBottomParcelHandUI(replaceIdx);
-      }
+      if (gameState.handSlots.includes(wantedType)) return;
+      const protectedTypes = new Set();
+      apartments.forEach(apt => {
+        const relativeZ = getResidentRelativeZ(apt);
+        if (apt.hasOrder && !apt.delivered && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) {
+          protectedTypes.add(apt.wantedType);
+        }
+      });
+      const candidates = Array.from(gameState.handSlots.keys()).filter(index =>
+        !protectedTypes.has(gameState.handSlots[index]) &&
+        !(gameState.dragging && gameState.dragSlotIndex === index)
+      );
+      const replaceIdx = candidates.find(index => index !== gameState.selectedSlotIndex) ?? candidates[0];
+      if (replaceIdx === undefined) return;
+      gameState.handSlots[replaceIdx] = wantedType;
+      if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
+      gameState.handModifiers[replaceIdx] = rollParcelModifier();
+      renderBottomParcelHandUI(replaceIdx);
     }
 
     function refillHandSlot(slotIndex) {
       gameState.handSlots[slotIndex] = pickSmartParcelType();
       if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
       gameState.handModifiers[slotIndex] = rollParcelModifier();
+      apartments.forEach(apt => {
+        if (apt.hasOrder && !apt.delivered && getResidentRelativeZ(apt) >= -95 &&
+            getResidentRelativeZ(apt) <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
+      });
       renderBottomParcelHandUI(slotIndex);
-      selectHandSlot(gameState.selectedSlotIndex);
     }
 
     function renderBottomParcelHandUI(animatedSlotIdx = -1) {
       const container = document.getElementById('parcel-hand-horizontal');
       if (!container) return;
 
-      const slotKeyLabels = ['[Q / 1]', '[W / 2]', '[E / 3]'];
-
-      // If cards already exist, update them in place to prevent DOM recreation and pointer listener loss
-      const existingCards = container.querySelectorAll('.parcel-card-slot');
-      if (existingCards.length === 3) {
-        gameState.handSlots.forEach((parcelTypeId, slotIdx) => {
-          const p = PARCEL_TYPES[parcelTypeId];
-          const card = existingCards[slotIdx];
-          card.className = `parcel-card-slot ${p.tierClass} w-[62px] sm:w-[80px] select-none cursor-pointer transition-transform ${
-            slotIdx === animatedSlotIdx ? 'deal-anim' : ''
-          }`;
-
-          const mod = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
-          let modifierBadgeHTML = '';
-          let modifierTrackHTML = '';
-          if (mod && mod.type === 'hot') {
-            const pct = Math.max(0, Math.min(100, (mod.timer / mod.maxTime) * 100));
-            modifierBadgeHTML = `<span class="hot-timer-text px-1 py-0.2 rounded-full bg-gradient-to-r from-red-500 to-amber-400 text-slate-950 font-black text-[5.5px] sm:text-[6.5px] shadow animate-pulse">🔥 HOT ${mod.timer.toFixed(1)}s</span>`;
-            modifierTrackHTML = `
-              <div class="hot-countdown-track">
-                <div class="hot-countdown-fill" style="width: ${pct}%"></div>
-              </div>
-            `;
-          } else if (mod && mod.type === 'fragile') {
-            if (mod.cracked) {
-              modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-cracked text-[5.5px] sm:text-[6.5px]">💔 CRACKED</span>`;
-            } else {
-              modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-fragile text-[5.5px] sm:text-[6.5px] animate-pulse">⚠️ FRAGILE</span>`;
-            }
-          }
-
-          card.innerHTML = `
-            <div class="parcel-card-inner py-1 px-1 sm:px-1.5 flex flex-col items-center justify-center relative">
-              <div class="w-full flex items-center justify-between mb-0.5 pointer-events-none">
-                <span class="px-1.5 py-0.2 rounded bg-slate-950/95 text-amber-300 border border-amber-400 font-black text-[7px] sm:text-[8.5px] arcade-font shadow">
-                  ${slotKeyLabels[slotIdx]}
-                </span>
-                <span class="px-1 py-0.2 rounded-full ${p.badgeBg} font-extrabold text-[6px] sm:text-[7px] shadow">
-                  +${p.pts}
-                </span>
-              </div>
-              ${modifierBadgeHTML ? `<div class="mb-0.5 pointer-events-none">${modifierBadgeHTML}</div>` : ''}
-              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-950/90 border border-slate-700/80 flex items-center justify-center p-0.5 my-0.5 shadow-inner pointer-events-none">
-                <img src="${parcelIconDataURLs[p.id]}" alt="${p.name}" class="w-full h-full object-contain pointer-events-none" />
-              </div>
-              <span class="text-[6px] sm:text-[7.5px] font-extrabold text-white uppercase tracking-tight leading-none pointer-events-none truncate max-w-full mt-0.5">${p.short}</span>
-              ${modifierTrackHTML}
-            </div>
-          `;
-        });
-        return;
-      }
-
-      container.innerHTML = '';
-
       gameState.handSlots.forEach((parcelTypeId, slotIdx) => {
-        const p = PARCEL_TYPES[parcelTypeId];
-        const card = document.createElement('div');
-        card.dataset.slot = slotIdx;
-        card.className = `parcel-card-slot ${p.tierClass} w-[62px] sm:w-[80px] select-none cursor-pointer transition-transform ${
-          slotIdx === animatedSlotIdx ? 'deal-anim' : ''
-        }`;
+        const parcel = PARCEL_TYPES[parcelTypeId];
+        let card = container.children[slotIdx];
+        if (!card) {
+          card = document.createElement('div');
+          card.dataset.slot = slotIdx;
+          card.setAttribute('role', 'button');
+          card.tabIndex = 0;
+          let pointerId = null;
+          let pointerDownX = 0;
+          let pointerDownY = 0;
 
-        const mod = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
-        let modifierBadgeHTML = '';
-        let modifierTrackHTML = '';
-        if (mod && mod.type === 'hot') {
-          const pct = Math.max(0, Math.min(100, (mod.timer / mod.maxTime) * 100));
-          modifierBadgeHTML = `<span class="hot-timer-text px-1 py-0.2 rounded-full bg-gradient-to-r from-red-500 to-amber-400 text-slate-950 font-black text-[5.5px] sm:text-[6.5px] shadow animate-pulse">🔥 HOT ${mod.timer.toFixed(1)}s</span>`;
-          modifierTrackHTML = `
-            <div class="hot-countdown-track">
-              <div class="hot-countdown-fill" style="width: ${pct}%"></div>
-            </div>
-          `;
-        } else if (mod && mod.type === 'fragile') {
-          if (mod.cracked) {
-            modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-cracked text-[5.5px] sm:text-[6.5px]">💔 CRACKED</span>`;
-          } else {
-            modifierBadgeHTML = `<span class="px-1 py-0.2 rounded-full badge-fragile text-[5.5px] sm:text-[6.5px] animate-pulse">⚠️ FRAGILE</span>`;
-          }
-        }
-
-        card.innerHTML = `
-          <div class="parcel-card-inner py-1 px-1 sm:px-1.5 flex flex-col items-center justify-center relative">
-            <div class="w-full flex items-center justify-between mb-0.5 pointer-events-none">
-              <span class="px-1.5 py-0.2 rounded bg-slate-950/95 text-amber-300 border border-amber-400 font-black text-[7px] sm:text-[8.5px] arcade-font shadow">
-                ${slotKeyLabels[slotIdx]}
-              </span>
-              <span class="px-1 py-0.2 rounded-full ${p.badgeBg} font-extrabold text-[6px] sm:text-[7px] shadow">
-                +${p.pts}
-              </span>
-            </div>
-            ${modifierBadgeHTML ? `<div class="mb-0.5 pointer-events-none">${modifierBadgeHTML}</div>` : ''}
-            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-950/90 border border-slate-700/80 flex items-center justify-center p-0.5 my-0.5 shadow-inner pointer-events-none">
-              <img src="${parcelIconDataURLs[p.id]}" alt="${p.name}" class="w-full h-full object-contain pointer-events-none" />
-            </div>
-            <span class="text-[6px] sm:text-[7.5px] font-extrabold text-white uppercase tracking-tight leading-none pointer-events-none truncate max-w-full mt-0.5">${p.short}</span>
-            ${modifierTrackHTML}
-          </div>
-        `;
-
-        let pointerDownX = 0;
-        let pointerDownY = 0;
-        let isPotentialDrag = false;
-
-        card.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          soundFX.init();
-          pointerDownX = e.clientX;
-          pointerDownY = e.clientY;
-          isPotentialDrag = true;
-          selectHandSlot(slotIdx);
-        });
-
-        card.addEventListener('pointermove', (e) => {
-          if (isPotentialDrag && !gameState.dragging) {
-            const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
-            if (dist > 14) {
-              startParcelDrag(slotIdx, e.clientX, e.clientY, e.pointerId);
+          card.addEventListener('pointerdown', event => {
+            if (gameState.mode !== 'playing' || !event.isPrimary || event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            soundFX.init();
+            pointerId = event.pointerId;
+            pointerDownX = event.clientX;
+            pointerDownY = event.clientY;
+            card.setPointerCapture(pointerId);
+            selectHandSlot(slotIdx);
+          });
+          card.addEventListener('pointermove', event => {
+            if (event.pointerId !== pointerId || gameState.dragging) return;
+            if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 14) {
+              startParcelDrag(slotIdx, event.clientX, event.clientY, pointerId);
             }
-          }
-        });
-
-        card.addEventListener('pointerup', (e) => {
-          if (isPotentialDrag) {
-            isPotentialDrag = false;
+          });
+          card.addEventListener('pointerup', event => {
+            if (event.pointerId !== pointerId) return;
+            pointerId = null;
             if (!gameState.dragging) {
-              // Single-tap / click! Immediately throw from this slot!
+              event.stopPropagation();
               throwFromSlot(slotIdx);
             }
-          }
-        });
+          });
+          card.addEventListener('pointercancel', () => {
+            pointerId = null;
+            if (gameState.dragging) gameState.dragCancel = true;
+          });
+          card.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.detail === 0) throwFromSlot(slotIdx);
+          });
+          card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!event.repeat) throwFromSlot(slotIdx);
+            }
+          });
+          container.appendChild(card);
+        }
 
-        card.addEventListener('pointercancel', () => {
-          isPotentialDrag = false;
-        });
-
-        container.appendChild(card);
+        const modifier = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
+        const renderKey = `${parcelTypeId}:${modifier ? modifier.type : ''}:${!!(modifier && modifier.cracked)}`;
+        card.setAttribute('aria-label', `Throw ${parcel.name}, ${SLOT_KEYS[slotIdx]} or ${slotIdx + 1}`);
+        card.setAttribute('aria-keyshortcuts', `${SLOT_KEYS[slotIdx]} ${slotIdx + 1}`);
+        card.setAttribute('aria-disabled', gameState.roofCrates <= 0 ? 'true' : 'false');
+        if (card.dataset.renderKey === renderKey) return;
+        card.dataset.renderKey = renderKey;
+        const modifierClass = modifier ? `is-${modifier.type}${modifier.cracked ? ' is-cracked' : ''}` : '';
+        card.className = `parcel-card-slot ${parcel.tierClass} ${modifierClass}`;
+        let modifierBadge = '';
+        let modifierTrack = '';
+        if (modifier && modifier.type === 'hot') {
+          modifierBadge = '<span class="parcel-status" title="Hot parcel">🔥</span>';
+          modifierTrack = `<div class="hot-countdown-track"><div class="hot-countdown-fill" style="width: ${Math.max(0, modifier.timer / modifier.maxTime * 100)}%"></div></div>`;
+        } else if (modifier && modifier.type === 'fragile') {
+          modifierBadge = `<span class="parcel-status" title="${modifier.cracked ? 'Cracked parcel' : 'Fragile parcel'}">${modifier.cracked ? '💔' : '🍷'}</span>`;
+        }
+        card.innerHTML = `
+          <div class="parcel-card-inner">
+            <span class="parcel-key-badge parcel-dock-key">${SLOT_KEYS[slotIdx]}</span>
+            <img class="parcel-dock-icon" src="${parcelIconDataURLs[parcel.id]}" alt="${parcel.name}" />
+            ${modifierBadge}
+            ${modifierTrack}
+          </div>`;
       });
     }
 
@@ -1169,35 +1140,7 @@
     }
 
     function findBestTargetApartmentOnSide(side) {
-      let bestApt = null;
-      let bestScore = Infinity;
-      apartments.forEach((apt) => {
-        if (apt.side === side && apt.hasOrder && !apt.delivered) {
-          const dz = apt.group.position.z - gameState.vanZ;
-          if (dz < 14 && dz > -135) {
-            const dist = Math.abs(dz + 18);
-            if (dist < bestScore) {
-              bestScore = dist;
-              bestApt = apt;
-            }
-          }
-        }
-      });
-      if (!bestApt) {
-        apartments.forEach((apt) => {
-          if (apt.side === side) {
-            const dz = apt.group.position.z - gameState.vanZ;
-            if (dz < 10 && dz > -60) {
-              const dist = Math.abs(dz + 16);
-              if (dist < bestScore) {
-                bestScore = dist;
-                bestApt = apt;
-              }
-            }
-          }
-        });
-      }
-      return bestApt;
+      return findTargetApartment(side);
     }
 
     function updateProjectileArcVisuals(now = performance.now()) {
@@ -1224,12 +1167,8 @@
       }
 
       gameState.targetAptLock = targetApt;
-      const startPos = new THREE.Vector3(playerVan.position.x, 2.9, playerVan.position.z);
-      const endPos = new THREE.Vector3(
-        targetApt.group.position.x + targetApt.porchX,
-        1.45,
-        targetApt.group.position.z + 1.2
-      );
+      const startPos = aimStartPosition.set(playerVan.position.x, 2.9, playerVan.position.z);
+      const endPos = getResidentHandPosition(targetApt, aimEndPosition);
 
       const isMatch = targetApt && targetApt.hasOrder && targetApt.wantedType === parcelId;
       const arcColor = isMatch ? 0x00f5d4 : (isAutoLock ? 0xfacc15 : 0xf43f5e);
@@ -1238,7 +1177,7 @@
       for (let i = 0; i < ARC_POINTS; i++) {
         const t = i / (ARC_POINTS - 1);
         const px = THREE.MathUtils.lerp(startPos.x, endPos.x, t);
-        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 5.8;
+        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 6.2;
         const pz = THREE.MathUtils.lerp(startPos.z, endPos.z, t);
         posAttr.setXYZ(i, px, py, pz);
       }
@@ -1557,12 +1496,21 @@
     }
 
     function throwParcelFromHandSlot(slotIndex, apt, isMagneticHoming = true) {
-      if (gameState.mode !== 'playing' || !apt) return;
+      if (gameState.mode !== 'playing' || !isResidentInThrowRange(apt) ||
+          !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
+      if (gameState.roofCrates <= 0) {
+        showActionToast('Cargo empty • drive through a green supply arch', 'info');
+        return false;
+      }
+      const pendingCount = flyingParcels.filter(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId).length;
+      const remainingDrops = apt.isVip ? 2 - (apt.vipDelivered || 0) : 1;
+      if (pendingCount >= remainingDrops) return false;
       const parcelTypeId = gameState.handSlots[slotIndex];
+      if (!PARCEL_TYPES[parcelTypeId]) return false;
       soundFX.playThrow();
 
       const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
-      const startPos = new THREE.Vector3(playerVan.position.x, 2.8, playerVan.position.z);
+      const startPos = getRoofThrowPosition(new THREE.Vector3());
       mesh.position.copy(startPos);
       scene.add(mesh);
 
@@ -1589,6 +1537,9 @@
         trailDots,
         startPos,
         targetApt: apt,
+        targetOrderId: apt.orderId,
+        cargoMultiplier: getRoofScoreMultiplier(),
+        endPos: new THREE.Vector3(),
         parcelType: parcelTypeId,
         modifier: slotModifier,
         progress: 0,
@@ -1598,162 +1549,54 @@
       });
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      gameState.roofCrates--;
+      syncRoofCargo();
       refillHandSlot(slotIndex);
+      updateOrderAlertsAndBubbles();
+      return true;
+    }
+
+    function removeFlyingParcel(index) {
+      const parcel = flyingParcels[index];
+      scene.remove(parcel.mesh);
+      parcel.trailDots.forEach(dot => scene.remove(dot));
+      flyingParcels.splice(index, 1);
     }
 
     function findTargetApartment(targetSide = 'auto') {
-      const effectiveSide = targetSide === 'auto'
-        ? (playerVan.position.x < 0 ? 'left' : 'right')
-        : targetSide;
-
-      // 1. First priority: locked target if valid
-      if (targetSide === 'auto' && gameState.lockedTargetApt && !gameState.lockedTargetApt.delivered) {
-        return gameState.lockedTargetApt;
-      }
-
-      // 2. Second priority: active customer order on targetSide within comfortable throw range
-      let bestOrderApt = null;
-      let bestOrderDist = Infinity;
+      const locked = gameState.lockedTargetApt;
+      if (isResidentInThrowRange(locked) && (targetSide === 'auto' || locked.side === targetSide)) return locked;
+      let target = null;
+      let closestDistance = Infinity;
       apartments.forEach(apt => {
-        if ((targetSide === 'auto' || apt.side === targetSide) && apt.hasOrder && !apt.delivered) {
-          const dz = gameState.vanZ - apt.group.position.z;
-          if (dz >= -14 && dz <= 75) {
-            const dist = Math.abs(dz - 18);
-            if (dist < bestOrderDist) {
-              bestOrderDist = dist;
-              bestOrderApt = apt;
-            }
-          }
+        if (!isResidentInThrowRange(apt) || (targetSide !== 'auto' && apt.side !== targetSide)) return;
+        const distance = Math.abs(getResidentRelativeZ(apt) + 18);
+        if (distance < closestDistance) {
+          target = apt;
+          closestDistance = distance;
         }
       });
-      if (bestOrderApt) return bestOrderApt;
-
-      // 3. Third priority: ANY active customer order on either side within range
-      if (targetSide === 'auto') {
-        apartments.forEach(apt => {
-          if (apt.hasOrder && !apt.delivered) {
-            const dz = gameState.vanZ - apt.group.position.z;
-            if (dz >= -14 && dz <= 75) {
-              const dist = Math.abs(dz - 18);
-              if (dist < bestOrderDist) {
-                bestOrderDist = dist;
-                bestOrderApt = apt;
-              }
-            }
-          }
-        });
-        if (bestOrderApt) return bestOrderApt;
-      }
-
-      // 4. Fourth priority: closest roadside apartment ahead on effectiveSide so the throw ALWAYS launches
-      let bestNearbyApt = null;
-      let bestNearbyDist = Infinity;
-      apartments.forEach(apt => {
-        if (apt.side === effectiveSide) {
-          const dz = gameState.vanZ - apt.group.position.z;
-          if (dz >= -16 && dz <= 75) {
-            const dist = Math.abs(dz - 18);
-            if (dist < bestNearbyDist) {
-              bestNearbyDist = dist;
-              bestNearbyApt = apt;
-            }
-          }
-        }
-      });
-      if (bestNearbyApt) return bestNearbyApt;
-
-      // 5. Ultimate fallback: any apartment on effectiveSide or any apartment in scene
-      return apartments.find(a => a.side === effectiveSide) || apartments[0] || null;
+      return target;
     }
 
     function throwFromSlot(slotIndex) {
-      if (gameState.mode !== 'playing') return;
-      if (slotIndex < 0 || slotIndex >= gameState.handSlots.length) return;
-
-      const chosenParcelType = gameState.handSlots[slotIndex];
-
-      // Prioritize the in-range resident (-14 <= dz <= 75)
-      // If multiple residents are in range, prioritize the one whose requested parcel matches this slot!
-      let targetApt = null;
-      let matchingApt = null;
-      let closestOrderApt = null;
-      let bestDist = Infinity;
-
-      apartments.forEach(apt => {
-        if (apt.hasOrder && !apt.delivered) {
-          const dz = gameState.vanZ - apt.group.position.z;
-          if (dz >= -14 && dz <= 75) {
-            const dist = Math.abs(dz - 18);
-            if (apt.wantedType === chosenParcelType && !matchingApt) {
-              matchingApt = apt;
-            }
-            if (dist < bestDist) {
-              bestDist = dist;
-              closestOrderApt = apt;
-            }
-          }
-        }
-      });
-
-      targetApt = matchingApt || closestOrderApt;
-
-      // If no customer order in range, aim at nearest roadside building porch on player's side
-      if (!targetApt) {
-        const effectiveSide = playerVan.position.x < 0 ? 'left' : 'right';
-        let bestNearbyApt = null;
-        let bestNearbyDist = Infinity;
-        apartments.forEach(apt => {
-          if (apt.side === effectiveSide) {
-            const dz = gameState.vanZ - apt.group.position.z;
-            if (dz >= -16 && dz <= 75) {
-              const dist = Math.abs(dz - 18);
-              if (dist < bestNearbyDist) {
-                bestNearbyDist = dist;
-                bestNearbyApt = apt;
-              }
-            }
-          }
-        });
-        targetApt = bestNearbyApt || apartments.find(a => a.side === effectiveSide) || apartments[0] || null;
-      }
-
-      if (!targetApt) return;
-
+      if (gameState.mode !== 'playing' || !Number.isInteger(slotIndex) ||
+          slotIndex < 0 || slotIndex >= gameState.handSlots.length) return false;
+      const target = findTargetApartment();
+      if (!target) return false;
       selectHandSlot(slotIndex);
-      throwParcelFromHandSlot(slotIndex, targetApt, true);
-
-      if (gameState.tutorialActive && gameState.tutorialStep === 2) {
-        completeInteractiveTutorial();
-      }
+      const launched = throwParcelFromHandSlot(slotIndex, target);
+      if (launched && gameState.tutorialActive && gameState.tutorialStep === 2) completeInteractiveTutorial();
+      return launched;
     }
 
     function autoThrowMatchingSlot() {
       if (gameState.mode !== 'playing') return;
-
-      let bestOrderApt = null;
-      let bestDist = Infinity;
-      apartments.forEach(apt => {
-        if (apt.hasOrder && !apt.delivered) {
-          const dz = gameState.vanZ - apt.group.position.z;
-          if (dz >= -14 && dz <= 75) {
-            const dist = Math.abs(dz - 18);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestOrderApt = apt;
-            }
-          }
-        }
-      });
-
-      if (bestOrderApt) {
-        const matchIdx = gameState.handSlots.indexOf(bestOrderApt.wantedType);
-        if (matchIdx !== -1) {
-          throwFromSlot(matchIdx);
-          return;
-        }
-      }
-
-      throwFromSlot(gameState.selectedSlotIndex || 0);
+      const target = findTargetApartment();
+      if (!target) return;
+      ensureParcelAvailableInHand(target.wantedType);
+      const matchingSlot = gameState.handSlots.indexOf(target.wantedType);
+      if (matchingSlot !== -1) throwFromSlot(matchingSlot);
     }
 
     function quickThrowParcel(side = 'auto') {
@@ -1764,202 +1607,87 @@
     }
 
     function updateOrderAlertsAndBubbles() {
-      let activeOrderApt = null;
-      let closestMeters = Infinity;
       const now = performance.now();
-
-      apartments.forEach((apt) => {
+      const playing = gameState.mode === 'playing';
+      apartments.forEach(apt => {
         if (!apt.hasOrder || apt.delivered) {
           apt.cloudEl.classList.add('hidden');
-          if (apt.ringGroup) apt.ringGroup.visible = false;
-          return;
-        }
-        const dz = gameState.vanZ - apt.group.position.z;
-        const meters = Math.round(dz * 1.45);
-
-        // If the player drove past the customer without delivering, expire the order and refresh its slot in the 3-slot bar!
-        if (meters < -6) {
-          const missedType = apt.wantedType;
-          apt.hasOrder = false;
           apt.ringGroup.visible = false;
+          return;
+        }
+        const relativeZ = getResidentRelativeZ(apt);
+        const pendingDelivery = flyingParcels.some(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId);
+        if (relativeZ > THROW_RANGE_MAX && !pendingDelivery) {
+          apt.hasOrder = false;
           apt.cloudEl.classList.add('hidden');
-          const missedSlotIdx = gameState.handSlots.indexOf(missedType);
-          if (missedSlotIdx !== -1) {
-            refillHandSlot(missedSlotIdx);
-          }
+          apt.ringGroup.visible = false;
+          return;
+        }
+        if (playing && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
+        const inRange = playing && isResidentInThrowRange(apt);
+        apt.ringGroup.visible = inRange;
+        if (!inRange) {
+          apt.cloudEl.classList.add('hidden');
           return;
         }
 
-        // Dynamic Sweet-Spot Shrinking 3D Ring & Target Indicator as Player Van approaches
-        if (dz >= -6 && dz <= 75) {
-          apt.ringGroup.visible = true;
-          const sweetDist = Math.abs(dz - 18.0);
-          const isSweet = sweetDist <= 6.5;
+        const sweet = Math.abs(relativeZ + 18) <= 6.5;
+        const scale = sweet ? 1 + Math.sin(now * 0.02) * 0.16 : 1 + Math.max(0, (-relativeZ - 18) / 28);
+        apt.shrinkRing.scale.set(scale, 1, scale);
+        const ringColor = sweet ? 0xfacc15 : 0x00f5d4;
+        apt.centerMarker.material.color.setHex(ringColor);
+        apt.centerMarker.material.emissive.setHex(ringColor);
+        apt.ringBars.forEach(bar => {
+          bar.material.color.setHex(ringColor);
+          bar.material.emissive.setHex(ringColor);
+        });
 
-          if (isSweet) {
-            // Sweet-spot pulsing gold aura & target bullseye
-            const pulse = 1.0 + Math.sin(now * 0.02) * 0.16;
-            if (apt.shrinkRing) {
-              apt.shrinkRing.scale.set(pulse, 1, pulse);
-              apt.shrinkRing.visible = true;
-            }
-            if (apt.centerMarker) {
-              apt.centerMarker.material.color.setHex(0xfacc15);
-              apt.centerMarker.material.emissive.setHex(0xfacc15);
-              apt.centerMarker.material.emissiveIntensity = 1.9;
-            }
-            apt.ringBars.forEach(b => {
-              b.material.color.setHex(0xfacc15);
-              b.material.emissive.setHex(0xfacc15);
-              b.material.emissiveIntensity = 1.6;
-            });
-          } else {
-            // Approaching: dynamic shrinking ring scales down towards target pad
-            const scale = 1.0 + Math.max(0, Math.min(1.8, (dz - 18.0) / 28.0));
-            if (apt.shrinkRing) {
-              apt.shrinkRing.scale.set(scale, 1, scale);
-              apt.shrinkRing.visible = true;
-            }
-            if (apt.centerMarker) {
-              apt.centerMarker.material.color.setHex(0x00f5d4);
-              apt.centerMarker.material.emissive.setHex(0x00f5d4);
-              apt.centerMarker.material.emissiveIntensity = 0.8;
-            }
-            apt.ringBars.forEach(b => {
-              b.material.color.setHex(0x00f5d4);
-              b.material.emissive.setHex(0x00f5d4);
-              b.material.emissiveIntensity = 0.85;
-            });
-          }
+        const matchingSlot = gameState.handSlots.indexOf(apt.wantedType);
+        const parcelInfo = PARCEL_TYPES[apt.wantedType];
+        const vipStep = apt.vipDelivered || 0;
+        const renderKey = `${apt.orderId}:${apt.wantedType}:${vipStep}`;
+        if (apt.cloudEl.dataset.renderKey !== renderKey) {
+          apt.cloudEl.dataset.renderKey = renderKey;
+          apt.cloudEl.innerHTML = `
+            <div class="thought-cloud-pill resident-order-badge">
+              <img class="resident-request-icon" src="${parcelIconDataURLs[apt.wantedType]}" alt="${parcelInfo.name}" />
+              <div class="resident-order-copy">
+                <strong>${parcelInfo.short}</strong>
+                <span class="cloud-distance-badge"></span>
+                ${apt.isVip ? `<span class="vip-crown-badge">👑 VIP ${vipStep}/2</span>` : ''}
+              </div>
+              <button type="button" class="quick-throw-cloud-btn parcel-key-badge" title="Throw the requested parcel"></button>
+            </div>`;
+          apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
+          apt.cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');
         }
+        const slotKey = matchingSlot === -1 ? '' : `[${SLOT_KEYS[matchingSlot]}]`;
+        if (apt.cloudBtn.textContent !== slotKey) apt.cloudBtn.textContent = slotKey;
+        apt.cloudBtn.disabled = matchingSlot === -1;
+        apt.cloudDistBadge.textContent = `${Math.max(0, Math.round(-relativeZ * 1.45))}m • ${apt.side.toUpperCase()}`;
 
-        if (meters >= -6 && meters <= 185 && meters < closestMeters) {
-          closestMeters = meters;
-          activeOrderApt = apt;
-        } else {
-          apt.cloudEl.classList.add('hidden');
-        }
+        getResidentHandPosition(apt, orderBadgePosition);
+        orderBadgePosition.y += 2.2;
+        orderBadgePosition.project(camera);
+        const padX = Math.min(110, window.innerWidth / 2 - 8);
+        const screenX = (orderBadgePosition.x * 0.5 + 0.5) * window.innerWidth;
+        const screenY = (-orderBadgePosition.y * 0.5 + 0.5) * window.innerHeight;
+        apt.cloudEl.style.left = `${Math.max(padX, Math.min(window.innerWidth - padX, screenX))}px`;
+        apt.cloudEl.style.top = `${Math.max(110, Math.min(window.innerHeight - 180, screenY))}px`;
+        apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
       });
 
-      // Guarantee that the active approaching order's wanted item is always in one of the 3 hand slots!
-      if (activeOrderApt && !gameState.handSlots.includes(activeOrderApt.wantedType)) {
-        ensureParcelAvailableInHand(activeOrderApt.wantedType);
+      if (!isResidentInThrowRange(gameState.lockedTargetApt)) gameState.lockedTargetApt = null;
+      gameState.lockedTargetApt = playing ? findTargetApartment() : null;
+      const matchingSlot = gameState.lockedTargetApt ? gameState.handSlots.indexOf(gameState.lockedTargetApt.wantedType) : -1;
+      const cards = document.getElementById('parcel-hand-horizontal').children;
+      for (let index = 0; index < cards.length; index++) {
+        cards[index].classList.toggle('slot-matched-pulse', index === matchingSlot);
       }
-
-      // If in Tutorial Step 2 and an order is approaching, update the instruction text with the side
-      if (gameState.tutorialActive && gameState.tutorialStep === 2 && activeOrderApt && closestMeters <= 150) {
-        updateTutorialStep2Prompt(activeOrderApt);
+      if (gameState.tutorialActive && gameState.tutorialStep === 2 && gameState.lockedTargetApt) {
+        updateTutorialStep2Prompt(gameState.lockedTargetApt);
       }
-
-      const matchingSlotIdx = activeOrderApt ? gameState.handSlots.indexOf(activeOrderApt.wantedType) : -1;
-
-      // Dynamically highlight matching slot in the bottom dock with pulsing gold border
-      document.querySelectorAll('.parcel-card-slot').forEach(card => {
-        const s = parseInt(card.dataset.slot, 10);
-        if (matchingSlotIdx !== -1 && s === matchingSlotIdx) {
-          card.classList.add('slot-matched-pulse');
-        } else {
-          card.classList.remove('slot-matched-pulse');
-        }
-      });
-
-      if (!activeOrderApt || gameState.mode !== 'playing') {
-        gameState.lockedTargetApt = null;
-        updateProjectileArcVisuals();
-        return;
-      }
-
-      const apt = activeOrderApt;
-      const pInfo = PARCEL_TYPES[apt.wantedType];
-      const charImg = charIconDataURLs[apt.character.id] || '';
-      const parcelImg = parcelIconDataURLs[apt.wantedType] || '';
-      const sideLabel = apt.side === 'left' ? 'LEFT' : 'RIGHT';
-
-      // Lock-On active when customer is within throwable delivery window
-      const aptDz = gameState.vanZ - apt.group.position.z;
-      const inThrowableRange = (aptDz >= -6 && aptDz <= 45);
-      gameState.lockedTargetApt = inThrowableRange ? apt : null;
       updateProjectileArcVisuals();
-
-      const isVip = !!apt.isVip;
-      const vipStep = apt.vipDelivered || 0;
-      const vipBadgeHtml = isVip
-        ? `<span class="vip-crown-badge">👑 VIP (${vipStep}/2)</span>`
-        : '';
-      const slotKeyPrompt = (isVip && vipStep === 1)
-        ? '👑 [THROW 2ND ORDER!]'
-        : (matchingSlotIdx === 0 ? '⚡ [PRESS Q]' : (matchingSlotIdx === 1 ? '⚡ [PRESS W]' : (matchingSlotIdx === 2 ? '⚡ [PRESS E]' : '⚡ [SPACE]')));
-
-      if (apt.renderedOrderId !== apt.orderId || apt.renderedVipStep !== vipStep) {
-        apt.renderedOrderId = apt.orderId;
-        apt.renderedVipStep = vipStep;
-        apt.cloudEl.innerHTML = `
-          <div class="thought-cloud-pill">
-            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
-              <img src="${charImg}" class="w-full h-full object-contain" alt="char" />
-            </div>
-            <div class="flex flex-col text-left min-w-0 flex-1">
-              <div class="flex items-center gap-1">
-                <span class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</span>
-                ${vipBadgeHtml}
-              </div>
-              <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
-              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                <span class="cloud-distance-badge inline-block px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
-                  ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
-                </span>
-                <button type="button" class="quick-throw-cloud-btn px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 font-black text-[8px] sm:text-[9px] arcade-font shadow-[0_0_12px_rgba(250,204,21,0.95)] border border-white cursor-pointer active:scale-95 animate-pulse" title="Quick Throw matching parcel">
-                  ${slotKeyPrompt}
-                </button>
-              </div>
-            </div>
-            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${pInfo.boxTierClass} flex flex-col items-center justify-center p-1 flex-shrink-0">
-              <img src="${parcelImg}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" alt="item" />
-              <span class="text-[6px] font-extrabold text-slate-900 uppercase leading-none mt-0.5">${pInfo.tier.split(' ')[0]}</span>
-            </div>
-          </div>
-        `;
-        apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
-        apt.cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');
-        if (apt.cloudBtn) {
-          apt.cloudBtn.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-            soundFX.init();
-            if (matchingSlotIdx !== -1) {
-              throwFromSlot(matchingSlotIdx);
-            } else {
-              autoThrowMatchingSlot();
-            }
-          });
-        }
-      } else {
-        if (apt.cloudDistBadge) {
-          apt.cloudDistBadge.innerHTML = `${Math.max(0, closestMeters)}m &bull; ${sideLabel}`;
-        }
-        if (apt.cloudBtn) {
-          apt.cloudBtn.textContent = slotKeyPrompt;
-        }
-      }
-
-      const worldPos = new THREE.Vector3(
-        apt.group.position.x + apt.porchX,
-        4.6,
-        apt.group.position.z + 1.2
-      );
-      worldPos.project(camera);
-
-      if (worldPos.z < 1.0) {
-        const rawX = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
-        const rawY = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
-        const padX = Math.min(155, window.innerWidth * 0.36);
-        const clampedX = Math.max(padX, Math.min(window.innerWidth - padX, rawX));
-        const clampedY = Math.max(92, Math.min(window.innerHeight - 165, rawY));
-        apt.cloudEl.style.left = `${clampedX}px`;
-        apt.cloudEl.style.top = `${clampedY}px`;
-        apt.cloudEl.classList.remove('hidden');
-      } else {
-        apt.cloudEl.classList.add('hidden');
-      }
     }
 
     function increaseOverdrive(amount) {
@@ -1991,69 +1719,28 @@
     // ============================================================================
     function updateHUD() {
       document.getElementById('score-val').textContent = gameState.score.toLocaleString();
-      document.getElementById('delivered-val').textContent = gameState.deliveries;
       document.getElementById('hud-coins-val').textContent = gameState.coins.toLocaleString();
       document.getElementById('combo-val').textContent = `x${gameState.combo}`;
-
-      // Overdrive Meter Update
-      const odFill = document.getElementById('overdrive-bar-fill');
-      const odPct = document.getElementById('overdrive-pct-val');
-      const odTitle = document.getElementById('overdrive-title-text');
-      const odPill = document.getElementById('overdrive-hud-pill');
-      if (odFill && odPct) {
-        const pct = Math.round(gameState.overdriveMeter || 0);
-        odFill.style.width = `${pct}%`;
-        odPct.textContent = `${pct}%`;
-        if (odPill && odTitle) {
-          if (gameState.overdriveActive) {
-            odPill.classList.add('overdrive-fever-active');
-            odTitle.textContent = '⚡ FEVER 2X!';
-          } else {
-            odPill.classList.remove('overdrive-fever-active');
-            odTitle.textContent = 'OVERDRIVE';
-          }
-        }
-      }
-
-      // Collectible Power-Up status pills
-      const dronePill = document.getElementById('pill-drone-assist');
-      const droneTimerText = document.getElementById('drone-timer-text');
-      if (dronePill && droneTimerText) {
-        const active = gameState.droneAssistTimer > 0;
-        dronePill.classList.toggle('hidden', !active);
-        if (active) droneTimerText.textContent = `${Math.ceil(gameState.droneAssistTimer)}s`;
-      }
-
-      const magnetPill = document.getElementById('pill-coin-magnet');
-      const magnetTimerText = document.getElementById('magnet-timer-text');
-      if (magnetPill && magnetTimerText) {
-        const active = gameState.coinMagnetTimer > 0;
-        magnetPill.classList.toggle('hidden', !active);
-        if (active) magnetTimerText.textContent = `${Math.ceil(gameState.coinMagnetTimer)}s`;
-      }
-
-      const shieldPill = document.getElementById('pill-shield-bumper');
-      if (shieldPill) {
-        shieldPill.classList.toggle('hidden', !gameState.shieldBumperActive);
-      }
+      const overdrive = Math.round(gameState.overdriveMeter || 0);
+      document.getElementById('overdrive-bar-fill').style.width = `${overdrive}%`;
+      const overdrivePill = document.getElementById('overdrive-hud-pill');
+      overdrivePill.setAttribute('aria-valuenow', overdrive);
+      overdrivePill.classList.toggle('is-active', !!gameState.overdriveActive);
+      document.getElementById('overdrive-title-text').textContent = gameState.overdriveActive ? '⚡ OVERDRIVE ×2' : '⚡ OVERDRIVE';
 
       const armorContainer = document.getElementById('armor-boxes');
-      const totalSlots = Math.max(3, gameState.hearts);
-      armorContainer.innerHTML = Array.from({ length: totalSlots }, (_, i) => {
-        const active = i < gameState.hearts;
-        const isBonusHeart = i >= 3;
-        const fillCol = active ? (isBonusHeart ? '#facc15' : '#f43f5e') : '#1e293b';
-        const strokeCol = active ? '#ffffff' : '#475569';
-        return `
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 ${active ? 'voxel-heart-icon' : 'opacity-40'}" viewBox="0 0 24 24" fill="${fillCol}" stroke="${strokeCol}" stroke-width="2">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        `;
+      if (armorContainer.dataset.hearts === String(gameState.hearts)) return;
+      armorContainer.dataset.hearts = String(gameState.hearts);
+      armorContainer.setAttribute('aria-label', `${gameState.hearts} hearts`);
+      armorContainer.innerHTML = Array.from({ length: 3 }, (unused, index) => {
+        const fill = index < gameState.hearts ? '#fb7185' : '#334155';
+        return `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
       }).join('');
     }
 
     function spawnVoxelBurst(pos, colorHex, count = 18) {
-      for (let i = 0; i < count; i++) {
+      const availableCount = Math.min(count, Math.max(0, 256 - particles.length));
+      for (let i = 0; i < availableCount; i++) {
         const s = 0.22 + Math.random() * 0.26;
         const p = new THREE.Mesh(unitBoxGeo, getMat(colorHex, { emissive: colorHex, emissiveIntensity: 0.45 }));
         p.scale.setScalar(s);
@@ -2087,32 +1774,34 @@
       }
     }
 
-    function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
-      const v = worldPos.clone().project(camera);
-      const x = (v.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+    let actionToastTimer = null;
+    let cityToastTimer = null;
+    let crosswalkWarningActive = false;
 
-      const el = document.createElement('div');
-      el.className = `floating-combat-banner arcade-font ${extraClass}`;
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.textContent = text;
-      document.getElementById('popups-layer').appendChild(el);
-      setTimeout(() => el.remove(), 1200);
+    function clearHudFeedback() {
+      clearTimeout(actionToastTimer);
+      clearTimeout(cityToastTimer);
+      document.getElementById('action-toast').classList.remove('is-visible');
+      document.getElementById('action-toast').textContent = '';
+      document.getElementById('city-toast').classList.add('hidden');
+      crosswalkWarningActive = false;
+    }
+
+    function showActionToast(text, tone = 'bonus') {
+      const toast = document.getElementById('action-toast');
+      clearTimeout(actionToastTimer);
+      toast.textContent = text;
+      toast.dataset.tone = tone;
+      toast.classList.add('is-visible');
+      actionToastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1600);
+    }
+
+    function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
+      showActionToast(text, extraClass.includes('rose') ? 'danger' : 'bonus');
     }
 
     function showFloatingPopup(worldPos, text, colorClass = 'text-amber-300') {
-      const v = worldPos.clone().project(camera);
-      const x = (v.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-
-      const el = document.createElement('div');
-      el.className = `floating-pop arcade-font font-extrabold text-base sm:text-xl drop-shadow-[0_3px_0_#000] ${colorClass}`;
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.textContent = text;
-      document.getElementById('popups-layer').appendChild(el);
-      setTimeout(() => el.remove(), 1250);
+      showActionToast(text, colorClass.includes('rose') ? 'danger' : 'info');
     }
 
     function initWeatherParticles() {
@@ -2296,11 +1985,12 @@
 
     function showCityToast(cityTheme) {
       const toast = document.getElementById('city-toast');
+      clearTimeout(cityToastTimer);
       document.getElementById('city-toast-title').textContent = cityTheme.banner;
       toast.classList.remove('hidden', 'city-toast-anim');
       void toast.offsetWidth;
       toast.classList.add('city-toast-anim');
-      setTimeout(() => toast.classList.add('hidden'), 3200);
+      cityToastTimer = setTimeout(() => toast.classList.add('hidden'), 2000);
     }
 
     function spawnTrafficWave() {
@@ -2336,15 +2026,16 @@
         let leftBlinker = null;
         let rightBlinker = null;
         if (canSwitchLane) {
-          const blinkMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
           const halfX = mesh.userData.halfX || 1.1;
           const halfZ = mesh.userData.halfZ || 1.8;
-          leftBlinker = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), blinkMat);
+          leftBlinker = new THREE.Mesh(unitBoxGeo, trafficBlinkerMat);
+          leftBlinker.scale.set(0.28, 0.22, 0.28);
           leftBlinker.position.set(-halfX - 0.06, 0.75, -halfZ + 0.25);
           leftBlinker.visible = false;
           mesh.add(leftBlinker);
 
-          rightBlinker = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), blinkMat);
+          rightBlinker = new THREE.Mesh(unitBoxGeo, trafficBlinkerMat);
+          rightBlinker.scale.set(0.28, 0.22, 0.28);
           rightBlinker.position.set(halfX + 0.06, 0.75, -halfZ + 0.25);
           rightBlinker.visible = false;
           mesh.add(rightBlinker);
@@ -2374,6 +2065,7 @@
       const prevLane = gameState.laneIndex;
       gameState.laneIndex = Math.max(0, Math.min(3, gameState.laneIndex + dir));
       if (gameState.laneIndex !== prevLane) {
+        registerCargoSteer(dir);
         soundFX.playReelTick(440);
         if (gameState.tutorialActive && gameState.tutorialStep === 1) {
           gameState.tutorialSteerCount = (gameState.tutorialSteerCount || 0) + 1;
@@ -2440,15 +2132,19 @@
       }
 
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
-      document.getElementById('tutorial-title').textContent = 'CHECK THOUGHT CLOUD & DRAG PARCEL!';
-      document.getElementById('tutorial-desc').textContent = 'Look at the customer\'s Thought Cloud ahead, grab the matching item from your 3-slot bar below, and drag it LEFT or RIGHT to throw (or DOWN to cancel)!';
+      document.getElementById('tutorial-title').textContent = 'MATCH THE PARCEL & PRESS Q, W OR E!';
+      document.getElementById('tutorial-desc').textContent = 'Wait for the resident\'s target ring, then press the key on their parcel badge or tap the matching dock card once. Keys 1, 2 and 3 also throw!';
     }
 
     function updateTutorialStep2Prompt(apt) {
       const sideText = apt.side === 'left' ? 'LEFT' : 'RIGHT';
+      const matchingSlot = gameState.handSlots.indexOf(apt.wantedType);
+      if (matchingSlot === -1) return;
+      const title = `PRESS [${SLOT_KEYS[matchingSlot]}] FOR THE ${sideText} RESIDENT!`;
+      if (document.getElementById('tutorial-title').textContent === title) return;
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
-      document.getElementById('tutorial-title').textContent = `MATCH & DRAG PARCEL ${sideText}!`;
-      document.getElementById('tutorial-desc').textContent = `Find the item shown in the customer's Thought Cloud, drag it from the bottom bar toward the ${sideText} sidewalk, and release (or drag DOWN to cancel)!`;
+      document.getElementById('tutorial-title').textContent = title;
+      document.getElementById('tutorial-desc').textContent = `Press ${SLOT_KEYS[matchingSlot]} or ${matchingSlot + 1}, or tap the matching parcel card, to deliver the requested item to the ${sideText} resident.`;
     }
 
     function completeInteractiveTutorial() {
@@ -2591,28 +2287,7 @@
       }, { once: true, passive: true });
     });
 
-    // Wire up On-Screen Quick-Throw Action Buttons (Dual pointerdown + click with debounce)
-    function bindQuickThrowBtn(btnId, side) {
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      let lastTrigger = 0;
-      const trigger = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        const now = performance.now();
-        if (now - lastTrigger < 140) return;
-        lastTrigger = now;
-        soundFX.init();
-        quickThrowParcel(side);
-      };
-      btn.addEventListener('pointerdown', trigger);
-      btn.addEventListener('click', trigger);
-    }
-    bindQuickThrowBtn('btn-quick-throw-left', 'slot0');
-    bindQuickThrowBtn('btn-quick-throw-auto', 'slot1');
-    bindQuickThrowBtn('btn-quick-throw-right', 'slot2');
+
 
     window.addEventListener('keydown', (e) => {
       // Escape for Pause / Resume
@@ -2651,6 +2326,8 @@
         e.preventDefault();
         moveLane(1);
       }
+
+      if (e.repeat) return;
 
       // Slot 0 throw: Q or 1
       if (key === 'q' || code === 'KeyQ' || key === '1' || code === 'Digit1') {
@@ -2896,6 +2573,7 @@
     }
 
     function resetGame(forceTutorial = false) {
+      clearHudFeedback();
       soundFX.init();
       soundFX.startCozyMusic();
 
@@ -2914,6 +2592,8 @@
       gameState.hearts = 3;
       gameState.laneIndex = 2;
       gameState.currentX = LANES[2];
+      gameState.lateralVelocity = 0;
+      resetCargoRun();
       gameState.throttle = 0.72;
       gameState.boostTimer = 0;
 
@@ -2945,9 +2625,9 @@
       gameState.nextGateDistance = 210;
       gameState.invulnerableTimer = 0;
       gameState.cityIndex = 0;
-      document.getElementById('immortal-hud-pill').classList.add('hidden');
-      document.getElementById('slowmo-hud-pill').classList.remove('hidden');
-      document.getElementById('slowmo-bar-fill').style.width = `${(gameState.slowMoEnergy / gameState.maxSlowMoEnergy) * 100}%`;
+
+
+
       slowmoVignette.style.opacity = '0';
 
       applyTimeOfDay(0, true);
@@ -2970,6 +2650,9 @@
         fp.trailDots.forEach(td => scene.remove(td));
       });
       flyingParcels.length = 0;
+
+      particles.forEach(particle => scene.remove(particle.mesh));
+      particles.length = 0;
 
       exhaustPool.forEach(p => {
         p.active = false;
@@ -3004,8 +2687,8 @@
       if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
       if (shieldBumperMesh) shieldBumperMesh.visible = false;
       if (droneGroup) droneGroup.visible = false;
-      const rushBanner = document.getElementById('rush-hour-banner');
-      if (rushBanner) rushBanner.classList.add('hidden');
+
+
 
       activeGates.forEach(g => scene.remove(g.mesh));
       activeGates.length = 0;
@@ -3014,6 +2697,8 @@
       activeCrosswalks.length = 0;
 
       globalOrderCounter = 0;
+      gameState.lockedTargetApt = null;
+      gameState.handSlots = [0, 2, 6];
       apartments.forEach((apt) => {
         apt.hasOrder = false;
         apt.delivered = false;
@@ -3027,7 +2712,6 @@
         configureApartmentCustomer(apt, gameState.tutorialActive && pairIdx >= 4);
       });
 
-      gameState.handSlots = [0, 2, 6];
       renderBottomParcelHandUI();
 
       const startVehicleTypes = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck'];
@@ -3069,22 +2753,14 @@
     // ============================================================================
     // 14. INITIALIZE SCENE & MAIN GAME LOOP
     // ============================================================================
-    initSavedProgression();
-    generate3DIcons();
-    initWeatherParticles();
-    initCozyMotes();
-    initSidewalkPromenadeActors();
-
-    for (let i = 0; i < NUM_PAIRS; i++) {
-      const zPos = 12 - i * BLOCK_SPACING;
-      apartments.push(createApartmentBuilding('left', zPos, i * 2));
-      apartments.push(createApartmentBuilding('right', zPos, i * 2 + 1));
-    }
-    renderBottomParcelHandUI();
-    setHomePageMode(true);
-    updateHomeGarageUI();
-
     let lastTime = performance.now();
+    const gameplayCameraLook = new THREE.Vector3();
+
+    function aimGameplayCamera() {
+      gameplayCameraLook.copy(PLAY_CAM_LOOK);
+      gameplayCameraLook.y -= 1.8;
+      camera.lookAt(gameplayCameraLook);
+    }
     let trafficTimer = 0;
     let crosswalkTimer = 0;
     let atmosphereCycleTimer = 0;
@@ -3093,8 +2769,9 @@
 
     function animate(now) {
       requestAnimationFrame(animate);
-      if (!now) now = performance.now();
-      const rawDt = Math.min((now - lastTime) / 1000, 0.1);
+      if (!Number.isFinite(now)) now = performance.now();
+      const elapsed = (now - lastTime) / 1000;
+      const rawDt = Number.isFinite(elapsed) ? Math.min(Math.max(elapsed, 0.001), 0.05) : 0.001;
       lastTime = now;
 
       cozyMotes.forEach((cm) => {
@@ -3120,7 +2797,7 @@
       if (gameState.mode === 'paused' || gameState.mode === 'countdown') {
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
         renderer.render(scene, camera);
         return;
       }
@@ -3130,34 +2807,34 @@
 
       // Slow-Motion ONLY activates & drains Slow-Mo Energy while the player is actively dragging a parcel!
       let isDragSlowMoActive = false;
-      const slowmoDot = document.getElementById('slowmo-dot');
+
       if (gameState.dragging && gameState.slowMoEnergy > 0) {
         isDragSlowMoActive = true;
         const battLvl = getVanTuningLevel(gameState.equippedVanId, 'battery');
         const drainMult = battLvl === 5 ? 0.70 : 1.0;
         gameState.slowMoEnergy = Math.max(0, gameState.slowMoEnergy - rawDt * drainMult);
         slowmoVignette.style.opacity = '1';
-        if (slowmoDot) slowmoDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-300 animate-ping';
+
       } else {
         slowmoVignette.style.opacity = '0';
-        if (slowmoDot) slowmoDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-400';
+
       }
-      document.getElementById('slowmo-bar-fill').style.width = `${(gameState.slowMoEnergy / gameState.maxSlowMoEnergy) * 100}%`;
+
 
       const timeScale = isDragSlowMoActive ? 0.28 : (gameState.tutorialActive ? 0.68 : 1.0);
       const dt = rawDt * timeScale;
 
       if (gameState.immortalTimer > 0) {
         gameState.immortalTimer = Math.max(0, gameState.immortalTimer - rawDt);
-        document.getElementById('immortal-hud-pill').classList.remove('hidden');
-        document.getElementById('immortal-bar-fill').style.width = `${(gameState.immortalTimer / 10) * 100}%`;
+
+
         if (playerVan.userData.immortalAura) {
           playerVan.userData.immortalAura.visible = true;
           playerVan.userData.immortalAura.rotation.z = now * 0.008;
           playerVan.userData.immortalAura.material.color.setHSL((now * 0.0015) % 1, 1.0, 0.55);
         }
         if (gameState.immortalTimer <= 0) {
-          document.getElementById('immortal-hud-pill').classList.add('hidden');
+
           if (playerVan.userData.immortalAura) playerVan.userData.immortalAura.visible = false;
         }
       }
@@ -3176,13 +2853,13 @@
           THREE.MathUtils.lerp(PLAY_CAM_POS.y - 2.2, PLAY_CAM_POS.y, easeOut),
           THREE.MathUtils.lerp(PLAY_CAM_POS.z + 4.5, PLAY_CAM_POS.z, easeOut)
         );
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
       } else {
         gameState.vanZ = -5.4;
         playerVan.position.z = gameState.vanZ;
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
       }
 
       if (screenShakeTime > 0) {
@@ -3197,7 +2874,7 @@
       const engSpeedMult = 1 + (engLvl - 1) * 0.045;
       const speedProgression = Math.min(22, gameState.distanceMeters * 0.015 + gameState.deliveries * 0.65);
       const playerSpeed = gameState.mode === 'playing'
-        ? (gameState.baseSpeed + speedProgression) * engSpeedMult
+        ? (gameState.baseSpeed + speedProgression) * engSpeedMult * (gameState.overdriveActive ? 1.35 : 1)
         : 12;
 
       if (gameState.dragging) {
@@ -3274,7 +2951,7 @@
           }
         }
 
-        if (apt.group.position.z > 32) {
+        if (apt.group.position.z > 32 && !flyingParcels.some(parcel => parcel.targetApt === apt)) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
           const currentTheme = CITY_THEMES[gameState.cityIndex];
           if (apt.currentThemeId !== currentTheme.id) {
@@ -3321,9 +2998,9 @@
                 const card = document.querySelector(`.parcel-card-slot[data-slot="${slotIdx}"]`);
                 if (card) {
                   const fill = card.querySelector('.hot-countdown-fill');
-                  const badge = card.querySelector('.hot-timer-text');
+
                   if (fill) fill.style.width = `${Math.max(0, (m.timer / m.maxTime) * 100)}%`;
-                  if (badge) badge.textContent = `🔥 HOT ${m.timer.toFixed(1)}s`;
+
                 }
               }
             }
@@ -3334,7 +3011,6 @@
         if (gameState.overdriveActive) {
           gameState.overdriveTimer -= dt;
           gameState.overdriveMeter = Math.max(0, (gameState.overdriveTimer / 7.0) * 100);
-          playerSpeed *= 1.35; // Boost speed by 35%!
           camera.fov = THREE.MathUtils.lerp(camera.fov, 68, dt * 4.0);
           camera.updateProjectionMatrix();
 
@@ -3367,20 +3043,12 @@
           soundFX.playCityGateChime();
           triggerScreenShake(0.3, 1.2);
           showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.5, 0)), '🔥 RUSH HOUR BLITZ! 15s', 'combat-text-fire');
-          const banner = document.getElementById('rush-hour-banner');
-          if (banner) {
-            banner.classList.remove('hidden');
-            banner.classList.add('flex', 'rush-hour-banner-active');
-          }
+
         } else if (gameState.rushHourActive) {
           gameState.rushHourTimer -= dt;
           if (gameState.rushHourTimer <= 0) {
             gameState.rushHourActive = false;
-            const banner = document.getElementById('rush-hour-banner');
-            if (banner) {
-              banner.classList.add('hidden');
-              banner.classList.remove('flex', 'rush-hour-banner-active');
-            }
+
           }
         }
 
@@ -3393,7 +3061,7 @@
 
           droneThrowCooldown -= dt;
           if (droneThrowCooldown <= 0) {
-            const target = apartments.find(a => a.hasOrder && !a.delivered && (gameState.vanZ - a.group.position.z) >= -4 && (gameState.vanZ - a.group.position.z) <= 50);
+            const target = findTargetApartment();
             if (target) {
               droneThrowCooldown = 1.35;
               autoThrowMatchingSlot();
@@ -3537,7 +3205,7 @@
               showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '+1 EXTRA LIFE HEART!', 'text-rose-400');
             } else if (pu.type === 'slowmo') {
               gameState.slowMoEnergy = gameState.maxSlowMoEnergy;
-              document.getElementById('slowmo-bar-fill').style.width = '100%';
+
               spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 24);
               showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'DRAG SLOW-MO RECHARGED!', 'text-cyan-300');
             } else {
@@ -3583,12 +3251,7 @@
           const distZ = cw.group.position.z - gameState.vanZ;
           if (distZ > -80 && distZ < 2 && cw.members.length > 0) {
             showCrosswalkWarning = true;
-            const alertTxt = document.getElementById('crosswalk-alert-text');
-            if (alertTxt) {
-              alertTxt.textContent = cw.isDuckCrossing
-                ? 'CAUTION: DUCK FAMILY CROSSING AHEAD'
-                : 'CAUTION: INLE CHEF CROSSING AHEAD';
-            }
+
           }
 
           if (Math.abs(distZ) < 1.8 && !cw.hitTriggered) {
@@ -3623,7 +3286,6 @@
 
               if (gameState.immortalTimer > 0 || gameState.overdriveActive) {
                 showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '⚡ OVERDRIVE KNOCKBACK!', 'combat-text-gold');
-                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'OVERDRIVE KNOCKBACK!', 'text-amber-300');
               } else if (gameState.shieldBumperActive) {
                 gameState.shieldBumperActive = false;
                 if (shieldBumperMesh) shieldBumperMesh.visible = false;
@@ -3631,7 +3293,6 @@
                 triggerScreenShake(0.25, 0.9);
                 spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 22);
                 showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD SAVED IMPACT!', 'combat-text-blue');
-                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'SHIELD DEFLECTED!', 'text-cyan-300');
                 updateHUD();
               } else if (gameState.invulnerableTimer <= 0) {
                 // Grazing obstacles or taking damage cracks fragile parcels in hand
@@ -3673,7 +3334,8 @@
             activeCrosswalks.splice(i, 1);
           }
         }
-        document.getElementById('crosswalk-alert').classList.toggle('hidden', !showCrosswalkWarning);
+        if (showCrosswalkWarning && !crosswalkWarningActive) showActionToast('Crossing ahead • watch for pedestrians', 'info');
+        crosswalkWarningActive = showCrosswalkWarning;
 
         // Snappy Arcade Spring-Damped Lane Switching & Body Physics
         const handLvl = getVanTuningLevel(gameState.equippedVanId, 'handling');
@@ -3681,16 +3343,24 @@
         const springK = 195 + (handLvl - 1) * 45;
         const damping = 24 + (handLvl - 1) * 3.5;
 
+        if (!Number.isFinite(gameState.currentX)) gameState.currentX = targetX;
+        if (!Number.isFinite(gameState.lateralVelocity)) gameState.lateralVelocity = 0;
+        const physicsSteps = Math.ceil(rawDt / (1 / 120));
+        const physicsDt = rawDt / physicsSteps;
+        for (let step = 0; step < physicsSteps; step++) {
+          const springForce = -springK * (gameState.currentX - targetX) - damping * gameState.lateralVelocity;
+          gameState.lateralVelocity += springForce * physicsDt;
+          gameState.currentX += gameState.lateralVelocity * physicsDt;
+        }
         const distToTarget = gameState.currentX - targetX;
-        const springForce = -springK * distToTarget - damping * (gameState.lateralVelocity || 0);
-        gameState.lateralVelocity = (gameState.lateralVelocity || 0) + springForce * rawDt;
-        gameState.currentX += gameState.lateralVelocity * rawDt;
 
         if (Math.abs(distToTarget) < 0.012 && Math.abs(gameState.lateralVelocity) < 0.04) {
           gameState.currentX = targetX;
           gameState.lateralVelocity = 0;
         }
         playerVan.position.x = gameState.currentX;
+        updateRoofSway(rawDt);
+        updateCargoRoad(dt, playerSpeed);
 
         // Dynamic Vehicle Body Physics during Lane Changes:
         // 1. Yaw rotation (steering into the target lane and straightening out)
@@ -3871,7 +3541,6 @@
                 updateHUD();
                 spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 28);
                 showFloatingCombatText(tv.mesh.position.clone().add(new THREE.Vector3(0, 2.5, 0)), gameState.overdriveActive ? '⚡ OVERDRIVE SMASH! +300' : 'IMMORTAL SMASH! +150', 'combat-text-gold');
-                showFloatingPopup(tv.mesh.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'ROADBLOCK SMASHED!', 'text-amber-300 font-extrabold');
                 scene.remove(tv.mesh);
                 trafficVehicles.splice(i, 1);
                 continue;
@@ -3885,7 +3554,6 @@
                 triggerScreenShake(0.25, 0.9);
                 spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 26);
                 showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD DEFLECTED IMPACT!', 'combat-text-blue');
-                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.5, 0)), 'BUMPER ABSORPTION!', 'text-cyan-300 font-bold');
                 updateHUD();
                 // Knock traffic vehicle out of player's way
                 tv.forwardDriveSpeed = 45;
@@ -3934,14 +3602,18 @@
 
         for (let i = flyingParcels.length - 1; i >= 0; i--) {
           const fp = flyingParcels[i];
+          if (fp.targetApt.orderId !== fp.targetOrderId || fp.targetApt.delivered || !fp.targetApt.hasOrder) {
+            removeFlyingParcel(i);
+            continue;
+          }
           fp.progress += rawDt / fp.duration;
 
           // Customer porch live position (magnetic homing tracks resident in real time)
-          const liveEnd = new THREE.Vector3(
-            fp.targetApt.group.position.x + fp.targetApt.porchX,
-            1.45,
-            fp.targetApt.group.position.z + 1.2
-          );
+          const liveEnd = getResidentHandPosition(fp.targetApt, fp.endPos);
+          if (![liveEnd.x, liveEnd.y, liveEnd.z].every(Number.isFinite)) {
+            removeFlyingParcel(i);
+            continue;
+          }
 
           const t = Math.min(1, fp.progress);
           // Parabolic trajectory with magnetic convergence
@@ -3976,8 +3648,8 @@
                   triggerScreenShake(0.18, 0.7);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 24);
 
-                  const vipHalfPts = Math.round(pInfo.pts * 1.5 * engScoreMult * (gameState.overdriveActive ? 2 : 1));
-                  const vipHalfCoins = Math.round(baseCoinGain * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfPts = Math.round(pInfo.pts * 2 * engScoreMult * fp.cargoMultiplier * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfCoins = Math.round(baseCoinGain * 2 * (gameState.overdriveActive ? 2 : 1));
                   gameState.score += vipHalfPts;
                   gameState.coins += vipHalfCoins;
                   gameState.runCoinsEarned += vipHalfCoins;
@@ -3985,15 +3657,12 @@
                   updateHUD();
 
                   updateContractProgress('deliveries_run', 1);
-                  showFloatingCombatText(liveEnd, '👑 VIP 1/2 DELIVERED! QUICK THROW 2ND!', 'combat-text-gold');
-                  showFloatingPopup(liveEnd, `👑 VIP 1/2 COMPLETED! +${vipHalfPts} PTS`, 'text-amber-300 font-extrabold');
+                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! x2 • VIP 1/2', 'combat-text-gold');
 
                   // Guarantee matching parcel for 2nd throw in player's hand!
                   ensureParcelAvailableInHand(apt.wantedType);
 
-                  scene.remove(fp.mesh);
-                  fp.trailDots.forEach(td => scene.remove(td));
-                  flyingParcels.splice(i, 1);
+                  removeFlyingParcel(i);
                   continue;
                 }
 
@@ -4026,7 +3695,7 @@
                 const vipMultiplier = isVipJackpot ? 3.0 : 1.0;
                 const matchMultiplier = 2; // +100% exact order bonus
                 const multiplier = (isPerfect ? 2 : 1) * matchMultiplier * modMultiplier * vipMultiplier;
-                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult);
+                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult * fp.cargoMultiplier);
                 const vipCoinBonus = isVipJackpot ? 100 : 0;
                 const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier);
 
@@ -4056,26 +3725,23 @@
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.42, 1.6);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 48);
-                  showFloatingCombatText(liveEnd, '👑 VIP JACKPOT COMPLETED! x3', 'combat-text-gold');
-                  showFloatingPopup(liveEnd, `👑 VIP JACKPOT! +${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
+                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! x2 • VIP COMPLETE!', 'combat-text-gold');
                 } else if (isPerfect) {
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.35, 1.4);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 36);
-                  const bannerText = modText ? `⚡ PERFECT DROP! (${modText})` : '⚡ PERFECT EXACT DROP! x2';
+                  const bannerText = modText ? `🎯 EXACT ORDER! x2 • ${modText}` : '🎯 EXACT ORDER! x2 • PERFECT!';
                   showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
-                  showFloatingPopup(liveEnd, `🎯 EXACT MATCH! +${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
                 } else {
                   soundFX.playDeliverSuccess();
                   triggerScreenShake(0.15, 0.6);
                   spawnVoxelBurst(liveEnd, pInfo.color, 24);
-                  const bannerText = modText ? `🎯 EXACT ORDER! (${modText})` : '🎯 EXACT ORDER! +100% BONUS';
+                  const bannerText = modText ? `🎯 EXACT ORDER! x2 • ${modText}` : '🎯 EXACT ORDER! x2';
                   showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
-                  showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-emerald-300 font-bold');
                 }
               } else {
                 // WRONG PARCEL! Player receives 50% points & combo resets to 1
-                const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult));
+                const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier));
                 const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5));
 
                 apt.delivered = true;
@@ -4094,16 +3760,13 @@
                 soundFX.playCrash();
                 triggerScreenShake(0.18, 0.6);
                 spawnVoxelBurst(liveEnd, 0xf43f5e, 18);
-                showFloatingCombatText(liveEnd, '📦 WRONG PARCEL! (50% PTS)', 'combat-text-rose');
-                showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-rose-400 font-bold');
+                showFloatingCombatText(liveEnd, '📦 WRONG ITEM! (50%)', 'combat-text-rose');
               }
             } else {
               spawnVoxelBurst(liveEnd, 0x94a3b8, 12);
             }
 
-            scene.remove(fp.mesh);
-            fp.trailDots.forEach(td => scene.remove(td));
-            flyingParcels.splice(i, 1);
+            removeFlyingParcel(i);
           }
         }
       }
@@ -4141,6 +3804,7 @@
         }
       }
 
+      updateFallenCargo(rawDt);
       renderer.render(scene, camera);
     }
 
@@ -4163,29 +3827,36 @@
       }
     });
 
-    function hideLoadingOverlay() {
-      const loader = document.getElementById('loading-overlay');
-      if (loader && !loader.classList.contains('fade-out')) {
-        loader.classList.add('fade-out');
-        setTimeout(() => {
-          loader.style.display = 'none';
-        }, 550);
-      }
-    }
-
     let isLoopStarted = false;
     function startAnimationLoop() {
       if (isLoopStarted) return;
-      isLoopStarted = true;
       updateCameraForViewport();
       lastTime = performance.now();
+      renderer.render(scene, camera);
+      isLoopStarted = true;
       requestAnimationFrame(animate);
-      hideLoadingOverlay();
+      window.midnightStartup.complete();
     }
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      startAnimationLoop();
-    } else {
-      document.addEventListener('DOMContentLoaded', startAnimationLoop);
-      window.addEventListener('load', startAnimationLoop);
+    function initializeGame() {
+      try {
+        initSavedProgression();
+        window.midnightStartup.optional('parcel icons', generate3DIcons);
+        window.midnightStartup.optional('weather particles', initWeatherParticles);
+        window.midnightStartup.optional('ambient motes', initCozyMotes);
+        window.midnightStartup.optional('sidewalk actors', initSidewalkPromenadeActors);
+        for (let pairIndex = 0; pairIndex < NUM_PAIRS; pairIndex++) {
+          const zPos = 12 - pairIndex * BLOCK_SPACING;
+          apartments.push(createApartmentBuilding('left', zPos, pairIndex * 2));
+          apartments.push(createApartmentBuilding('right', zPos, pairIndex * 2 + 1));
+        }
+        renderBottomParcelHandUI();
+        setHomePageMode(true);
+        updateHomeGarageUI();
+        startAnimationLoop();
+      } catch (error) {
+        window.midnightStartup.fail(error, 'Game initialization failed');
+      }
     }
+
+    initializeGame();

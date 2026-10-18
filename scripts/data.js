@@ -426,6 +426,7 @@
 
     const LANES = [-5.4, -1.8, 1.8, 5.4];
     const ROAD_WIDTH = 16.5;
+    const CARGO_CONFIG = Object.freeze({ capacity: 6, spacing: 0.72, crateHeight: 0.66, swayLimit: 0.5 });
 
     const gameState = {
       mode: 'home',
@@ -435,6 +436,17 @@
       bestDistance: 0,
       coins: 250,
       runCoinsEarned: 0,
+      roofCrates: 3,
+      vanSwayAngle: 0,
+      cargoSwayVelocity: 0,
+      cargoStress: 0,
+      cargoDanger: 0,
+      cargoLossCooldown: 0,
+      lastCargoVelocity: 0,
+      lastCargoSteerTime: -Infinity,
+      lastCargoSteerDir: 0,
+      nextSupplyDistance: 65,
+      nextOverpassDistance: 100,
       combo: 1,
       nearMissCount: 0,
       perfectDropCount: 0,

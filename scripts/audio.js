@@ -7,6 +7,23 @@
         this.enabled = true;
         this.isPlayingMusic = false;
         this.step = 0;
+        this.activeVoices = new Set();
+        this.maxVoices = 32;
+      }
+
+      createVoice() {
+        if (!this.ctx || this.ctx.state !== 'running' || this.activeVoices.size >= this.maxVoices) return null;
+        const oscillator = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const voice = { oscillator, gain };
+        this.activeVoices.add(voice);
+        oscillator.onended = () => {
+          oscillator.disconnect();
+          gain.disconnect();
+          this.activeVoices.delete(voice);
+          oscillator.onended = null;
+        };
+        return voice;
       }
 
       init() {
@@ -42,14 +59,16 @@
 
         const tick = () => {
           if (!this.isPlayingMusic) return;
+          setTimeout(tick, 127);
           if (this.enabled && this.ctx && this.ctx.state === 'running') {
             const now = this.ctx.currentTime;
             const bar = Math.floor(this.step / 16) % 4;
             const s16 = this.step % 16;
 
             if (s16 % 4 === 0) {
-              const kOsc = this.ctx.createOscillator();
-              const kGain = this.ctx.createGain();
+              const voice = this.createVoice();
+              if (!voice) return;
+              const { oscillator: kOsc, gain: kGain } = voice;
               kOsc.type = 'sine';
               kOsc.frequency.setValueAtTime(135, now);
               kOsc.frequency.exponentialRampToValueAtTime(38, now + 0.09);
@@ -62,8 +81,9 @@
             }
 
             if (s16 === 4 || s16 === 12) {
-              const sOsc = this.ctx.createOscillator();
-              const sGain = this.ctx.createGain();
+              const voice = this.createVoice();
+              if (!voice) return;
+              const { oscillator: sOsc, gain: sGain } = voice;
               sOsc.type = 'triangle';
               sOsc.frequency.setValueAtTime(290, now);
               sOsc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
@@ -76,8 +96,9 @@
             }
 
             if (s16 % 2 === 0) {
-              const bOsc = this.ctx.createOscillator();
-              const bGain = this.ctx.createGain();
+              const voice = this.createVoice();
+              if (!voice) return;
+              const { oscillator: bOsc, gain: bGain } = voice;
               bOsc.type = 'sawtooth';
               const isOctave = (s16 % 4 === 2);
               const freq = bassRoot[bar] * (isOctave ? 2.0 : 1.0);
@@ -92,8 +113,9 @@
 
             if (s16 === 0 || s16 === 3 || s16 === 6 || s16 === 10 || s16 === 12) {
               chords[bar].forEach((freq, idx) => {
-                const cOsc = this.ctx.createOscillator();
-                const cGain = this.ctx.createGain();
+                const voice = this.createVoice();
+                if (!voice) return;
+                const { oscillator: cOsc, gain: cGain } = voice;
                 cOsc.type = 'triangle';
                 cOsc.frequency.setValueAtTime(freq, now);
                 cGain.gain.setValueAtTime(0.016 - idx * 0.002, now);
@@ -106,8 +128,9 @@
             }
 
             if (s16 === 0 || s16 === 2 || s16 === 5 || s16 === 8 || s16 === 11 || s16 === 14) {
-              const lOsc = this.ctx.createOscillator();
-              const lGain = this.ctx.createGain();
+              const voice = this.createVoice();
+              if (!voice) return;
+              const { oscillator: lOsc, gain: lGain } = voice;
               lOsc.type = 'square';
               const note = leadNotes[(s16 + bar * 3) % leadNotes.length];
               lOsc.frequency.setValueAtTime(note, now);
@@ -121,9 +144,26 @@
 
             this.step++;
           }
-          setTimeout(tick, 127);
         };
         tick();
+      }
+
+      playBoost() {
+        if (!this.enabled) return;
+        this.init();
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator, gain } = voice;
+        const now = this.ctx.currentTime;
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(120, now);
+        oscillator.frequency.exponentialRampToValueAtTime(720, now + 0.3);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+        oscillator.connect(gain);
+        gain.connect(this.ctx.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 0.33);
       }
 
       playThrow() {
@@ -131,8 +171,9 @@
         this.init();
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator: osc, gain: gain } = voice;
         osc.type = 'sine';
         osc.frequency.setValueAtTime(260, now);
         osc.frequency.exponentialRampToValueAtTime(740, now + 0.16);
@@ -150,8 +191,9 @@
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, now + i * 0.05);
           gain.gain.setValueAtTime(0.085, now + i * 0.05);
@@ -169,8 +211,9 @@
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [0, 0.13].forEach((offset) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(430, now + offset);
           osc.frequency.exponentialRampToValueAtTime(260, now + offset + 0.09);
@@ -189,8 +232,9 @@
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [392.00, 493.88, 587.33, 783.99].forEach((f, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'sine';
           osc.frequency.setValueAtTime(f, now + idx * 0.07);
           gain.gain.setValueAtTime(0.07, now + idx * 0.07);
@@ -207,8 +251,9 @@
         this.init();
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator: osc, gain: gain } = voice;
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(115, now);
         osc.frequency.exponentialRampToValueAtTime(32, now + 0.32);
@@ -225,8 +270,9 @@
         this.init();
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator: osc, gain: gain } = voice;
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(pitch, now);
         osc.frequency.exponentialRampToValueAtTime(pitch * 1.35, now + 0.045);
@@ -244,8 +290,9 @@
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         if (type === 'cattruck') {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(520, now);
           osc.frequency.linearRampToValueAtTime(880, now + 0.11);
@@ -258,8 +305,9 @@
           osc.stop(now + 0.31);
         } else if (type === 'tuktuk') {
           [480, 540].forEach((f, i) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            const voice = this.createVoice();
+            if (!voice) return;
+            const { oscillator: osc, gain: gain } = voice;
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(f, now + i * 0.09);
             gain.gain.setValueAtTime(0.035, now + i * 0.09);
@@ -271,8 +319,9 @@
           });
         } else if (type === 'ambulance' || type === 'police' || type === 'firetruck') {
           [740, 590].forEach((f, i) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            const voice = this.createVoice();
+            if (!voice) return;
+            const { oscillator: osc, gain: gain } = voice;
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(f, now + i * 0.14);
             gain.gain.setValueAtTime(0.032, now + i * 0.14);
@@ -283,8 +332,9 @@
             osc.stop(now + i * 0.14 + 0.14);
           });
         } else if (type === 'ufo') {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'sine';
           osc.frequency.setValueAtTime(520, now);
           osc.frequency.exponentialRampToValueAtTime(860, now + 0.28);
@@ -304,8 +354,9 @@
         const now = this.ctx.currentTime;
         // Sparkling high-pitched arcade synth arpeggio (C6, E6, G6, C7)
         [1046.5, 1318.5, 1567.98, 2093.0].forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const voice = this.createVoice();
+          if (!voice) return;
+          const { oscillator: osc, gain: gain } = voice;
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, now + idx * 0.055);
           gain.gain.setValueAtTime(0.08, now + idx * 0.055);
@@ -322,8 +373,9 @@
         this.init();
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator: osc, gain: gain } = voice;
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(160, now);
         osc.frequency.exponentialRampToValueAtTime(540, now + 0.08);
