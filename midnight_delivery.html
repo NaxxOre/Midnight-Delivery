@@ -1966,11 +1966,11 @@
         id: 'cairo',
         name: 'Cairo',
         banner: 'مرحباً بكم في القاهرة (WELCOME TO CAIRO)',
-        gatePrimary: 0xd97706,
-        gateSecondary: 0xfacc15,
-        walls: [0xfde68a, 0xf59e0b, 0xd97706],
-        roofs: [0xd97706, 0x92400e, 0x78350f],
-        accent: 0xfacc15,
+        gatePrimary: 0xc27803,
+        gateSecondary: 0x1e3a8a,
+        walls: [0xdfb887, 0xe2c499, 0xc89658],
+        roofs: [0x8c5e34, 0x78350f, 0x5c2b09],
+        accent: 0x1e3a8a,
         signs: [
           { top: 'خان الخليلي',  bottom: 'KHAN EL-KHALILI BAZAAR', bg: '#7f1d1d', fg: '#facc15' },
           { top: 'قهوة النيل',   bottom: 'NILE-SIDE AHWA TEAHOUSE', bg: '#064e3b', fg: '#fef08a' },
@@ -3767,45 +3767,142 @@ function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
   return root;
 }
 
-// 10. CAIRO
-function createGrandPyramidAndSphinx(parent, px, py, pz) {
+// 10. CAIRO - Authentic Giza Plateau (Great Pyramid of Khufu, Khafre with Casing, Colossal Sphinx & Obelisk)
+function createGrandPyramidAndSphinx(parent, px, py, pz, xSign = 1) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
-  const sandGold = 0xd97706;
-  const limeStone = 0xf59e0b;
-  const paleSand = 0xfde68a;
-  const royalGold = 0xfacc15;
 
-  const pyrZ = -1.8;
-  const pyramidTiers = [
-    { w: 17.0, d: 15.0, h: 4.8, y: 2.4 },
-    { w: 14.5, d: 12.8, h: 4.8, y: 7.2 },
-    { w: 12.0, d: 10.5, h: 4.8, y: 12.0 },
-    { w: 9.5,  d: 8.2,  h: 4.8, y: 16.8 },
-    { w: 7.0,  d: 6.0,  h: 4.8, y: 21.6 },
-    { w: 4.5,  d: 4.0,  h: 4.2, y: 26.0 },
-    { w: 2.6,  d: 2.4,  h: 2.5, y: 29.2 }
+  // Directional helpers: street is towards -xSign, desert background is towards +xSign
+  const streetDirX = -xSign;
+  const awayDirX = xSign;
+
+  // Ancient Egyptian Sandstone & Weathered Limestone Palette (NOT pagoda gold)
+  const sandstoneLight = 0xdfb887; // Warm sunbaked sandstone
+  const sandstoneMid   = 0xc89658; // Ancient weathered limestone
+  const sandstoneDark  = 0xb8864f; // Desert shade sandstone
+  const sandstoneDeep  = 0x926538; // Terracotta / foundation stone
+  const ancientShadow  = 0x27170a; // Chamber interior / shadows
+  const lapisBlue      = 0x1e3a8a; // Pharaonic Nemes royal lapis lazuli
+  const nemesGold      = 0xf59e0b; // Pharaonic headcloth gold accent
+  const casingStone    = 0xfef3c7; // Khafre's famous smooth summit casing
+  const redGranite     = 0x991b1b; // Aswan red granite obelisk
+
+  // ---------------------------------------------------------
+  // 1. THE GREAT PYRAMID OF KHUFU (Expansive 4-Sided Stepped Pyramid)
+  // Low-slung, broad Egyptian aspect ratio (~52 degree slope)
+  // ---------------------------------------------------------
+  const kx = awayDirX * 3.2;
+  const kz = -1.2;
+  const khufuTiers = [
+    { w: 22.0, d: 20.0, h: 1.25, y: 0.625 },
+    { w: 20.0, d: 18.2, h: 1.25, y: 1.875 },
+    { w: 18.0, d: 16.4, h: 1.25, y: 3.125 },
+    { w: 16.0, d: 14.6, h: 1.25, y: 4.375 },
+    { w: 14.0, d: 12.8, h: 1.25, y: 5.625 },
+    { w: 12.0, d: 11.0, h: 1.25, y: 6.875 },
+    { w: 10.0, d: 9.2,  h: 1.25, y: 8.125 },
+    { w: 8.0,  d: 7.4,  h: 1.25, y: 9.375 },
+    { w: 6.0,  d: 5.6,  h: 1.25, y: 10.625 },
+    { w: 4.2,  d: 3.8,  h: 1.25, y: 11.875 },
+    { w: 2.6,  d: 2.4,  h: 1.1,  y: 13.05 },
+    { w: 1.4,  d: 1.3,  h: 0.7,  y: 13.95 }
   ];
-  pyramidTiers.forEach((tier, i) => {
-    const col = i % 2 === 0 ? sandGold : limeStone;
-    addVoxelBox(root, tier.w, tier.h, tier.d, 0, tier.y, pyrZ, col);
+
+  khufuTiers.forEach((tier, i) => {
+    const col = (i % 3 === 0) ? sandstoneMid : ((i % 3 === 1) ? sandstoneLight : sandstoneDark);
+    addVoxelBox(root, tier.w, tier.h, tier.d, kx, tier.y, kz, col);
   });
 
-  addVoxelBox(root, 1.8, 2.2, 1.8, 0, 31.4, pyrZ, royalGold, { metalness: 0.85, emissive: royalGold, emissiveIntensity: 1.8 });
-  addVoxelBox(root, 0.8, 1.2, 0.8, 0, 32.8, pyrZ, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 2.5 });
+  // Ancient Tomb Entrance Passage (cut into the street-facing slope)
+  const entX = kx + streetDirX * 9.2;
+  addVoxelBox(root, 1.2, 2.2, 2.0, entX, 2.3, kz, ancientShadow);
+  addVoxelBox(root, 1.4, 0.6, 2.6, entX, 3.6, kz, sandstoneDeep);
+  addVoxelBox(root, 0.8, 0.8, 1.8, entX + awayDirX * 0.4, 4.2, kz, sandstoneDark);
 
-  const sphZ = 5.2;
-  addVoxelBox(root, 3.4, 2.2, 5.5, 0, 1.1, sphZ, limeStone);
-  addVoxelBox(root, 0.9, 0.8, 2.4, -1.2, 0.4, sphZ + 3.2, limeStone);
-  addVoxelBox(root, 0.9, 0.8, 2.4,  1.2, 0.4, sphZ + 3.2, limeStone);
-  addVoxelBox(root, 2.2, 2.5, 2.2, 0, 3.2, sphZ + 1.2, paleSand);
-  addVoxelBox(root, 2.6, 1.8, 1.2, 0, 3.5, sphZ + 0.8, 0x1d4ed8);
-  addVoxelBox(root, 2.8, 0.4, 1.4, 0, 4.4, sphZ + 0.8, royalGold);
-  addVoxelBox(root, 0.4, 1.2, 0.4, 0, 1.6, sphZ + 2.2, 0x78350f);
+  // ---------------------------------------------------------
+  // 2. THE SECOND PYRAMID OF KHAFRE (Giza Duo Skyline)
+  // Offset in background with signature preserved white casing cap
+  // ---------------------------------------------------------
+  const kfX = awayDirX * 11.2;
+  const kfZ = -11.5;
+  const khafreTiers = [
+    { w: 14.0, d: 13.0, h: 1.3, y: 0.65, col: sandstoneDark },
+    { w: 12.0, d: 11.2, h: 1.3, y: 1.95, col: sandstoneMid },
+    { w: 10.0, d: 9.4,  h: 1.3, y: 3.25, col: sandstoneLight },
+    { w: 8.0,  d: 7.6,  h: 1.3, y: 4.55, col: sandstoneMid },
+    { w: 6.0,  d: 5.8,  h: 1.3, y: 5.85, col: sandstoneDark },
+    { w: 4.2,  d: 4.0,  h: 1.3, y: 7.15, col: casingStone },
+    { w: 2.6,  d: 2.5,  h: 1.3, y: 8.45, col: casingStone },
+    { w: 1.2,  d: 1.2,  h: 1.0, y: 9.60, col: 0xffffff, opt: { emissive: 0xfef9c3, emissiveIntensity: 0.4 } }
+  ];
+  khafreTiers.forEach(t => {
+    addVoxelBox(root, t.w, t.h, t.d, kfX, t.y, kfZ, t.col, t.opt || {});
+  });
 
-  parent.add(root);
-  return root;
-}
+  // ---------------------------------------------------------
+  // 3. THE COLOSSAL GREAT SPHINX OF GIZA
+  // Guarding the roadside terrace in front of the pyramids
+  // ---------------------------------------------------------
+  const sx = streetDirX * 4.6;
+  const sz = 3.6;
+
+  // Raised Sandstone Terrace & Ramparts
+  addVoxelBox(root, 4.4, 0.6, 9.2, sx, 0.3, sz, sandstoneDeep);
+  addVoxelBox(root, 4.0, 0.3, 8.6, sx, 0.75, sz, sandstoneMid);
+
+  // Couchant Lion Body
+  addVoxelBox(root, 3.0, 2.7, 5.6, sx, 2.25, sz - 0.6, sandstoneLight);
+  addVoxelBox(root, 3.6, 2.0, 2.6, sx, 1.9, sz - 2.8, sandstoneDark);
+  addVoxelBox(root, 0.4, 1.8, 0.4, sx + awayDirX * 1.5, 2.0, sz - 3.8, sandstoneDeep);
+
+  // Extended Front Lion Paws resting on the causeway
+  addVoxelBox(root, 0.9, 0.75, 2.8, sx - 1.0, 1.25, sz + 3.0, sandstoneLight);
+  addVoxelBox(root, 0.9, 0.75, 2.8, sx + 1.0, 1.25, sz + 3.0, sandstoneLight);
+  addVoxelBox(root, 0.92, 0.25, 0.5, sx - 1.0, 1.0, sz + 4.3, sandstoneDeep);
+  addVoxelBox(root, 0.92, 0.25, 0.5, sx + 1.0, 1.0, sz + 4.3, sandstoneDeep);
+
+  // The Dream Stele Tablet between paws
+  addVoxelBox(root, 0.9, 1.7, 0.25, sx, 1.75, sz + 2.2, sandstoneDeep);
+
+  // Pharaoh Head with Royal Nemes Headdress
+  addVoxelBox(root, 1.8, 1.9, 1.7, sx, 4.45, sz + 1.0, sandstoneLight);
+  addVoxelBox(root, 0.4, 1.5, 0.4, sx, 3.2, sz + 1.75, lapisBlue);
+
+  // Royal Nemes Headcloth (Lapis Lazuli Blue & Gold striped lappets)
+  [-1.08, 1.08].forEach(wx => {
+    addVoxelBox(root, 0.38, 2.2, 1.4, sx + wx, 3.9, sz + 0.8, lapisBlue);
+    addVoxelBox(root, 0.42, 0.35, 1.44, sx + wx, 4.3, sz + 0.8, nemesGold);
+    addVoxelBox(root, 0.42, 0.35, 1.44, sx + wx, 3.4, sz + 0.8, nemesGold);
+  });
+  addVoxelBox(root, 2.1, 0.55, 1.9, sx, 5.55, sz + 0.9, lapisBlue);
+  addVoxelBox(root, 0.35, 0.55, 0.35, sx, 5.4, sz + 1.85, nemesGold, { emissive: nemesGold, emissiveIntensity: 0.9 });
+
+  // ---------------------------------------------------------
+  // 4. RED ASWAN GRANITE OBELISK
+  // Tall needle monument with glowing golden pyramidion capstone
+  // ---------------------------------------------------------
+  const ox = streetDirX * 5.0;
+  const oz = -4.8;
+  addVoxelBox(root, 2.2, 0.9, 2.2, ox, 0.45, oz, sandstoneDeep);
+  addVoxelBox(root, 1.7, 0.6, 1.7, ox, 1.2, oz, redGranite);
+  addVoxelBox(root, 1.15, 4.2, 1.15, ox, 3.6, oz, redGranite);
+  addVoxelBox(root, 0.9,  3.6, 0.9,  ox, 7.5, oz, 0x7f1d1d);
+  addVoxelBox(root, 0.7,  3.0, 0.7,  ox, 10.8, oz, redGranite);
+  addVoxelBox(root, 0.5, 1.3, 0.5, ox, 12.8, oz, 0xfacc15, { metalness: 0.85, emissive: 0xf59e0b, emissiveIntensity: 1.4 });
+
+  // ---------------------------------------------------------
+  // 5. CEREMONIAL FLAME BRAZIERS
+  // Ancient carved stone fire pits with warm desert embers
+  // ---------------------------------------------------------
+  [
+    { bx: sx - 2.8, bz: sz + 1.5 },
+    { bx: sx + 2.8, bz: sz + 1.5 },
+    { bx: ox, bz: oz + 2.2 }
+  ].forEach(b => {
+    addVoxelBox(root, 0.7, 0.7, 0.7, b.bx, 0.35, b.bz, sandstoneDeep);
+    addVoxelBox(root, 0.9, 0.3, 0.9, b.bx, 0.85, b.bz, sandstoneMid);
+    addVoxelBox(root, 0.45, 0.55, 0.45, b.bx, 1.25, b.bz, 0xf97316, { emissive: 0xef4444, emissiveIntensity: 2.2 });
+  });
 
 // CULTURAL PROPS
 function createHachikoStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xd97706); }
@@ -4209,25 +4306,25 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 10. CAIRO (EGYPT)
   } else {
     if (bType === 0) {
-      createGrandPyramidAndSphinx(apt.archGroup, 0, 0, 0);
+      createGrandPyramidAndSphinx(apt.archGroup, 0, 0, 0, xSign);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
-      addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0xf59e0b);
-      addVoxelBox(apt.archGroup, 2.6, 12.0, 2.6, faceX * 0.4, 16.5, -depth * 0.3, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0xdfb887);
+      addVoxelBox(apt.archGroup, 2.6, 12.0, 2.6, faceX * 0.4, 16.5, -depth * 0.3, 0xc89658);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 2) {
       const h = 9.5;
-      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xc89658);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 3) {
       const h = 7.0;
-      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xfde68a);
+      addVoxelBox(apt.archGroup, width, h, depth, 0, h / 2, 0, 0xdfb887);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 4) {
-      addVoxelBox(apt.archGroup, width, 12.0, depth, 0, 6.0, 0, 0xd97706);
+      addVoxelBox(apt.archGroup, width, 12.0, depth, 0, 6.0, 0, 0xb8864f);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else {
-      addVoxelBox(apt.archGroup, width, 18.0, depth, 0, 9.0, 0, 0x78350f);
+      addVoxelBox(apt.archGroup, width, 18.0, depth, 0, 9.0, 0, 0x8c5e34);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     }
   }
