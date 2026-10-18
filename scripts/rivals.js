@@ -72,6 +72,7 @@ function activateRoute(kind) {
     }
     showActionToast('🛡️ SAFE BYPASS • 20s • PIT STOP + CARGO REFILL', 'info');
   }
+  if (typeof soundFX !== 'undefined' && soundFX.playCityGateChime) soundFX.playCityGateChime();
 }
 
 function spawnRival() {
@@ -109,6 +110,7 @@ function claimRivalDelivery(apartment, parcelType) {
   if (rivalState.target === apartment) rivalState.target = null;
   gameState.score += 500;
   updateHUD();
+  if (typeof soundFX !== 'undefined' && soundFX.playRivalSnipe) soundFX.playRivalSnipe();
   showActionToast('⚡ SNIPED RIVAL! +500', 'bonus');
   return true;
 }

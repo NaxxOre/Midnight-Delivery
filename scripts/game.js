@@ -1662,6 +1662,7 @@
       gameState.overdriveMeter = 100;
       soundFX.playCityGateChime();
       soundFX.playBoost();
+      if (typeof soundFX.playOverdriveBurst === 'function') soundFX.playOverdriveBurst();
       triggerScreenShake(0.35, 1.4);
       triggerSpeedLines();
       if (playerVan) {
