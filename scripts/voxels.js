@@ -1129,6 +1129,12 @@
     const envGroup = new THREE.Group();
     scene.add(envGroup);
 
+    // Singular Grand City Landmark placed in the background on the left side
+    const cityLeftLandmarkGroup = new THREE.Group();
+    cityLeftLandmarkGroup.position.set(-30.0, 0, -65.0);
+    scene.add(cityLeftLandmarkGroup);
+    window.cityLeftLandmarkGroup = cityLeftLandmarkGroup;
+
     const roadMat = new THREE.MeshStandardMaterial({ color: 0x3b4254, roughness: 0.86 });
     const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(ROAD_WIDTH, 0.4, 340), roadMat);
     roadMesh.position.set(0, -0.2, -95);
@@ -1691,6 +1697,49 @@ function createGrandPyramidAndSphinx(parent, px, py, pz, xSign = 1) {
   return root;
 }
 
+// -------------------------------------------------------------
+// SINGULAR GRAND CITY LANDMARK MANAGER
+// Each city has ONLY ONE unique national landmark in the left background!
+// -------------------------------------------------------------
+function updateCityLeftLandmark(cityTheme) {
+  if (!window.cityLeftLandmarkGroup) return;
+  while (window.cityLeftLandmarkGroup.children.length > 0) {
+    window.cityLeftLandmarkGroup.remove(window.cityLeftLandmarkGroup.children[0]);
+  }
+  if (!cityTheme) return;
+
+  const root = new THREE.Group();
+  // Scale bigger (1.45x) so it looms majestically in the left background
+  const s = cityTheme.id === 'cairo' ? 1.35 : 1.45;
+  root.scale.set(s, s, s);
+
+  if (cityTheme.id === 'tokyo') {
+    createGrandTokyoTower(root, 0, 0, 0);
+  } else if (cityTheme.id === 'yangon') {
+    createGrandShwedagonPagoda(root, 0, 0, 0);
+  } else if (cityTheme.id === 'littleindia') {
+    createGrandTajMahal(root, 0, 0, 0);
+  } else if (cityTheme.id === 'chinatown') {
+    createImperialTempleOfHeaven(root, 0, 0, 0);
+  } else if (cityTheme.id === 'pastel') {
+    createCyberSpaceNeedleAndWheel(root, 0, 0, 0);
+  } else if (cityTheme.id === 'paris') {
+    createGrandEiffelTower(root, 0, 0, 0);
+  } else if (cityTheme.id === 'rio') {
+    createGrandChristTheRedeemer(root, 0, 0, 0);
+  } else if (cityTheme.id === 'washington') {
+    createGrandUSCapitolAndMonument(root, 0, 0, 0);
+  } else if (cityTheme.id === 'dubai') {
+    createGrandBurjKhalifaAndArab(root, 0, 0, 0);
+  } else if (cityTheme.id === 'cairo') {
+    createGrandPyramidAndSphinx(root, 0, 0, 0, -1);
+  }
+
+  window.cityLeftLandmarkGroup.add(root);
+  window.cityLeftLandmarkGroup.position.set(-30.0, 0, -65.0);
+}
+window.updateCityLeftLandmark = updateCityLeftLandmark;
+
 // CULTURAL PROPS
 function createHachikoStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xd97706); }
 function createChintheStatue(parent, px, py, pz, rotY = 0) { addVoxelBox(parent, 1, 1, 1, px, py, pz, 0xfacc15); }
@@ -1839,7 +1888,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 1. TOKYO
   if (cityTheme.id === 'tokyo') {
     if (bType === 0) {
-      createGrandTokyoTower(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x1e293b);
+      addVoxelBox(apt.archGroup, width * 0.88, 1.8, depth * 0.75, 0, 8.4, 0, 0xef4444);
       createHachikoStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 8.0, depth, 0, 4.0, 0, 0x1e293b);
@@ -1861,7 +1911,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 2. YANGON
   } else if (cityTheme.id === 'yangon') {
     if (bType === 0) {
-      createGrandShwedagonPagoda(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0x78350f);
+      addVoxelBox(apt.archGroup, width * 0.9, 1.6, depth * 0.8, 0, 8.0, 0, 0xfacc15);
       createChintheStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 11.5, depth, 0, 5.75, 0, 0x991b1b);
@@ -1883,7 +1934,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 3. CHINATOWN
   } else if (cityTheme.id === 'chinatown') {
     if (bType === 0) {
-      createImperialTempleOfHeaven(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0x991b1b);
+      addVoxelBox(apt.archGroup, width * 0.92, 1.6, depth * 0.8, 0, 8.0, 0, 0x1d4ed8);
       createFooDogStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 14.0, depth, 0, 7.0, 0, 0xb91c1c);
@@ -1905,7 +1957,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 4. LITTLE INDIA
   } else if (cityTheme.id === 'littleindia') {
     if (bType === 0) {
-      createGrandTajMahal(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0xf8fafc);
+      addVoxelBox(apt.archGroup, width * 0.88, 1.6, depth * 0.75, 0, 8.3, 0, 0xfacc15);
       createRoyalElephantStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 12.0, depth, 0, 6.0, 0, 0xfde68a);
@@ -1927,7 +1980,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 5. PASTEL METRO
   } else if (cityTheme.id === 'pastel') {
     if (bType === 0) {
-      createCyberSpaceNeedleAndWheel(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0x1e1b4b);
+      addVoxelBox(apt.archGroup, width * 0.85, 1.8, depth * 0.7, 0, 8.1, 0, 0x00f5d4);
       createCyberMascotStatue(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 21.0, depth, 0, 10.5, 0, 0x0f172a);
@@ -1949,7 +2003,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 6. PARIS (FRANCE)
   } else if (cityTheme.id === 'paris') {
     if (bType === 0) {
-      createGrandEiffelTower(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0xfef3c7);
+      addVoxelBox(apt.archGroup, width * 0.88, 1.8, depth * 0.75, 0, 8.4, 0, 0x334155);
       createParisianCafeBistro(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       const h = 15.5;
@@ -1991,7 +2046,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 7. RIO DE JANEIRO (BRASIL)
   } else if (cityTheme.id === 'rio') {
     if (bType === 0) {
-      createGrandChristTheRedeemer(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0x67e8f9);
+      addVoxelBox(apt.archGroup, width * 0.85, 1.8, depth * 0.7, 0, 8.1, 0, 0xfacc15);
       createCopacabanaCoconutKiosk(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       const h = 14.0;
@@ -2030,7 +2086,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 8. WASHINGTON D.C. (USA)
   } else if (cityTheme.id === 'washington') {
     if (bType === 0) {
-      createGrandUSCapitolAndMonument(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x991b1b);
+      addVoxelBox(apt.archGroup, width * 0.88, 1.8, depth * 0.75, 0, 8.4, 0, 0x1e293b);
       createAmericanHotDogCart(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       const h = 13.5;
@@ -2060,7 +2117,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 9. DUBAI (UAE)
   } else if (cityTheme.id === 'dubai') {
     if (bType === 0) {
-      createGrandBurjKhalifaAndArab(apt.archGroup, 0, 0, 0);
+      addVoxelBox(apt.archGroup, width, 7.5, depth, 0, 3.75, 0, 0x0f172a);
+      addVoxelBox(apt.archGroup, width * 0.85, 1.8, depth * 0.7, 0, 8.4, 0, 0xfacc15);
       createDubaiGahwaMajlis(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       const h = 16.0;
@@ -2093,7 +2151,8 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   // 10. CAIRO (EGYPT)
   } else {
     if (bType === 0) {
-      createGrandPyramidAndSphinx(apt.archGroup, 0, 0, 0, xSign);
+      addVoxelBox(apt.archGroup, width, 7.2, depth, 0, 3.6, 0, 0xdfb887);
+      addVoxelBox(apt.archGroup, width * 0.85, 1.8, depth * 0.7, 0, 8.1, 0, 0xc89658);
       createCairoAhwaTeahouse(apt.archGroup, frontX, 0, frontZ, rotFacingStreet);
     } else if (bType === 1) {
       addVoxelBox(apt.archGroup, width, 10.5, depth, 0, 5.25, 0, 0xdfb887);
@@ -2254,5 +2313,9 @@ function createApartmentBuilding(side, zPos, index) {
       apartments.forEach((apt, idx) => {
         rebuildApartmentVisuals(apt, cityTheme, idx);
       });
+      if (typeof updateCityLeftLandmark === 'function') {
+        updateCityLeftLandmark(cityTheme);
+      }
     }
+    window.transformAllApartmentsToCity = transformAllApartmentsToCity;
 

@@ -2358,6 +2358,9 @@
       apartments.push(createApartmentBuilding('left', zPos, i * 2));
       apartments.push(createApartmentBuilding('right', zPos, i * 2 + 1));
     }
+    if (typeof updateCityLeftLandmark === 'function' && CITY_THEMES[gameState.cityIndex]) {
+      updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
+    }
     renderBottomParcelHandUI();
     setHomePageMode(true);
     updateHomeGarageUI();
@@ -2538,6 +2541,14 @@
           act.mesh.position.z = -210 - Math.random() * 25;
         }
       });
+
+      if (window.cityLeftLandmarkGroup) {
+        window.cityLeftLandmarkGroup.position.x = -30.0;
+        window.cityLeftLandmarkGroup.position.z += playerSpeed * dt;
+        if (window.cityLeftLandmarkGroup.position.z > 35) {
+          window.cityLeftLandmarkGroup.position.z -= (NUM_PAIRS * BLOCK_SPACING);
+        }
+      }
 
       apartments.forEach(apt => {
         apt.group.position.z += playerSpeed * dt;
