@@ -2543,11 +2543,13 @@
       });
 
       if (window.cityLeftLandmarkGroup) {
-        window.cityLeftLandmarkGroup.position.x = -30.0;
-        window.cityLeftLandmarkGroup.position.z += playerSpeed * dt;
-        if (window.cityLeftLandmarkGroup.position.z > 35) {
-          window.cityLeftLandmarkGroup.position.z -= (NUM_PAIRS * BLOCK_SPACING);
-        }
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -68.0 : -42.0;
+        const targetZ = isCairo ? -95.0 : -80.0;
+        window.cityLeftLandmarkGroup.position.x = targetX;
+        // Subtle horizon parallax drift - stays permanently in the left background, never loops or repeats!
+        const drift = Math.sin(gameState.distanceMeters * 0.003) * 6.0;
+        window.cityLeftLandmarkGroup.position.z = targetZ + drift;
       }
 
       apartments.forEach(apt => {

@@ -1556,141 +1556,179 @@ function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
   return root;
 }
 
-// 10. CAIRO - Authentic Giza Plateau (Great Pyramid of Khufu, Khafre with Casing, Colossal Sphinx & Obelisk)
-function createGrandPyramidAndSphinx(parent, px, py, pz, xSign = 1) {
+// 10. CAIRO - Authentic Giza Plateau with Real 4-Sided Geometric Pyramids (Smooth, Non-Blocky)
+function createGrandPyramidAndSphinx(parent, px, py, pz) {
   const root = new THREE.Group();
   root.position.set(px, py, pz);
 
-  // Directional helpers: street is towards -xSign, desert background is towards +xSign
-  const streetDirX = -xSign;
-  const awayDirX = xSign;
-
-  // Ancient Egyptian Sandstone & Weathered Limestone Palette (NOT pagoda gold)
-  const sandstoneLight = 0xdfb887; // Warm sunbaked sandstone
-  const sandstoneMid   = 0xc89658; // Ancient weathered limestone
-  const sandstoneDark  = 0xb8864f; // Desert shade sandstone
-  const sandstoneDeep  = 0x926538; // Terracotta / foundation stone
-  const ancientShadow  = 0x27170a; // Chamber interior / shadows
-  const lapisBlue      = 0x1e3a8a; // Pharaonic Nemes royal lapis lazuli
-  const nemesGold      = 0xf59e0b; // Pharaonic headcloth gold accent
-  const casingStone    = 0xfef3c7; // Khafre's famous smooth summit casing
-  const redGranite     = 0x991b1b; // Aswan red granite obelisk
-
-  // ---------------------------------------------------------
-  // 1. THE GREAT PYRAMID OF KHUFU (Expansive 4-Sided Stepped Pyramid)
-  // Low-slung, broad Egyptian aspect ratio (~52 degree slope)
-  // ---------------------------------------------------------
-  const kx = awayDirX * 3.2;
-  const kz = -1.2;
-  const khufuTiers = [
-    { w: 22.0, d: 20.0, h: 1.25, y: 0.625 },
-    { w: 20.0, d: 18.2, h: 1.25, y: 1.875 },
-    { w: 18.0, d: 16.4, h: 1.25, y: 3.125 },
-    { w: 16.0, d: 14.6, h: 1.25, y: 4.375 },
-    { w: 14.0, d: 12.8, h: 1.25, y: 5.625 },
-    { w: 12.0, d: 11.0, h: 1.25, y: 6.875 },
-    { w: 10.0, d: 9.2,  h: 1.25, y: 8.125 },
-    { w: 8.0,  d: 7.4,  h: 1.25, y: 9.375 },
-    { w: 6.0,  d: 5.6,  h: 1.25, y: 10.625 },
-    { w: 4.2,  d: 3.8,  h: 1.25, y: 11.875 },
-    { w: 2.6,  d: 2.4,  h: 1.1,  y: 13.05 },
-    { w: 1.4,  d: 1.3,  h: 0.7,  y: 13.95 }
-  ];
-
-  khufuTiers.forEach((tier, i) => {
-    const col = (i % 3 === 0) ? sandstoneMid : ((i % 3 === 1) ? sandstoneLight : sandstoneDark);
-    addVoxelBox(root, tier.w, tier.h, tier.d, kx, tier.y, kz, col);
+  // Warm ancient sandstone materials with flatShading for crisp triangular faces
+  const khufuMat = new THREE.MeshStandardMaterial({
+    color: 0xd4a373,
+    roughness: 0.92,
+    metalness: 0.05,
+    flatShading: true
   });
 
-  // Ancient Tomb Entrance Passage (cut into the street-facing slope)
-  const entX = kx + streetDirX * 9.2;
-  addVoxelBox(root, 1.2, 2.2, 2.0, entX, 2.3, kz, ancientShadow);
-  addVoxelBox(root, 1.4, 0.6, 2.6, entX, 3.6, kz, sandstoneDeep);
-  addVoxelBox(root, 0.8, 0.8, 1.8, entX + awayDirX * 0.4, 4.2, kz, sandstoneDark);
-
-  // ---------------------------------------------------------
-  // 2. THE SECOND PYRAMID OF KHAFRE (Giza Duo Skyline)
-  // Offset in background with signature preserved white casing cap
-  // ---------------------------------------------------------
-  const kfX = awayDirX * 11.2;
-  const kfZ = -11.5;
-  const khafreTiers = [
-    { w: 14.0, d: 13.0, h: 1.3, y: 0.65, col: sandstoneDark },
-    { w: 12.0, d: 11.2, h: 1.3, y: 1.95, col: sandstoneMid },
-    { w: 10.0, d: 9.4,  h: 1.3, y: 3.25, col: sandstoneLight },
-    { w: 8.0,  d: 7.6,  h: 1.3, y: 4.55, col: sandstoneMid },
-    { w: 6.0,  d: 5.8,  h: 1.3, y: 5.85, col: sandstoneDark },
-    { w: 4.2,  d: 4.0,  h: 1.3, y: 7.15, col: casingStone },
-    { w: 2.6,  d: 2.5,  h: 1.3, y: 8.45, col: casingStone },
-    { w: 1.2,  d: 1.2,  h: 1.0, y: 9.60, col: 0xffffff, opt: { emissive: 0xfef9c3, emissiveIntensity: 0.4 } }
-  ];
-  khafreTiers.forEach(t => {
-    addVoxelBox(root, t.w, t.h, t.d, kfX, t.y, kfZ, t.col, t.opt || {});
+  const khafreMat = new THREE.MeshStandardMaterial({
+    color: 0xc89658,
+    roughness: 0.92,
+    metalness: 0.05,
+    flatShading: true
   });
 
-  // ---------------------------------------------------------
-  // 3. THE COLOSSAL GREAT SPHINX OF GIZA
-  // Guarding the roadside terrace in front of the pyramids
-  // ---------------------------------------------------------
-  const sx = streetDirX * 4.6;
-  const sz = 3.6;
+  const casingMat = new THREE.MeshStandardMaterial({
+    color: 0xfef9c3,
+    roughness: 0.75,
+    flatShading: true,
+    emissive: 0xfef08a,
+    emissiveIntensity: 0.25
+  });
 
-  // Raised Sandstone Terrace & Ramparts
-  addVoxelBox(root, 4.4, 0.6, 9.2, sx, 0.3, sz, sandstoneDeep);
-  addVoxelBox(root, 4.0, 0.3, 8.6, sx, 0.75, sz, sandstoneMid);
+  const goldApexMat = new THREE.MeshStandardMaterial({
+    color: 0xfacc15,
+    metalness: 0.85,
+    roughness: 0.2,
+    emissive: 0xd97706,
+    emissiveIntensity: 0.8,
+    flatShading: true
+  });
+
+  const sandBaseMat = new THREE.MeshStandardMaterial({
+    color: 0xb8864f,
+    roughness: 0.95,
+    flatShading: true
+  });
+
+  // -------------------------------------------------------------
+  // 1. THE GREAT PYRAMID OF KHUFU (Real 4-Sided Smooth Pyramid)
+  // Broad base (radius 34, height 30), authentic ~52 degree slope
+  // -------------------------------------------------------------
+  const khufuGroup = new THREE.Group();
+  khufuGroup.position.set(0, 0, 0);
+
+  // Desert Plateau foundation slab
+  const base1 = new THREE.Mesh(new THREE.BoxGeometry(54, 1.4, 54), sandBaseMat);
+  base1.position.set(0, 0.7, 0);
+  base1.receiveShadow = true;
+  khufuGroup.add(base1);
+
+  // Main 4-Sided Geometric Pyramid (ConeGeometry with 4 radial segments)
+  const khufuGeo = new THREE.ConeGeometry(34, 30, 4);
+  const khufuMesh = new THREE.Mesh(khufuGeo, khufuMat);
+  khufuMesh.position.set(0, 15.0 + 1.4, 0);
+  khufuMesh.rotation.y = Math.PI / 4; // Align 4 triangular faces squarely with axes
+  khufuMesh.castShadow = true;
+  khufuMesh.receiveShadow = true;
+  khufuGroup.add(khufuMesh);
+
+  // Golden Pyramidion (Electrum capstone at apex)
+  const khufuCapGeo = new THREE.ConeGeometry(4.5, 4.0, 4);
+  const khufuCap = new THREE.Mesh(khufuCapGeo, goldApexMat);
+  khufuCap.position.set(0, 30.0 + 1.4 - 2.0, 0);
+  khufuCap.rotation.y = Math.PI / 4;
+  khufuGroup.add(khufuCap);
+
+  // Ancient Tomb Entrance Passage (cut into the front face facing the road)
+  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 4.2, 3.0), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
+  entMesh.position.set(16.5, 3.2, 0);
+  khufuGroup.add(entMesh);
+
+  // Heavy stone chevron lintels above the entrance
+  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 4.2), sandBaseMat);
+  lintelMesh.position.set(16.0, 5.8, 0);
+  khufuGroup.add(lintelMesh);
+
+  root.add(khufuGroup);
+
+  // -------------------------------------------------------------
+  // 2. THE SECOND PYRAMID OF KHAFRE (With Signature Preserved Casing Cap)
+  // Set back deeper in the desert (offset: x = -35, z = -38)
+  // -------------------------------------------------------------
+  const khafreGroup = new THREE.Group();
+  khafreGroup.position.set(-35, 0, -38);
+
+  const base2 = new THREE.Mesh(new THREE.BoxGeometry(44, 1.2, 44), sandBaseMat);
+  base2.position.set(0, 0.6, 0);
+  khafreGroup.add(base2);
+
+  const khafreGeo = new THREE.ConeGeometry(27, 26, 4);
+  const khafreMesh = new THREE.Mesh(khafreGeo, khafreMat);
+  khafreMesh.position.set(0, 13.0 + 1.2, 0);
+  khafreMesh.rotation.y = Math.PI / 4;
+  khafreMesh.castShadow = true;
+  khafreMesh.receiveShadow = true;
+  khafreGroup.add(khafreMesh);
+
+  // Signature White Limestone Casing Stones at Khafre's Summit
+  const casingGeo = new THREE.ConeGeometry(9.5, 9.2, 4);
+  const casingMesh = new THREE.Mesh(casingGeo, casingMat);
+  casingMesh.position.set(0, 26.0 + 1.2 - 4.6, 0);
+  casingMesh.rotation.y = Math.PI / 4;
+  khafreGroup.add(casingMesh);
+
+  root.add(khafreGroup);
+
+  // -------------------------------------------------------------
+  // 3. THE GREAT SPHINX OF GIZA
+  // Guarding the desert causeway in front of Khufu
+  // -------------------------------------------------------------
+  const sphGroup = new THREE.Group();
+  sphGroup.position.set(24, 0, 18);
+
+  // Raised stone causeway
+  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(8, 1.2, 16), sandBaseMat);
+  sphPlinth.position.set(0, 0.6, 0);
+  sphGroup.add(sphPlinth);
 
   // Couchant Lion Body
-  addVoxelBox(root, 3.0, 2.7, 5.6, sx, 2.25, sz - 0.6, sandstoneLight);
-  addVoxelBox(root, 3.6, 2.0, 2.6, sx, 1.9, sz - 2.8, sandstoneDark);
-  addVoxelBox(root, 0.4, 1.8, 0.4, sx + awayDirX * 1.5, 2.0, sz - 3.8, sandstoneDeep);
+  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(5.5, 4.5, 9.5), khufuMat);
+  lionBody.position.set(0, 3.4, -1.0);
+  sphGroup.add(lionBody);
 
-  // Extended Front Lion Paws resting on the causeway
-  addVoxelBox(root, 0.9, 0.75, 2.8, sx - 1.0, 1.25, sz + 3.0, sandstoneLight);
-  addVoxelBox(root, 0.9, 0.75, 2.8, sx + 1.0, 1.25, sz + 3.0, sandstoneLight);
-  addVoxelBox(root, 0.92, 0.25, 0.5, sx - 1.0, 1.0, sz + 4.3, sandstoneDeep);
-  addVoxelBox(root, 0.92, 0.25, 0.5, sx + 1.0, 1.0, sz + 4.3, sandstoneDeep);
-
-  // The Dream Stele Tablet between paws
-  addVoxelBox(root, 0.9, 1.7, 0.25, sx, 1.75, sz + 2.2, sandstoneDeep);
+  // Lion Paws extending forward
+  [-1.8, 1.8].forEach(pxx => {
+    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 5.0), khufuMat);
+    paw.position.set(pxx, 1.8, 5.0);
+    sphGroup.add(paw);
+  });
 
   // Pharaoh Head with Royal Nemes Headdress
-  addVoxelBox(root, 1.8, 1.9, 1.7, sx, 4.45, sz + 1.0, sandstoneLight);
-  addVoxelBox(root, 0.4, 1.5, 0.4, sx, 3.2, sz + 1.75, lapisBlue);
+  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.4, 3.0), khufuMat);
+  sphHead.position.set(0, 7.0, 1.5);
+  sphGroup.add(sphHead);
 
-  // Royal Nemes Headcloth (Lapis Lazuli Blue & Gold striped lappets)
-  [-1.08, 1.08].forEach(wx => {
-    addVoxelBox(root, 0.38, 2.2, 1.4, sx + wx, 3.9, sz + 0.8, lapisBlue);
-    addVoxelBox(root, 0.42, 0.35, 1.44, sx + wx, 4.3, sz + 0.8, nemesGold);
-    addVoxelBox(root, 0.42, 0.35, 1.44, sx + wx, 3.4, sz + 0.8, nemesGold);
+  // Nemes royal headcloth (blue lapis wings)
+  const nemesMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
+  [-1.9, 1.9].forEach(nx => {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.8, 2.5), nemesMat);
+    wing.position.set(nx, 6.2, 1.2);
+    sphGroup.add(wing);
   });
-  addVoxelBox(root, 2.1, 0.55, 1.9, sx, 5.55, sz + 0.9, lapisBlue);
-  addVoxelBox(root, 0.35, 0.55, 0.35, sx, 5.4, sz + 1.85, nemesGold, { emissive: nemesGold, emissiveIntensity: 0.9 });
 
-  // ---------------------------------------------------------
-  // 4. RED ASWAN GRANITE OBELISK
-  // Tall needle monument with glowing golden pyramidion capstone
-  // ---------------------------------------------------------
-  const ox = streetDirX * 5.0;
-  const oz = -4.8;
-  addVoxelBox(root, 2.2, 0.9, 2.2, ox, 0.45, oz, sandstoneDeep);
-  addVoxelBox(root, 1.7, 0.6, 1.7, ox, 1.2, oz, redGranite);
-  addVoxelBox(root, 1.15, 4.2, 1.15, ox, 3.6, oz, redGranite);
-  addVoxelBox(root, 0.9,  3.6, 0.9,  ox, 7.5, oz, 0x7f1d1d);
-  addVoxelBox(root, 0.7,  3.0, 0.7,  ox, 10.8, oz, redGranite);
-  addVoxelBox(root, 0.5, 1.3, 0.5, ox, 12.8, oz, 0xfacc15, { metalness: 0.85, emissive: 0xf59e0b, emissiveIntensity: 1.4 });
+  // Nemes crown top & beard
+  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.9, 3.2), nemesMat);
+  nemesCrown.position.set(0, 9.0, 1.5);
+  sphGroup.add(nemesCrown);
 
-  // ---------------------------------------------------------
-  // 5. CEREMONIAL FLAME BRAZIERS
-  // Ancient carved stone fire pits with warm desert embers
-  // ---------------------------------------------------------
+  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.4, 0.7), nemesMat);
+  beard.position.set(0, 4.8, 2.8);
+  sphGroup.add(beard);
+
+  root.add(sphGroup);
+
+  // -------------------------------------------------------------
+  // 4. DESERT SAND DUNES ACROSS THE HORIZON
+  // Rolling desert dunes anchoring the pyramids into the backdrop
+  // -------------------------------------------------------------
+  const duneMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.95 });
   [
-    { bx: sx - 2.8, bz: sz + 1.5 },
-    { bx: sx + 2.8, bz: sz + 1.5 },
-    { bx: ox, bz: oz + 2.2 }
-  ].forEach(b => {
-    addVoxelBox(root, 0.7, 0.7, 0.7, b.bx, 0.35, b.bz, sandstoneDeep);
-    addVoxelBox(root, 0.9, 0.3, 0.9, b.bx, 0.85, b.bz, sandstoneMid);
-    addVoxelBox(root, 0.45, 0.55, 0.45, b.bx, 1.25, b.bz, 0xf97316, { emissive: 0xef4444, emissiveIntensity: 2.2 });
+    { x: -15, z: 24, w: 35, h: 2.8, d: 20 },
+    { x: 30, z: -25, w: 40, h: 3.2, d: 22 },
+    { x: -45, z: 15, w: 32, h: 2.4, d: 18 }
+  ].forEach(d => {
+    const dune = new THREE.Mesh(new THREE.BoxGeometry(d.w, d.h, d.d), duneMat);
+    dune.position.set(d.x, d.h / 2, d.z);
+    root.add(dune);
   });
 
   parent.add(root);
@@ -1709,8 +1747,9 @@ function updateCityLeftLandmark(cityTheme) {
   if (!cityTheme) return;
 
   const root = new THREE.Group();
-  // Scale bigger (1.45x) so it looms majestically in the left background
-  const s = cityTheme.id === 'cairo' ? 1.35 : 1.45;
+  const isCairo = (cityTheme.id === 'cairo');
+  // Sized appropriately: Cairo geometric pyramids are sized directly; others scaled 1.45x
+  const s = isCairo ? 1.0 : 1.45;
   root.scale.set(s, s, s);
 
   if (cityTheme.id === 'tokyo') {
@@ -1732,11 +1771,15 @@ function updateCityLeftLandmark(cityTheme) {
   } else if (cityTheme.id === 'dubai') {
     createGrandBurjKhalifaAndArab(root, 0, 0, 0);
   } else if (cityTheme.id === 'cairo') {
-    createGrandPyramidAndSphinx(root, 0, 0, 0, -1);
+    createGrandPyramidAndSphinx(root, 0, 0, 0);
   }
 
   window.cityLeftLandmarkGroup.add(root);
-  window.cityLeftLandmarkGroup.position.set(-30.0, 0, -65.0);
+
+  // Set far back in the left background (Cairo pushed far into the desert at X = -68, Z = -95)
+  const targetX = isCairo ? -68.0 : -42.0;
+  const targetZ = isCairo ? -95.0 : -80.0;
+  window.cityLeftLandmarkGroup.position.set(targetX, 0, targetZ);
 }
 window.updateCityLeftLandmark = updateCityLeftLandmark;
 
