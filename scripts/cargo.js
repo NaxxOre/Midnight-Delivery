@@ -176,7 +176,7 @@
         if (spawnSupplyDepot()) gameState.nextSupplyDistance = gameState.distanceMeters + 65;
       }
       if (!gameState.tutorialActive && gameState.distanceMeters >= gameState.nextOverpassDistance) {
-        if (spawnCargoOverpass()) gameState.nextOverpassDistance = gameState.distanceMeters + 110;
+        if (spawnCargoOverpass()) gameState.nextOverpassDistance = gameState.distanceMeters + (routeState.kind === 'express' ? 50 : 110);
       }
       roofCargoRoot.getWorldPosition(cargoWorldPosition);
       const roofZ = cargoWorldPosition.z;

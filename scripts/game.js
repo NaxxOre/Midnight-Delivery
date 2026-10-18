@@ -1540,6 +1540,7 @@
         targetOrderId: apt.orderId,
         cargoMultiplier: getRoofScoreMultiplier(),
         nightMultiplier: nightState.remaining > 0 ? 1.5 : 1,
+        routeCoinMultiplier: getRouteCoinMultiplier(),
         endPos: new THREE.Vector3(),
         parcelType: parcelTypeId,
         modifier: slotModifier,
@@ -1551,6 +1552,7 @@
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
       gameState.roofCrates--;
+      claimRivalDelivery(apt, parcelTypeId);
       syncRoofCargo();
       refillHandSlot(slotIndex);
       updateOrderAlertsAndBubbles();
@@ -1995,9 +1997,9 @@
     }
 
     function spawnTrafficWave() {
-      if (trafficVehicles.length >= 8) return;
+      if (trafficVehicles.length >= getRouteTrafficCap()) return;
       const laneIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
-      const count = Math.random() < 0.30 ? 2 : 1;
+      const count = routeState.kind === 'safe' ? 1 : Math.random() < (routeState.kind === 'express' ? 0.75 : 0.30) ? 2 : 1;
       const vehiclePool = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck', 'ambulance', 'firetruck', 'police', 'ufo', 'car'];
 
       for (let i = 0; i < count; i++) {
@@ -2067,6 +2069,7 @@
       gameState.laneIndex = Math.max(0, Math.min(3, gameState.laneIndex + dir));
       if (gameState.laneIndex !== prevLane) {
         registerCargoSteer(dir);
+        queueRivalRam(prevLane, gameState.laneIndex);
         soundFX.playReelTick(440);
         if (gameState.tutorialActive && gameState.tutorialStep === 1) {
           gameState.tutorialSteerCount = (gameState.tutorialSteerCount || 0) + 1;
@@ -2596,6 +2599,7 @@
       gameState.lateralVelocity = 0;
       resetCargoRun();
       resetNightRun();
+      resetRivalRun();
       gameState.throttle = 0.72;
       gameState.boostTimer = 0;
 
@@ -3112,8 +3116,8 @@
           const distX = Math.abs(cMesh.position.x - playerVan.position.x);
           if (distZ < 2.0 && distX < 1.6) {
             soundFX.playDeliverSuccess();
-            gameState.coins += 1;
-            gameState.runCoinsEarned += 1;
+            gameState.coins += getRouteCoinMultiplier();
+            gameState.runCoinsEarned += getRouteCoinMultiplier();
             gameState.score += 20 * (gameState.overdriveActive ? 2 : 1);
             spawnVoxelBurst(cMesh.position, 0xfacc15, 10);
             showFloatingPopup(cMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '+1 COIN', 'text-amber-300 font-extrabold');
@@ -3398,7 +3402,7 @@
         }
 
         trafficTimer += dt;
-        if (trafficTimer > 1.45) {
+        if (trafficTimer > getRouteTrafficInterval()) {
           trafficTimer = 0;
           spawnTrafficWave();
         }
@@ -3652,7 +3656,7 @@
                   spawnVoxelBurst(liveEnd, 0xfacc15, 24);
 
                   const vipHalfPts = Math.round(pInfo.pts * 2 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier * (gameState.overdriveActive ? 2 : 1));
-                  const vipHalfCoins = Math.round(baseCoinGain * 2 * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfCoins = Math.round(baseCoinGain * 2 * (gameState.overdriveActive ? 2 : 1) * fp.routeCoinMultiplier);
                   gameState.score += vipHalfPts;
                   gameState.coins += vipHalfCoins;
                   gameState.runCoinsEarned += vipHalfCoins;
@@ -3700,7 +3704,7 @@
                 const multiplier = (isPerfect ? 2 : 1) * matchMultiplier * modMultiplier * vipMultiplier;
                 const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier);
                 const vipCoinBonus = isVipJackpot ? 100 : 0;
-                const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier);
+                const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier * fp.routeCoinMultiplier);
 
                 apt.delivered = true;
                 apt.ringGroup.visible = false;
@@ -3746,7 +3750,7 @@
               } else {
                 // WRONG PARCEL! Player receives 50% points & combo resets to 1
                 const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier));
-                const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5));
+                const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5 * fp.routeCoinMultiplier));
 
                 apt.delivered = true;
                 apt.ringGroup.visible = false;
@@ -3810,6 +3814,7 @@
 
       updateFallenCargo(rawDt);
       updateNightSystems(rawDt, dt, playerSpeed);
+      updateRivalSystems(rawDt, dt, playerSpeed);
       renderer.render(scene, camera);
     }
 

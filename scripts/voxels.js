@@ -1629,7 +1629,7 @@
         return;
       }
 
-      const skipChance = isRushHour ? 0.12 : 0.35;
+      const skipChance = routeState.kind === 'express' ? 0 : isRushHour ? 0.12 : 0.35;
       if (!allowOrder || tooCloseToExistingOrder || Math.random() < skipChance) {
         apt.hasOrder = false;
         apt.ringGroup.visible = false;
@@ -1655,7 +1655,7 @@
       apt.charMesh = charMesh;
 
       // VIP Double Order (20% chance)
-      const isVip = Math.random() < 0.20;
+      const isVip = routeState.kind === 'express' || Math.random() < 0.20;
       apt.isVip = isVip;
       apt.vipNeeded = isVip ? 2 : 1;
       apt.vipDelivered = 0;
