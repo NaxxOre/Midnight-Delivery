@@ -127,12 +127,13 @@
         gameState.cargoSwayVelocity *= 0.3;
         gameState.cargoStress *= 0.4;
         gameState.cargoLossCooldown = 0.8;
-        showActionToast('Cargo lost • ease off the swerves', 'danger');
+        showActionToast('⚠️ CARGO LOST', 'danger');
       }
       updateCargoHud();
     }
 
     function spawnSupplyDepot(laneIndex = Math.floor(Math.random() * LANES.length), zPosition = -150) {
+      if (gameState.distanceMeters < 250 && zPosition === -150) return null;
       if (cargoRoadEvents.filter(event => event.type === 'supply').length >= 2) return null;
       const mesh = createSupplyDepotMesh(laneIndex);
       mesh.position.z = zPosition;
@@ -143,7 +144,11 @@
     }
 
     function spawnCargoOverpass(safeLaneIndex = Math.floor(Math.random() * LANES.length), zPosition = -165) {
+      if (gameState.distanceMeters < 250 && zPosition === -165) return null;
+      if (typeof nightState !== 'undefined' && nightState.remaining > 0) return null;
       if (cargoRoadEvents.some(event => event.type === 'bridge')) return null;
+      if (typeof routeState !== 'undefined' && routeState.gateActive && typeof routeGate !== 'undefined' && Math.abs(routeGate.position.z - zPosition) < 80) return null;
+      if (typeof rivalState !== 'undefined' && rivalState.active && typeof rivalMesh !== 'undefined' && Math.abs(rivalMesh.position.z - zPosition) < 80) return null;
       const mesh = createCargoOverpassMesh(safeLaneIndex, playerVan.userData.rackY);
       mesh.position.z = zPosition;
       cargoRoadGroup.add(mesh);
@@ -167,8 +172,8 @@
       if (lost > 0) {
         soundFX.playCrash();
         triggerScreenShake(0.2, 0.6);
-        showActionToast(`Low clearance • ${lost} crate${lost === 1 ? '' : 's'} sheared off`, 'danger');
-      } else if (gameState.roofCrates > 0) showActionToast('Clearance cleared • cargo secure', 'info');
+        showActionToast('⚠️ LOW BRIDGE', 'danger');
+      } else if (gameState.roofCrates > 0) showActionToast('✅ CARGO SECURE', 'info');
       return lost;
     }
 
@@ -189,7 +194,7 @@
           if (event.type === 'supply' && Math.abs(playerVan.position.x - LANES[event.laneIndex]) <= 1.55 + (getVanTuningLevel(gameState.equippedVanId, 'cargoMagnet') - 1) * 0.15) {
             const loaded = loadRoofCargo(2);
             soundFX.playCityGateChime();
-            showActionToast(loaded > 0 ? `Supply depot • +${loaded} crates` : 'Cargo full • 6/6', 'info');
+            showActionToast(loaded > 0 ? `📦 +${loaded} CRATES` : '📦 CARGO FULL', 'info');
           } else if (event.type === 'bridge') shearRoofCargo(event);
         }
         if (event.mesh.position.z > 38) {
@@ -229,9 +234,8 @@
       gameState.lastCargoVelocity = 0;
       gameState.lastCargoSteerTime = -Infinity;
       gameState.lastCargoSteerDir = 0;
-      gameState.nextSupplyDistance = 65;
-      gameState.nextOverpassDistance = 100;
+      gameState.nextSupplyDistance = 270;
+      gameState.nextOverpassDistance = 330;
       roofCargoRoot.rotation.z = 0;
       attachRoofCargoToVan(playerVan);
-      spawnSupplyDepot(gameState.laneIndex, -70);
     }

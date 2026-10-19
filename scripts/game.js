@@ -912,8 +912,8 @@
     }
 
     const SLOT_KEYS = ['Q', 'W', 'E'];
-    const THROW_RANGE_MIN = -40;
-    const THROW_RANGE_MAX = 12;
+    const THROW_RANGE_MIN = -38;
+    const THROW_RANGE_MAX = 10;
     const orderBadgePosition = new THREE.Vector3();
     const aimStartPosition = new THREE.Vector3();
     const aimEndPosition = new THREE.Vector3();
@@ -1034,20 +1034,10 @@
         card.dataset.renderKey = renderKey;
         const modifierClass = modifier ? `is-${modifier.type}${modifier.cracked ? ' is-cracked' : ''}` : '';
         card.className = `parcel-card-slot ${parcel.tierClass} ${modifierClass}`;
-        let modifierBadge = '';
-        let modifierTrack = '';
-        if (modifier && modifier.type === 'hot') {
-          modifierBadge = '<span class="parcel-status" title="Hot parcel">🔥</span>';
-          modifierTrack = `<div class="hot-countdown-track"><div class="hot-countdown-fill" style="width: ${Math.max(0, modifier.timer / modifier.maxTime * 100)}%"></div></div>`;
-        } else if (modifier && modifier.type === 'fragile') {
-          modifierBadge = `<span class="parcel-status" title="${modifier.cracked ? 'Cracked parcel' : 'Fragile parcel'}">${modifier.cracked ? '💔' : '🍷'}</span>`;
-        }
         card.innerHTML = `
           <div class="parcel-card-inner">
             <span class="parcel-key-badge parcel-dock-key">${SLOT_KEYS[slotIdx]}</span>
             <img class="parcel-dock-icon" src="${parcelIconDataURLs[parcel.id]}" alt="${parcel.name}" />
-            ${modifierBadge}
-            ${modifierTrack}
           </div>`;
       });
     }
@@ -1453,7 +1443,7 @@
       if (gameState.mode !== 'playing' || !isResidentInThrowRange(apt) ||
           !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
       if (gameState.roofCrates <= 0) {
-        showActionToast('Cargo empty • drive through a green supply arch', 'info');
+        showActionToast('⚠️ ROOF EMPTY', 'info');
         return false;
       }
       const pendingCount = flyingParcels.filter(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId).length;
@@ -1749,7 +1739,7 @@
       toast.textContent = text;
       toast.dataset.tone = tone;
       toast.classList.add('is-visible');
-      actionToastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1600);
+      actionToastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1200);
     }
 
     function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
@@ -1940,7 +1930,7 @@
     }
 
     function showCityToast(cityTheme) {
-      showActionToast(cityTheme.banner, 'info');
+      showActionToast(`🏙️ ${cityTheme.name.toUpperCase()}`, 'info');
     }
 
     function spawnTrafficWave() {
@@ -2836,8 +2826,12 @@
         ? (gameState.baseSpeed + speedProgression) * engSpeedMult * (gameState.overdriveActive ? 1.35 : 1)
         : 12;
 
-      if (gameState.dragging) {
+      if (gameState.dragging || (gameState.mode === 'playing' && gameState.lockedTargetApt)) {
         updateProjectileArcVisuals(now);
+      } else {
+        projectileArcLine.visible = false;
+        aimNodes.forEach(n => (n.visible = false));
+        aimLandingRing.visible = false;
       }
 
       // Continuous Voxel Exhaust Pipe Smoke Puffs
@@ -3294,7 +3288,7 @@
             activeCrosswalks.splice(i, 1);
           }
         }
-        if (showCrosswalkWarning && !crosswalkWarningActive) showActionToast('Crossing ahead • watch for pedestrians', 'info');
+        if (showCrosswalkWarning && !crosswalkWarningActive) showActionToast('⚠️ PEDESTRIAN CROSSING', 'info');
         crosswalkWarningActive = showCrosswalkWarning;
 
         // Snappy Arcade Spring-Damped Lane Switching & Body Physics
@@ -3687,21 +3681,19 @@
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.42, 1.6);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 48);
-                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! x2 • VIP COMPLETE!', 'combat-text-gold');
+                  showFloatingCombatText(liveEnd, '🎯 VIP COMPLETE! +400', 'combat-text-gold');
                 } else if (isPerfect) {
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.35, 1.4);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 36);
-                  const bannerText = modText ? `🎯 EXACT ORDER! x2 • ${modText}` : '🎯 EXACT ORDER! x2 • PERFECT!';
-                  showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
+                  showFloatingCombatText(liveEnd, '🎯 PERFECT! +200', 'combat-text-gold');
                 } else {
                   soundFX.playDeliverSuccess();
                   triggerScreenShake(0.15, 0.6);
                   spawnVoxelBurst(liveEnd, pInfo.color, 24);
-                  const bannerText = modText ? `🎯 EXACT ORDER! x2 • ${modText}` : '🎯 EXACT ORDER! x2';
-                  showFloatingCombatText(liveEnd, bannerText, 'combat-text-gold');
+                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! +2x', 'combat-text-gold');
                 }
-                if (fp.nightMultiplier > 1) showActionToast('🌙 EXACT ORDER • NIGHT VISION BONUS x1.5', 'bonus');
+                if (fp.nightMultiplier > 1) showActionToast('🌙 NIGHT BONUS +1.5x', 'bonus');
               } else {
                 // WRONG PARCEL! Player receives 50% points & combo resets to 1
                 const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier));
@@ -3723,7 +3715,7 @@
                 soundFX.playCrash();
                 triggerScreenShake(0.18, 0.6);
                 spawnVoxelBurst(liveEnd, 0xf43f5e, 18);
-                showFloatingCombatText(liveEnd, '📦 WRONG ITEM! (50%)', 'combat-text-rose');
+                showFloatingCombatText(liveEnd, '📦 WRONG PARCEL! 50%', 'combat-text-rose');
               }
             } else {
               spawnVoxelBurst(liveEnd, 0x94a3b8, 12);

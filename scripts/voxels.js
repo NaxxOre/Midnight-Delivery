@@ -1069,16 +1069,24 @@
         const allowedCrates = laneIndex === safeLaneIndex ? CARGO_CONFIG.capacity : 1 + laneIndex % 3;
         const clearance = rackHeight + 0.18 + allowedCrates * CARGO_CONFIG.spacing;
         const safe = laneIndex === safeLaneIndex;
-        const color = safe ? 0x22c55e : 0xf97316;
-        const glow = { emissive: color, emissiveIntensity: 0.65 };
+        const color = safe ? 0x22c55e : 0xef4444;
+        const glow = { emissive: color, emissiveIntensity: 0.85 };
         for (const side of [-1, 1]) {
-          addVoxelBox(bridge, 0.18, safe ? 9 : clearance, 0.55, laneX + side * 1.7, (safe ? 9 : clearance) / 2, 0, 0x475569);
+          addVoxelBox(bridge, 0.18, safe ? 9 : clearance, 0.55, laneX + side * 1.7, (safe ? 9 : clearance) / 2, 0, safe ? 0x166534 : 0x475569);
         }
         if (!safe) {
-          addVoxelBox(bridge, 3.4, 0.3, 1.0, laneX, clearance + 0.15, 0, color, glow);
-          addVoxelBox(bridge, 3.4, 0.06, 1.04, laneX, clearance, 0, 0xfde047, { emissive: 0xfde047, emissiveIntensity: 0.8 });
+          addVoxelBox(bridge, 3.4, 0.35, 1.0, laneX, clearance + 0.15, 0, 0xef4444, glow);
+          addVoxelBox(bridge, 3.4, 0.08, 1.04, laneX, clearance, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
+        } else {
+          addVoxelBox(bridge, 3.4, 0.3, 0.8, laneX, 9.1, 0, 0x22c55e, glow);
         }
-        const sign = createNativeSignboardMesh(safe ? 'HIGH' : 'LOW', safe ? 'CLEARANCE' : `MAX ${allowedCrates} CRATES`, safe ? '#064e3b' : '#431407', safe ? '#86efac' : '#fed7aa', 3.1, 1.0, 0.2);
+        const sign = createNativeSignboardMesh(
+          safe ? '✅ OPEN' : '❌ LOW',
+          safe ? 'OPEN LANE' : `MAX ${allowedCrates} CRATES`,
+          safe ? '#064e3b' : '#450a0a',
+          safe ? '#4ade80' : '#fecaca',
+          3.1, 1.0, 0.2
+        );
         sign.position.set(laneX, safe ? 9.3 : clearance + 0.95, 0.65);
         bridge.add(sign);
         return safe ? Infinity : clearance;

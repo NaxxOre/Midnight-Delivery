@@ -1,4 +1,4 @@
-const nightState = { remaining: 0, nextDistance: 350, nextRepair: 250, blend: 0, damaged: false, elapsed: 0 };
+const nightState = { remaining: 0, nextDistance: 550, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 };
 const nightSky = new THREE.Color(0x020817);
 const nightGround = new THREE.Color(0x04091a);
 const nightHeadlightMaterials = [headlightBeamMat.clone(), headlightBeamMat.clone()];
@@ -56,7 +56,7 @@ function attachNightHeadlights(van) {
 }
 
 function resetNightRun() {
-  Object.assign(nightState, { remaining: 0, nextDistance: 350, nextRepair: 250, blend: 0, damaged: false, elapsed: 0 });
+  Object.assign(nightState, { remaining: 0, nextDistance: 550, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 });
   for (const pad of repairPadPool) { pad.active = false; pad.mesh.visible = false; }
   repairPads.length = 0;
   for (const flare of sosFlares) flare.mesh.visible = false;
@@ -67,8 +67,8 @@ function resetNightRun() {
 
 function startBlackout() {
   nightState.remaining = 25;
-  nightState.nextDistance = gameState.distanceMeters + 350;
-  showActionToast('⚡ POWER GRID BLACKOUT ZONE • 25s', 'info');
+  nightState.nextDistance = gameState.distanceMeters + 450;
+  showActionToast('⚡ BLACKOUT ZONE', 'info');
 }
 
 function damageHeadlight() { nightState.damaged = true; }
@@ -88,7 +88,7 @@ function repairVan() {
   gameState.hearts = Math.min(gameState.maxHearts, gameState.hearts + 1);
   updateHUD();
   soundFX.playPerfectChime();
-  showActionToast('🔧 PIT-STOP REPAIR • headlights restored • +1 heart', 'info');
+  showActionToast('🔧 PIT-STOP REPAIR', 'info');
 }
 
 function updateNightSystems(rawDt, roadDt, speed) {

@@ -1,4 +1,4 @@
-const routeState = { kind: 'normal', remaining: 0, nextDistance: 500, gateActive: false };
+const routeState = { kind: 'normal', remaining: 0, nextDistance: 950, gateActive: false };
 const rivalState = { active: false, elapsed: 0, nextAt: 45, remaining: 0, stun: 0, lane: 1, steerTimer: 0, target: null, orderId: 0, throwTimer: 0, ramWindow: 0, ramLane: -1, rewardedRam: false, flight: null };
 const rivalMesh = new THREE.Group();
 addVoxelBox(rivalMesh, 2.3, 1.4, 4.5, 0, 1.2, 0, 0x111827);
@@ -30,7 +30,7 @@ routeGate.visible = false;
 envGroup.add(routeGate);
 
 function resetRivalRun() {
-  Object.assign(routeState, { kind: 'normal', remaining: 0, nextDistance: 500, gateActive: false });
+  Object.assign(routeState, { kind: 'normal', remaining: 0, nextDistance: 950, gateActive: false });
   Object.assign(rivalState, { active: false, elapsed: 0, nextAt: 45, remaining: 0, stun: 0, lane: 1, steerTimer: 0, target: null, orderId: 0, throwTimer: 0, ramWindow: 0, ramLane: -1, rewardedRam: false, flight: null });
   rivalMesh.visible = false;
   rivalParcel.visible = false;
@@ -56,7 +56,7 @@ function activateRoute(kind) {
       apartment.customerSlot.add(apartment.crownMesh);
       apartment.cloudEl.dataset.renderKey = '';
     }
-    showActionToast('🔥 EXPRESS SHORTCUT • 20s • 2X PAY + VIP ORDERS', 'danger');
+    showActionToast('🔥 EXPRESS ROUTE', 'danger');
   } else {
     for (let index = cargoRoadEvents.length - 1; index >= 0; index--) {
       if (cargoRoadEvents[index].type !== 'supply') continue;
@@ -70,7 +70,7 @@ function activateRoute(kind) {
       repair.laneIndex = gameState.laneIndex;
       repair.passed = false;
     }
-    showActionToast('🛡️ SAFE BYPASS • 20s • PIT STOP + CARGO REFILL', 'info');
+    showActionToast('🛡️ SAFE BYPASS', 'info');
   }
   if (typeof soundFX !== 'undefined' && soundFX.playCityGateChime) soundFX.playCityGateChime();
 }
@@ -80,7 +80,7 @@ function spawnRival() {
   rivalState.nextAt = rivalState.elapsed + 45;
   rivalMesh.position.set(LANES[rivalState.lane], 0, playerVan.position.z - 1);
   rivalMesh.visible = true;
-  showActionToast('🔴 RIVAL APPROACHING • SHADOW EXPRESS', 'danger');
+  showActionToast('🔴 RIVAL APPROACHING', 'danger');
 }
 
 function queueRivalRam(previousLane, nextLane) {
@@ -101,7 +101,7 @@ function ramRival() {
   rivalState.rewardedRam = true;
   triggerScreenShake(0.2, 0.7);
   soundFX.playCrash();
-  showActionToast(`💥 SIDE-RAM • RIVAL STUNNED 4s • +${loaded} CRATES`, 'bonus');
+  showActionToast('💥 RIVAL STUNNED', 'bonus');
 }
 
 function claimRivalDelivery(apartment, parcelType) {
@@ -111,19 +111,24 @@ function claimRivalDelivery(apartment, parcelType) {
   gameState.score += 500;
   updateHUD();
   if (typeof soundFX !== 'undefined' && soundFX.playRivalSnipe) soundFX.playRivalSnipe();
-  showActionToast('⚡ SNIPED RIVAL! +500', 'bonus');
+  showActionToast('⚡ RIVAL SNIPED', 'bonus');
   return true;
 }
 
 function updateRivalSystems(rawDt, roadDt, speed) {
   if (gameState.mode !== 'playing') return;
+  const isBlackoutActive = typeof nightState !== 'undefined' && nightState.remaining > 0;
   routeState.remaining = Math.max(0, routeState.remaining - rawDt);
   if (routeState.remaining === 0) routeState.kind = 'normal';
-  if (!routeState.gateActive && !gameState.tutorialActive && gameState.distanceMeters >= routeState.nextDistance) {
-    routeState.gateActive = true;
-    routeGate.position.z = -160;
-    routeGate.visible = true;
-    routeState.nextDistance = gameState.distanceMeters + 500;
+  if (!routeState.gateActive && !gameState.tutorialActive && gameState.distanceMeters >= routeState.nextDistance && !isBlackoutActive) {
+    const hasNearBridge = typeof cargoRoadEvents !== 'undefined' && cargoRoadEvents.some(event => event.type === 'bridge' && Math.abs(event.mesh.position.z - (-160)) < 80);
+    const hasNearRival = rivalState.active && Math.abs(rivalMesh.position.z - (-160)) < 80;
+    if (!hasNearBridge && !hasNearRival) {
+      routeState.gateActive = true;
+      routeGate.position.z = -160;
+      routeGate.visible = true;
+      routeState.nextDistance = gameState.distanceMeters + 500;
+    }
   }
   if (routeState.gateActive) {
     routeGate.position.z += speed * roadDt;
@@ -133,8 +138,14 @@ function updateRivalSystems(rawDt, roadDt, speed) {
       routeGate.visible = false;
     }
   }
-  rivalState.elapsed += rawDt;
-  if (!rivalState.active && !gameState.tutorialActive && rivalState.elapsed >= rivalState.nextAt) spawnRival();
+  if (!isBlackoutActive) {
+    rivalState.elapsed += rawDt;
+  }
+  if (!rivalState.active && !gameState.tutorialActive && gameState.distanceMeters >= 850 && !isBlackoutActive && rivalState.elapsed >= rivalState.nextAt) {
+    const hasNearBridge = typeof cargoRoadEvents !== 'undefined' && cargoRoadEvents.some(event => event.type === 'bridge' && Math.abs(event.mesh.position.z - (playerVan.position.z - 1)) < 80);
+    const hasNearGate = routeState.gateActive && Math.abs(routeGate.position.z - (playerVan.position.z - 1)) < 80;
+    if (!hasNearBridge && !hasNearGate) spawnRival();
+  }
   if (!rivalState.active) return;
   rivalState.remaining -= rawDt;
   if (rivalState.remaining <= 0) {
@@ -170,7 +181,7 @@ function updateRivalSystems(rawDt, roadDt, speed) {
         apartment.delivered = true;
         apartment.ringGroup.visible = false;
         apartment.cloudEl.classList.add('hidden');
-        showActionToast('SHADOW EXPRESS TOOK THE ORDER • throw sooner!', 'danger');
+        showActionToast('❌ ORDER STOLEN', 'danger');
       }
       rivalState.flight = null;
       rivalParcel.visible = false;

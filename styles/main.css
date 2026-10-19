@@ -581,19 +581,19 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   row-gap: 4px;
-  width: 156px;
+  width: 172px;
   height: auto;
   padding: 8px 10px;
   border: 1px solid #cbd5e133;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #0f172ac9;
   color: #fff;
 }
 .hud-stat {
   display: grid;
-  grid-template-columns: 60px minmax(0, 1fr);
+  grid-template-columns: 74px minmax(0, 1fr);
   align-items: baseline;
-  column-gap: 10px;
+  column-gap: 6px;
   min-width: 0;
   min-height: 18px;
   line-height: 18px;
@@ -602,13 +602,14 @@
   display: block;
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .05em;
   color: #94a3b8;
+  white-space: nowrap;
 }
 .hud-stat > strong {
   display: block;
   font-family: 'Fredoka', sans-serif;
-  font-size: 15px;
+  font-size: 13.5px;
   line-height: 18px;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -620,16 +621,20 @@
 .hud-heart-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: #0f172ae6;
+  gap: 8px;
+  width: 172px;
+  padding: 4px 10px;
+  border: 1px solid #cbd5e133;
+  border-radius: 12px;
+  background: #0f172ac9;
 }
 .hud-heart-row > span {
-  color: #cbd5e1;
+  color: #94a3b8;
   font-size: 9px;
   line-height: 14px;
-  letter-spacing: .08em;
+  letter-spacing: .05em;
+  font-weight: 700;
+  white-space: nowrap;
 }
 #armor-boxes {
   display: flex;
@@ -697,12 +702,12 @@
 }
 #parcel-dock {
   position: fixed;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 4px;
+  padding: 1px 4px;
   border: 1px solid #cbd5e133;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #0f172abf;
   pointer-events: auto;
   width: max-content;
@@ -711,34 +716,60 @@
 }
 #parcel-hand-horizontal {
   display: grid;
-  grid-template-columns: repeat(3, 60px);
+  grid-template-columns: repeat(3, 64px);
   grid-auto-flow: column;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 #parcel-hand-horizontal .parcel-card-slot {
-  width: 60px;
-  height: 52px;
+  position: relative;
+  width: 64px;
+  height: 64px;
   padding: 2px;
-  border-radius: 9px;
+  border: 2px solid #334155;
+  border-radius: 12px;
   box-shadow: none;
-  animation: none !important;
   filter: none;
   transform: none;
-  transition: border-color .15s;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+  background: #1e293b;
+  cursor: pointer;
+  user-select: none;
 }
 #parcel-hand-horizontal .parcel-card-inner {
   position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
+  border-radius: 9px;
   overflow: hidden;
   pointer-events: none;
 }
+@keyframes slotPulseBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.8), inset 0 0 0 2px #facc15;
+  }
+  50% {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 1), inset 0 0 0 2px #fef08a;
+  }
+}
 #parcel-hand-horizontal .slot-matched-pulse {
-  box-shadow: 0 0 0 1px #fcd34d;
+  border-color: #facc15 !important;
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.95) !important;
+  animation: slotPulseBounce 0.6s infinite ease-in-out !important;
+}
+#parcel-hand-horizontal .parcel-card-slot.is-hot {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.85) !important;
+}
+#parcel-hand-horizontal .parcel-card-slot.is-fragile {
+  border-color: #06b6d4 !important;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.85) !important;
 }
 #parcel-hand-horizontal .parcel-card-slot[aria-disabled="true"] {
   opacity: .4;
@@ -782,14 +813,18 @@
   top: 3px;
   left: 3px;
   z-index: 1;
-  padding: 1px 3px;
+  padding: 1px 4px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
   font-size: 10px;
+  font-weight: 800;
+  line-height: 12px;
 }
 .parcel-dock-icon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 .parcel-status {
@@ -899,11 +934,13 @@
     height: 30px;
   }
   #parcel-hand-horizontal .parcel-card-slot {
-    width: 54px;
-    height: 46px;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
   }
   #parcel-hand-horizontal {
-    grid-template-columns: repeat(3, 54px);
+    grid-template-columns: repeat(3, 52px);
+    gap: 6px;
   }
   .parcel-dock-icon {
     width: 32px;

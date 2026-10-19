@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 exports.verify = async page => {
   const night = await page.evaluate(() => {
     resetGame(false);
-    gameState.distanceMeters = 350;
+    gameState.distanceMeters = 550;
     updateNightSystems(0.01, 0, 0);
     const triggered = nightState.remaining === 25;
     for (let step = 0; step < 240; step++) updateNightSystems(1 / 60, 0, 0);
@@ -40,6 +40,7 @@ exports.verify = async page => {
   console.log('PASS blackout lifecycle, asymmetric damage, real traffic impact, single repair, bounded effects, and restart');
   const rival = await page.evaluate(() => {
     gameState.entranceTimer = 0;
+    gameState.distanceMeters = 850;
     rivalState.elapsed = 44.99;
     updateRivalSystems(0.02, 0, 0);
     const spawned = rivalState.active && rivalState.remaining > 19;
@@ -83,7 +84,7 @@ exports.verify = async page => {
     updateRivalSystems(20, 0, 0);
     const departed = !rivalState.active && !rivalMesh.visible;
     resetGame(false);
-    gameState.distanceMeters = 500;
+    gameState.distanceMeters = 950;
     updateRivalSystems(0.01, 0, 0);
     routeGate.position.z = playerVan.position.z - 0.1;
     playerVan.position.x = -1;
@@ -91,7 +92,7 @@ exports.verify = async page => {
     const express = routeState.kind === 'express' && getRouteCoinMultiplier() === 2 && getRouteTrafficCap() === 12;
     updateRivalSystems(20.1, 0, 0);
     const routeExpired = routeState.kind === 'normal' && getRouteCoinMultiplier() === 1;
-    gameState.distanceMeters = 1000;
+    gameState.distanceMeters = 1450;
     updateRivalSystems(0.01, 0, 0);
     routeGate.position.z = playerVan.position.z - 0.1;
     playerVan.position.x = 1;
