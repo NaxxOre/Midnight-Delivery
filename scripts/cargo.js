@@ -18,7 +18,11 @@
     });
 
     function getRoofScoreMultiplier(count = gameState.roofCrates) {
-      return 1 + Math.max(0, Math.min(CARGO_CONFIG.capacity, count) - 1) * 0.4;
+      const c = Math.max(0, Math.min(CARGO_CONFIG.capacity, Math.trunc(count) || 0));
+      if (c <= 0) return 1.0;
+      if (c <= 2) return 1.5;
+      if (c <= 4) return 2.0;
+      return 3.0;
     }
 
     function updateCargoHud() {
@@ -38,11 +42,6 @@
       if (stockChanged || status.dataset.announcement !== `${gameState.roofCrates}:${danger}`) {
         status.dataset.announcement = `${gameState.roofCrates}:${danger}`;
         status.setAttribute('aria-label', `${gameState.roofCrates} roof crates, ${danger}% sway danger`);
-      }
-      const cards = document.getElementById('parcel-hand-horizontal').children;
-      const disabled = gameState.roofCrates <= 0 ? 'true' : 'false';
-      for (const card of cards) {
-        if (card.getAttribute('aria-disabled') !== disabled) card.setAttribute('aria-disabled', disabled);
       }
     }
 
@@ -178,6 +177,17 @@
     }
 
     function updateCargoRoad(dt, playerSpeed) {
+      if (gameState.mode === 'playing' && gameState.roofCrates <= 0) {
+        gameState.cargoRegenTimer = (gameState.cargoRegenTimer || 0) + dt;
+        if (gameState.cargoRegenTimer >= 4.0) {
+          gameState.cargoRegenTimer = 0;
+          loadRoofCargo(1);
+          soundFX.playCityGateChime();
+          showActionToast('📦 +1 CRATE RESTOCKED', 'info');
+        }
+      } else {
+        gameState.cargoRegenTimer = 0;
+      }
       if (gameState.distanceMeters >= gameState.nextSupplyDistance) {
         if (spawnSupplyDepot()) gameState.nextSupplyDistance = gameState.distanceMeters + 65;
       }
@@ -226,6 +236,7 @@
       cargoRoadEvents.length = 0;
       fallenCargoPool.forEach(parcel => { parcel.life = 0; parcel.mesh.visible = false; });
       gameState.roofCrates = 3;
+      gameState.cargoRegenTimer = 0;
       gameState.vanSwayAngle = 0;
       gameState.cargoSwayVelocity = 0;
       gameState.cargoStress = 0;

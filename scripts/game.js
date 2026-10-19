@@ -912,8 +912,8 @@
     }
 
     const SLOT_KEYS = ['Q', 'W', 'E'];
-    const THROW_RANGE_MIN = -38;
-    const THROW_RANGE_MAX = 10;
+    const THROW_RANGE_MIN = -55;
+    const THROW_RANGE_MAX = 18;
     const orderBadgePosition = new THREE.Vector3();
     const aimStartPosition = new THREE.Vector3();
     const aimEndPosition = new THREE.Vector3();
@@ -1029,7 +1029,7 @@
         const renderKey = `${parcelTypeId}:${modifier ? modifier.type : ''}:${!!(modifier && modifier.cracked)}`;
         card.setAttribute('aria-label', `Throw ${parcel.name}, ${SLOT_KEYS[slotIdx]} or ${slotIdx + 1}`);
         card.setAttribute('aria-keyshortcuts', `${SLOT_KEYS[slotIdx]} ${slotIdx + 1}`);
-        card.setAttribute('aria-disabled', gameState.roofCrates <= 0 ? 'true' : 'false');
+        card.setAttribute('aria-disabled', 'false');
         if (card.dataset.renderKey === renderKey) return;
         card.dataset.renderKey = renderKey;
         const modifierClass = modifier ? `is-${modifier.type}${modifier.cracked ? ' is-cracked' : ''}` : '';
@@ -1442,10 +1442,6 @@
     function throwParcelFromHandSlot(slotIndex, apt, isMagneticHoming = true) {
       if (gameState.mode !== 'playing' || !isResidentInThrowRange(apt) ||
           !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
-      if (gameState.roofCrates <= 0) {
-        showActionToast('⚠️ ROOF EMPTY', 'info');
-        return false;
-      }
       const pendingCount = flyingParcels.filter(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId).length;
       const remainingDrops = apt.isVip ? 2 - (apt.vipDelivered || 0) : 1;
       if (pendingCount >= remainingDrops) return false;
@@ -1495,8 +1491,62 @@
       });
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
-      gameState.roofCrates--;
+      if (gameState.roofCrates > 0) gameState.roofCrates--;
       claimRivalDelivery(apt, parcelTypeId);
+      syncRoofCargo();
+      refillHandSlot(slotIndex);
+      updateOrderAlertsAndBubbles();
+      return true;
+    }
+
+    function throwWildParcel(slotIndex) {
+      if (gameState.mode !== 'playing' ||
+          !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
+      const parcelTypeId = gameState.handSlots[slotIndex];
+      if (!PARCEL_TYPES[parcelTypeId]) return false;
+      soundFX.playThrow();
+
+      const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
+      const startPos = getRoofThrowPosition(new THREE.Vector3());
+      mesh.position.copy(startPos);
+      scene.add(mesh);
+
+      const trailDots = [];
+      const trailMat = getTrailDotMat(PARCEL_TYPES[parcelTypeId].color);
+      for (let i = 0; i < 6; i++) {
+        const td = new THREE.Mesh(trailDotGeo, trailMat);
+        td.position.copy(startPos);
+        scene.add(td);
+        trailDots.push(td);
+      }
+
+      const sideX = slotIndex === 0 ? -12 : (slotIndex === 2 ? 12 : (playerVan.position.x < 0 ? -12 : 12));
+      const endPos = new THREE.Vector3(sideX, 0.35, playerVan.position.z - 18);
+
+      const slotModifier = (gameState.handModifiers && gameState.handModifiers[slotIndex])
+        ? { ...gameState.handModifiers[slotIndex] }
+        : null;
+
+      flyingParcels.push({
+        mesh,
+        trailDots,
+        startPos,
+        targetApt: null,
+        targetOrderId: null,
+        cargoMultiplier: getRoofScoreMultiplier(),
+        nightMultiplier: nightState.remaining > 0 ? 1.5 : 1,
+        routeCoinMultiplier: getRouteCoinMultiplier(),
+        endPos,
+        parcelType: parcelTypeId,
+        modifier: slotModifier,
+        progress: 0,
+        duration: 0.38,
+        isSweetSpot: false,
+        magneticHoming: false
+      });
+
+      playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      if (gameState.roofCrates > 0) gameState.roofCrates--;
       syncRoofCargo();
       refillHandSlot(slotIndex);
       updateOrderAlertsAndBubbles();
@@ -1526,13 +1576,30 @@
       return target;
     }
 
-    function throwFromSlot(slotIndex) {
+    const slotCooldowns = [0, 0, 0];
+    function throwFromSlot(slotIndex, ignoreCooldown = false) {
       if (gameState.mode !== 'playing' || !Number.isInteger(slotIndex) ||
           slotIndex < 0 || slotIndex >= gameState.handSlots.length) return false;
-      const target = findTargetApartment();
-      if (!target) return false;
+      const now = performance.now() / 1000;
+      if (!ignoreCooldown && now < slotCooldowns[slotIndex]) return false;
+      slotCooldowns[slotIndex] = now + 0.25;
+
+      const container = document.getElementById('parcel-hand-horizontal');
+      if (container && container.children[slotIndex]) {
+        const card = container.children[slotIndex];
+        card.classList.remove('slot-cooldown');
+        void card.offsetWidth;
+        card.classList.add('slot-cooldown');
+      }
+
       selectHandSlot(slotIndex);
-      const launched = throwParcelFromHandSlot(slotIndex, target);
+      const target = findTargetApartment();
+      let launched = false;
+      if (target) {
+        launched = throwParcelFromHandSlot(slotIndex, target);
+      } else {
+        launched = throwWildParcel(slotIndex);
+      }
       if (launched && gameState.tutorialActive && gameState.tutorialStep === 2) completeInteractiveTutorial();
       return launched;
     }
@@ -1540,10 +1607,14 @@
     function autoThrowMatchingSlot() {
       if (gameState.mode !== 'playing') return;
       const target = findTargetApartment();
-      if (!target) return;
+      if (!target) {
+        throwFromSlot(1);
+        return;
+      }
       ensureParcelAvailableInHand(target.wantedType);
       const matchingSlot = gameState.handSlots.indexOf(target.wantedType);
       if (matchingSlot !== -1) throwFromSlot(matchingSlot);
+      else throwFromSlot(1);
     }
 
     function quickThrowParcel(side = 'auto') {
@@ -3558,6 +3629,26 @@
 
         for (let i = flyingParcels.length - 1; i >= 0; i--) {
           const fp = flyingParcels[i];
+          if (!fp.targetApt) {
+            fp.progress += rawDt / fp.duration;
+            const t = Math.min(1, fp.progress);
+            fp.mesh.position.lerpVectors(fp.startPos, fp.endPos, t);
+            fp.mesh.position.y += Math.sin(t * Math.PI) * 4.8;
+            fp.mesh.rotation.x += rawDt * 10;
+            fp.mesh.rotation.y += rawDt * 12;
+
+            fp.trailDots.forEach((td, idx) => {
+              const tt = Math.max(0, t - (idx + 1) * 0.05);
+              td.position.lerpVectors(fp.startPos, fp.endPos, tt);
+              td.position.y += Math.sin(tt * Math.PI) * 4.8;
+            });
+
+            if (fp.progress >= 1) {
+              spawnVoxelBurst(fp.endPos, 0x94a3b8, 6);
+              removeFlyingParcel(i);
+            }
+            continue;
+          }
           if (fp.targetApt.orderId !== fp.targetOrderId || fp.targetApt.delivered || !fp.targetApt.hasOrder) {
             removeFlyingParcel(i);
             continue;

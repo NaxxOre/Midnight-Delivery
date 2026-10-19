@@ -560,13 +560,15 @@
 }
 .game-hud-top {
   position: absolute;
-  top: max(70px, env(safe-area-inset-top));
-  left: max(12px, env(safe-area-inset-left));
-  right: max(12px, env(safe-area-inset-right));
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  transform: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  z-index: 70;
 }
 .hud-score-group {
   position: relative;
@@ -576,6 +578,7 @@
   align-items: flex-start;
   gap: 6px;
   flex-shrink: 0;
+  transform: none;
 }
 .hud-score-card {
   display: grid;
@@ -588,28 +591,29 @@
   border-radius: 12px;
   background: #0f172ac9;
   color: #fff;
+  transform: none;
 }
 .hud-stat {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-columns: 60px minmax(0, 1fr);
   align-items: baseline;
-  column-gap: 6px;
+  column-gap: 8px;
   min-width: 0;
   min-height: 18px;
   line-height: 18px;
 }
 .hud-stat > span {
   display: block;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .05em;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
   color: #94a3b8;
   white-space: nowrap;
 }
 .hud-stat > strong {
   display: block;
   font-family: 'Fredoka', sans-serif;
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 18px;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -621,19 +625,20 @@
 .hud-heart-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 172px;
-  padding: 4px 10px;
+  padding: 5px 10px;
   border: 1px solid #cbd5e133;
   border-radius: 12px;
   background: #0f172ac9;
+  transform: none;
 }
 .hud-heart-row > span {
   color: #94a3b8;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 14px;
-  letter-spacing: .05em;
-  font-weight: 700;
+  letter-spacing: .08em;
+  font-weight: 800;
   white-space: nowrap;
 }
 #armor-boxes {
@@ -771,8 +776,9 @@
   border-color: #06b6d4 !important;
   box-shadow: 0 0 14px rgba(6, 182, 212, 0.85) !important;
 }
-#parcel-hand-horizontal .parcel-card-slot[aria-disabled="true"] {
-  opacity: .4;
+#parcel-hand-horizontal .parcel-card-slot.slot-cooldown {
+  transform: scale(0.92);
+  transition: transform 0.08s ease-out;
 }
 .hud-cargo-status {
   position: static;
@@ -914,9 +920,11 @@
 }
 @media (max-width: 640px) {
   .game-hud-top {
-    left: 8px;
-    right: 8px;
+    top: 16px;
+    left: 16px;
+    right: 16px;
     gap: 6px;
+    transform: none;
   }
   .hud-stat > strong {
     font-size: 14px;
@@ -947,6 +955,7 @@
     height: 32px;
   }
   #action-toast {
+    top: 130px;
     left: 50%;
     max-width: calc(100vw - 16px);
     font-size: 11px;

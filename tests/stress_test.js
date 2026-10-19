@@ -60,7 +60,7 @@ async function runStressSuite() {
         for (let i = 0; i < 1000; i++) {
           gameState.roofCrates = 6;
           const slot = i % 3;
-          throwFromSlot(slot);
+          throwFromSlot(slot, true);
           if (i % 50 === 0) {
             // let flying parcels update slightly
             await new Promise(r => setTimeout(r, 8));

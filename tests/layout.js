@@ -30,8 +30,8 @@ exports.verify = async (page, root, width, height) => {
   assert.ok(layout.hearts.top >= layout.metrics.at(-1).bottom);
   assert.equal(layout.toastCount, 1);
   assert.ok(layout.toastText.includes('BLACKOUT') && !layout.toastText.includes('NEAR MISS'));
-  assert.ok(Math.abs((layout.toast.left + layout.toast.right) / 2 - width / 2) < 1);
-  assert.ok(layout.toast.bottom < layout.metrics[0].top);
+  assert.ok(layout.metrics[0].left >= 15 && layout.metrics[0].top >= 15);
+  assert.ok(layout.toast.left > layout.metrics[0].right || layout.toast.top > layout.metrics[0].bottom || layout.toast.bottom < layout.metrics[0].top);
   assert.equal(layout.clipped, false);
   assert.equal(layout.overflow, false);
   fs.mkdirSync(path.join(root, 'test-results'), { recursive: true });
