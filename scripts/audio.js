@@ -230,6 +230,59 @@
         }
       }
 
+
+      playGachaFanfare(rarity = 'COMMON') {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const dest = this.getSFXDestination();
+        if (!dest) return;
+
+        const t = this.ctx.currentTime;
+        if (rarity === 'LEGENDARY') {
+          // Epic 5-note fanfare with shimmering vibrato: C5, E5, G5, B5, C6
+          const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+
+            gain.gain.setValueAtTime(0, t + idx * 0.08);
+            gain.gain.linearRampToValueAtTime(0.32, t + idx * 0.08 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.65);
+
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(t + idx * 0.08);
+            osc.stop(t + idx * 0.08 + 0.70);
+          });
+        } else if (rarity === 'EPIC') {
+          // Rich 4-note chime: E5, G#5, B5, E6
+          const notes = [659.25, 830.61, 987.77, 1318.51];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.09);
+
+            gain.gain.setValueAtTime(0, t + idx * 0.09);
+            gain.gain.linearRampToValueAtTime(0.26, t + idx * 0.09 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.09 + 0.55);
+
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(t + idx * 0.09);
+            osc.stop(t + idx * 0.09 + 0.60);
+          });
+        } else if (rarity === 'RARE') {
+          this.playCityGateChime();
+        } else {
+          this.playDeliverSuccess();
+        }
+      }
+
       playThrow() {
         if (!this.enabled) return;
         this.init();

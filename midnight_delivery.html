@@ -494,7 +494,36 @@
 
 
 
-</style>
+
+    /* Gacha Rarity Card Styles */
+    .gacha-card-legendary {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(120, 53, 15, 0.65));
+      border: 2px solid #facc15;
+      box-shadow: 0 0 16px rgba(250, 204, 21, 0.45);
+    }
+    .gacha-card-epic {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(88, 28, 135, 0.65));
+      border: 2px solid #c084fc;
+      box-shadow: 0 0 14px rgba(192, 132, 252, 0.40);
+    }
+    .gacha-card-rare {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(12, 74, 110, 0.65));
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+    .gacha-card-common {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.65));
+      border: 2px solid #64748b;
+    }
+    @keyframes gachaGlowPulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.5)); }
+      50% { filter: drop-shadow(0 0 26px rgba(250, 204, 21, 0.95)); }
+    }
+    .gacha-glow-legendary {
+      animation: gachaGlowPulse 1.8s infinite ease-in-out;
+    }
+
+  </style>
 </head>
 <body>
 
@@ -797,8 +826,8 @@
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zm-4 17v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2H8zm4-14a4 4 0 0 1 4 4h-2a2 2 0 0 0-2-2V5z"/></svg>
           </div>
           <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">CRATE</div>
-            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / DROP</div>
+            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">GACHA</div>
+            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">FLEET CAPSULE</div>
           </div>
         </button>
 
@@ -861,6 +890,7 @@
       <div class="arcade-panel rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-1.5 sm:py-2 flex flex-col items-center gap-1 pointer-events-auto sm:mx-auto">
         <div class="flex items-center justify-center gap-2">
           <span id="home-van-name" class="arcade-font text-sm sm:text-2xl text-white tracking-wide truncate">Express Courier GTI</span>
+          <span id="home-van-rarity" class="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">★★★★★ LEGENDARY</span>
           <span id="home-van-status" class="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">EQUIPPED</span>
         </div>
         <div id="home-van-dots" class="flex items-center gap-1.5">
@@ -977,59 +1007,124 @@
     </div>
   </div>
 
-  <!-- 3. COURIER SUPPLY DROP & FLEET REQUISITION CRATE MODAL -->
+  <!-- 3. FLEET GACHA CAPSULE MACHINE MODAL -->
   <div id="modal-draw" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
-    <div class="arcade-panel rounded-3xl max-w-xl w-full p-5 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden">
-      <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30 relative z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center border-2 border-white">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
+    <div class="arcade-panel rounded-3xl max-w-xl w-full p-4 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden flex flex-col max-h-[95dvh]">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b-2 border-sky-400/30 relative z-10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center border-2 border-white text-xl shadow">
+            🎰
           </div>
           <div class="text-left">
-            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">COURIER SUPPLY DROP</h2>
-            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Requisition a Courier Supply Crate with earned coins to expand your fleet!</p>
+            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">FLEET GACHA MACHINE</h2>
+            <p class="text-[10px] sm:text-[11px] text-sky-200 font-bold mt-0.5">Draw courier rigs with earned coins • Duplicate scrap refund</p>
           </div>
         </div>
-        <button data-close-modal="modal-draw" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
+        <button data-close-modal="modal-draw" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
       </div>
 
-      <!-- Courier Supply Drop Crate & Reveal Stage -->
-      <div class="my-4 bg-slate-950 border-3 border-sky-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center min-h-[245px] relative overflow-hidden shadow-inner">
+      <!-- Live Pity & Rates Bar -->
+      <div class="my-2 bg-slate-950/90 p-2 sm:p-2.5 rounded-2xl border border-sky-400/30 flex items-center justify-between text-[10px] sm:text-xs flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1 font-bold text-purple-300">
+            <span>⭐</span>
+            <span>Epic+: <b id="gacha-pity-epic" class="text-white">10</b> pulls</span>
+          </span>
+          <span class="flex items-center gap-1 font-bold text-amber-300">
+            <span>👑</span>
+            <span>Legendary: <b id="gacha-pity-legendary" class="text-white">30</b> pulls</span>
+          </span>
+        </div>
+        <div class="hidden sm:flex items-center gap-1 text-[9px] text-sky-300 font-bold">
+          <span class="text-slate-400">★ 45%</span>
+          <span>•</span>
+          <span class="text-sky-400">★★ 35%</span>
+          <span>•</span>
+          <span class="text-purple-400">★★★ 16%</span>
+          <span>•</span>
+          <span class="text-amber-400">★★★★★ 4%</span>
+        </div>
+      </div>
+
+      <!-- Main Stage Container: Machine / Single Pull / 10x Grid -->
+      <div id="gacha-stage-container" class="my-1 bg-slate-950 border-3 border-sky-400 rounded-3xl p-3 sm:p-4 flex flex-col items-center justify-center min-h-[260px] relative overflow-hidden shadow-inner flex-1">
         <div id="draw-sunburst" class="sunburst-rays absolute inset-[-50%] opacity-35 pointer-events-none"></div>
         <canvas id="draw-confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
 
-        <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
-          <!-- Supply Crate Graphic -->
-          <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
-            <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
-              <rect x="8" y="14" width="48" height="42" rx="8" fill="#1e293b" stroke="#facc15" stroke-width="4"/>
-              <path d="M8 26H56" stroke="#38bdf8" stroke-width="4"/>
-              <rect x="26" y="20" width="12" height="12" rx="3" fill="#facc15"/>
-              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">📦</text>
-            </svg>
+        <!-- View A: Capsule Machine / Single Pull Reveal -->
+        <div id="gacha-single-view" class="relative z-10 flex flex-col items-center justify-center w-full">
+          <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
+            <!-- Gacha Capsule Machine / Crate Graphic -->
+            <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
+              <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="28" r="22" fill="#0f172a" stroke="#facc15" stroke-width="4"/>
+                <circle cx="26" cy="24" r="7" fill="#38bdf8"/>
+                <circle cx="38" cy="22" r="6" fill="#c084fc"/>
+                <circle cx="33" cy="34" r="6.5" fill="#facc15"/>
+                <rect x="18" y="44" width="28" height="14" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+                <circle cx="32" cy="51" r="3.5" fill="#facc15"/>
+              </svg>
+            </div>
+            <!-- Unboxed 3D Vehicle Image -->
+            <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
+            <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">FLEET CAPSULE</span>
           </div>
-          <!-- Unboxed 3D Vehicle Image -->
-          <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
-          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">SUPPLY CRATE</span>
+
+          <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET GACHA MACHINE</div>
+          <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Spin for Common, Rare, Epic, &amp; Legendary Rigs</div>
+
+          <!-- Single Equip Action (shown when a rig is won) -->
+          <div id="gacha-single-actions" class="hidden relative z-10 mt-3 flex items-center gap-2">
+            <button id="btn-gacha-equip-won" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              EQUIP RIG
+            </button>
+            <button id="btn-gacha-spin-another" class="px-4 py-2 rounded-xl bg-sky-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              SPIN AGAIN
+            </button>
+          </div>
         </div>
 
-        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET SUPPLY REQUISITION</div>
-        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Unlock 3D delivery vehicles with coins earned in-game &bull; Fleet Scrap Value +60 Coins</div>
+        <!-- View B: 10x Multi-Pull Results Grid -->
+        <div id="gacha-multi-view" class="hidden relative z-10 w-full flex-col items-center">
+          <div class="flex items-center justify-between w-full mb-2">
+            <span class="arcade-font text-xs sm:text-sm text-amber-300">10x GACHA RESULTS</span>
+            <span id="gacha-multi-summary" class="text-[10px] text-emerald-300 font-bold">New Rigs Unlocked!</span>
+          </div>
+          <div id="gacha-multi-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full max-h-[220px] overflow-y-auto p-1">
+            <!-- Populated dynamically with 10 pull cards -->
+          </div>
+          <div class="flex items-center gap-2 mt-3">
+            <button id="btn-gacha-equip-highest" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              EQUIP HIGHEST
+            </button>
+            <button id="btn-gacha-spin-10x-again" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              PULL 10X AGAIN
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center justify-between bg-slate-950/90 px-4 py-3 rounded-2xl border-2 border-sky-500/40 mb-4 relative z-10">
+      <!-- Balance Readout -->
+      <div class="flex items-center justify-between bg-slate-950/90 px-4 py-2.5 rounded-2xl border-2 border-sky-500/40 my-2 relative z-10 flex-shrink-0">
         <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">EARNED COIN BALANCE</span>
         <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">$</div>
+          <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">🪙</div>
           <span id="draw-coins-Readout" class="arcade-font text-xl text-amber-300">250</span>
           <span class="text-xs font-bold text-amber-200">COINS</span>
         </div>
       </div>
 
-      <div class="flex gap-2.5 relative z-10">
-        <button id="btn-spin-draw" class="flex-1 py-4 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-base sm:text-xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V14h-2v2.93A8 8 0 0 1 4.07 11H7V9H4.07A8 8 0 0 1 11 4.07V7h2V4.07A8 8 0 0 1 19.93 11H17v2h2.93A8 8 0 0 1 13 16.93z"/></svg>
-          <span>REQUISITION CRATE (100 COINS)</span>
+      <!-- 1x and 10x Pull Buttons -->
+      <div id="gacha-action-buttons" class="flex flex-col sm:flex-row gap-2 relative z-10 flex-shrink-0">
+        <button id="btn-spin-draw" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-sky-400 via-sky-500 to-indigo-600 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn flex items-center justify-center gap-2 shadow">
+          <span>🎰</span>
+          <span>1x PULL (100 🪙)</span>
+        </button>
+        <button id="btn-gacha-10x" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn flex items-center justify-center gap-2 shadow relative">
+          <span class="absolute -top-2 right-3 px-2 py-0.5 rounded-full bg-rose-500 text-white font-extrabold text-[8px] tracking-wide animate-pulse shadow">EPIC+ GUARANTEED!</span>
+          <span>🌟</span>
+          <span>10x PULL (900 🪙)</span>
         </button>
       </div>
     </div>
@@ -1514,6 +1609,59 @@
         }
       }
 
+
+      playGachaFanfare(rarity = 'COMMON') {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const dest = this.getSFXDestination();
+        if (!dest) return;
+
+        const t = this.ctx.currentTime;
+        if (rarity === 'LEGENDARY') {
+          // Epic 5-note fanfare with shimmering vibrato: C5, E5, G5, B5, C6
+          const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+
+            gain.gain.setValueAtTime(0, t + idx * 0.08);
+            gain.gain.linearRampToValueAtTime(0.32, t + idx * 0.08 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.65);
+
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(t + idx * 0.08);
+            osc.stop(t + idx * 0.08 + 0.70);
+          });
+        } else if (rarity === 'EPIC') {
+          // Rich 4-note chime: E5, G#5, B5, E6
+          const notes = [659.25, 830.61, 987.77, 1318.51];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.09);
+
+            gain.gain.setValueAtTime(0, t + idx * 0.09);
+            gain.gain.linearRampToValueAtTime(0.26, t + idx * 0.09 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.09 + 0.55);
+
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(t + idx * 0.09);
+            osc.stop(t + idx * 0.09 + 0.60);
+          });
+        } else if (rarity === 'RARE') {
+          this.playCityGateChime();
+        } else {
+          this.playDeliverSuccess();
+        }
+      }
+
       playThrow() {
         if (!this.enabled) return;
         this.init();
@@ -1892,11 +2040,64 @@
       { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Laser-Sharp Delivery!"' }
     ];
 
+    const RARITY_TIERS = {
+      COMMON: {
+        id: 'common',
+        name: 'COMMON',
+        stars: '★',
+        starCount: 1,
+        color: '#94a3b8',
+        bgClass: 'bg-slate-700 text-slate-100',
+        borderClass: 'border-slate-500',
+        glowColor: 'rgba(148, 163, 184, 0.45)',
+        dropRate: 0.45,
+        scrapCoins: 40
+      },
+      RARE: {
+        id: 'rare',
+        name: 'RARE',
+        stars: '★★',
+        starCount: 2,
+        color: '#38bdf8',
+        bgClass: 'bg-sky-500 text-slate-950 font-extrabold',
+        borderClass: 'border-sky-400',
+        glowColor: 'rgba(56, 189, 248, 0.55)',
+        dropRate: 0.35,
+        scrapCoins: 80
+      },
+      EPIC: {
+        id: 'epic',
+        name: 'EPIC',
+        stars: '★★★',
+        starCount: 3,
+        color: '#c084fc',
+        bgClass: 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-extrabold',
+        borderClass: 'border-purple-400',
+        glowColor: 'rgba(192, 132, 252, 0.65)',
+        dropRate: 0.16,
+        scrapCoins: 160
+      },
+      LEGENDARY: {
+        id: 'legendary',
+        name: 'LEGENDARY',
+        stars: '★★★★★',
+        starCount: 5,
+        color: '#facc15',
+        bgClass: 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 text-slate-950 font-extrabold',
+        borderClass: 'border-amber-400',
+        glowColor: 'rgba(250, 204, 21, 0.85)',
+        dropRate: 0.04,
+        scrapCoins: 350
+      }
+    };
+
     const PLAYABLE_VANS = [
       {
         id: 'classic',
         name: 'Express Courier GTI',
-        tier: 'STARTER RIG',
+        rarity: 'COMMON',
+        stars: '★',
+        tier: 'COMMON RIG',
         speedStat: 80,
         handStat: 90,
         coinBonus: 0,
@@ -1908,6 +2109,8 @@
       {
         id: 'ramen',
         name: 'Harajuku Ramen Truck',
+        rarity: 'RARE',
+        stars: '★★',
         tier: 'RARE RIG',
         speedStat: 85,
         handStat: 93,
@@ -1920,6 +2123,8 @@
       {
         id: 'cyber',
         name: 'Cyber-Blade 2099',
+        rarity: 'EPIC',
+        stars: '★★★',
         tier: 'EPIC RIG',
         speedStat: 95,
         handStat: 96,
@@ -1932,6 +2137,8 @@
       {
         id: 'goldtuktuk',
         name: 'Royal Bangkok Tuk-Tuk',
+        rarity: 'RARE',
+        stars: '★★',
         tier: 'RARE RIG',
         speedStat: 89,
         handStat: 99,
@@ -1944,6 +2151,8 @@
       {
         id: 'bullion',
         name: 'Fort Knox Bullion Rig',
+        rarity: 'EPIC',
+        stars: '★★★',
         tier: 'EPIC RIG',
         speedStat: 87,
         handStat: 89,
@@ -1956,6 +2165,8 @@
       {
         id: 'moairig',
         name: 'Mecha-Moai Interceptor',
+        rarity: 'LEGENDARY',
+        stars: '★★★★★',
         tier: 'LEGENDARY',
         speedStat: 100,
         handStat: 97,
@@ -2275,6 +2486,9 @@
       courierRankLevel: 1,
       shiftContracts: [],
       vanTuning: {},
+      gachaPityEpic: 0,
+      gachaPityLegendary: 0,
+      gachaTotalPulls: 0,
       // Step-by-Step Tutorial State
       tutorialActive: false,
       tutorialStep: 0,
@@ -2356,7 +2570,10 @@
           courierXP: gameState.courierXP,
           courierRankLevel: gameState.courierRankLevel,
           shiftContracts: gameState.shiftContracts,
-          vanTuning: gameState.vanTuning
+          vanTuning: gameState.vanTuning,
+          gachaPityEpic: gameState.gachaPityEpic || 0,
+          gachaPityLegendary: gameState.gachaPityLegendary || 0,
+          gachaTotalPulls: gameState.gachaTotalPulls || 0
         };
         localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
       } catch (e) {
@@ -5646,116 +5863,310 @@ function createApartmentBuilding(side, zPos, index) {
       garageVanHolder.add(mesh);
       updateHomeGarageUI();
     }
-    function resetBlindDrawModalStage() {
+    function updateGachaPityUI() {
+      const pityEpicEl = document.getElementById('gacha-pity-epic');
+      const pityLegEl = document.getElementById('gacha-pity-legendary');
+      const coinsReadout = document.getElementById('draw-coins-Readout');
+
+      const pityEpic = gameState.gachaPityEpic || 0;
+      const pityLeg = gameState.gachaPityLegendary || 0;
+
+      if (pityEpicEl) pityEpicEl.textContent = `${Math.max(1, 10 - (pityEpic % 10))}`;
+      if (pityLegEl) pityLegEl.textContent = `${Math.max(1, 30 - Math.min(29, pityLeg))}`;
+      if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
+    }
+
+    function resetGachaModalStage() {
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const singleActions = document.getElementById('gacha-single-actions');
       const mysteryCrate = document.getElementById('draw-mystery-crate');
       const vehicleImg = document.getElementById('draw-vehicle-img');
       const tierPill = document.getElementById('draw-tier-pill');
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
       const stageBox = document.getElementById('draw-stage-box');
+      const sunburst = document.getElementById('draw-sunburst');
+      const actionButtons = document.getElementById('gacha-action-buttons');
 
+      if (singleView) singleView.classList.remove('hidden');
+      if (multiView) {
+        multiView.classList.add('hidden');
+        multiView.classList.remove('flex');
+      }
+      if (singleActions) singleActions.classList.add('hidden');
       if (mysteryCrate) mysteryCrate.classList.remove('hidden');
       if (vehicleImg) vehicleImg.classList.add('hidden');
-      if (tierPill) tierPill.textContent = 'SUPPLY CRATE';
-      if (titleEl) titleEl.textContent = 'FLEET SUPPLY REQUISITION';
-      if (subEl) subEl.textContent = 'Unlock 3D delivery vehicles with coins earned in-game • Fleet Scrap Value +60 Coins';
+      if (actionButtons) actionButtons.classList.remove('hidden');
+      if (tierPill) {
+        tierPill.textContent = 'FLEET CAPSULE';
+        tierPill.className = 'px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1';
+      }
+      if (titleEl) titleEl.textContent = 'FLEET GACHA MACHINE';
+      if (subEl) subEl.textContent = 'Spin for Common, Rare, Epic, & Legendary Delivery Rigs';
+      if (sunburst) sunburst.style.opacity = '0.35';
       if (stageBox) {
         stageBox.classList.remove('prize-reveal-anim', 'capsule-tumbling');
         stageBox.classList.add('blind-crate-idle');
+        stageBox.style.borderColor = '#facc15';
+        stageBox.style.boxShadow = '0 0 30px rgba(250,204,21,0.45)';
       }
+      updateGachaPityUI();
     }
 
-    let isSpinningDraw = false;
-    function spinMysteryVehicleDraw() {
-      if (isSpinningDraw) return;
-      const stageBox = document.getElementById('draw-stage-box');
-      const mysteryCrate = document.getElementById('draw-mystery-crate');
-      const vehicleImg = document.getElementById('draw-vehicle-img');
-      const tierPill = document.getElementById('draw-tier-pill');
+    function rollGachaRarity(guaranteeEpicOrHigher = false) {
+      const pityLeg = gameState.gachaPityLegendary || 0;
+      const pityEpic = gameState.gachaPityEpic || 0;
+
+      if (pityLeg >= 29) return 'LEGENDARY';
+      if (guaranteeEpicOrHigher || pityEpic >= 9) {
+        return Math.random() < 0.20 ? 'LEGENDARY' : 'EPIC';
+      }
+
+      const rand = Math.random();
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate) return 'LEGENDARY';
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate + RARITY_TIERS.EPIC.dropRate) return 'EPIC';
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate + RARITY_TIERS.EPIC.dropRate + RARITY_TIERS.RARE.dropRate) return 'RARE';
+      return 'COMMON';
+    }
+
+    function executeSingleGachaPull(guaranteeEpicOrHigher = false) {
+      const rarity = rollGachaRarity(guaranteeEpicOrHigher);
+      const tierInfo = RARITY_TIERS[rarity] || RARITY_TIERS.COMMON;
+      const matchingVans = PLAYABLE_VANS.filter(v => v.rarity === rarity);
+      const pool = matchingVans.length > 0 ? matchingVans : PLAYABLE_VANS;
+
+      // 80% bias toward unowned vehicles in that rarity tier if any exist
+      const unowned = pool.filter(v => !gameState.ownedVans.includes(v.id));
+      let wonVan;
+      if (unowned.length > 0 && Math.random() < 0.80) {
+        wonVan = unowned[Math.floor(Math.random() * unowned.length)];
+      } else {
+        wonVan = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      // Update Pity counters
+      if (rarity === 'LEGENDARY') {
+        gameState.gachaPityLegendary = 0;
+        gameState.gachaPityEpic = 0;
+      } else if (rarity === 'EPIC') {
+        gameState.gachaPityEpic = 0;
+        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+      } else {
+        gameState.gachaPityEpic = (gameState.gachaPityEpic || 0) + 1;
+        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+      }
+      gameState.gachaTotalPulls = (gameState.gachaTotalPulls || 0) + 1;
+
+      const wasNew = !gameState.ownedVans.includes(wonVan.id);
+      let scrapCoins = 0;
+      if (wasNew) {
+        gameState.ownedVans.push(wonVan.id);
+      } else {
+        scrapCoins = tierInfo.scrapCoins || 60;
+        gameState.coins += scrapCoins;
+      }
+
+      return { van: wonVan, rarity, tierInfo, wasNew, scrapCoins };
+    }
+
+    let isSpinningGacha = false;
+    let lastWonVanId = null;
+
+    function spinGacha(pullCount = 1) {
+      if (isSpinningGacha) return;
+      const cost = pullCount === 10 ? 900 : 100;
+
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
-      const sunburst = document.getElementById('draw-sunburst');
 
-      if (gameState.coins < 100) {
+      if (gameState.coins < cost) {
         soundFX.playCrash();
-        titleEl.textContent = 'INSUFFICIENT COINS (NEED 100)';
-        subEl.textContent = 'Deliver wishes on the road or claim the +300 Coins grant in Options!';
+        if (titleEl) titleEl.textContent = `INSUFFICIENT COINS (NEED ${cost})`;
+        if (subEl) subEl.textContent = 'Deliver wishes on the road to earn coins or complete shift contracts!';
         return;
       }
 
       soundFX.init();
-      isSpinningDraw = true;
-      gameState.coins -= 100;
+      isSpinningGacha = true;
+      gameState.coins -= cost;
       updateHomeGarageUI();
+      updateGachaPityUI();
+      saveProgression();
 
-      // Determine target winning vehicle (82% bias toward unowned vehicles!)
-      const lockedVans = PLAYABLE_VANS.filter(v => !gameState.ownedVans.includes(v.id));
-      let wonVan;
-      if (lockedVans.length > 0 && Math.random() < 0.82) {
-        wonVan = lockedVans[Math.floor(Math.random() * lockedVans.length)];
+      const stageBox = document.getElementById('draw-stage-box');
+      const mysteryCrate = document.getElementById('draw-mystery-crate');
+      const vehicleImg = document.getElementById('draw-vehicle-img');
+      const tierPill = document.getElementById('draw-tier-pill');
+      const sunburst = document.getElementById('draw-sunburst');
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const singleActions = document.getElementById('gacha-single-actions');
+
+      if (singleView) singleView.classList.remove('hidden');
+      if (multiView) {
+        multiView.classList.add('hidden');
+        multiView.classList.remove('flex');
+      }
+      if (singleActions) singleActions.classList.add('hidden');
+      if (mysteryCrate) mysteryCrate.classList.remove('hidden');
+      if (vehicleImg) vehicleImg.classList.add('hidden');
+
+      if (stageBox) {
+        stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
+        stageBox.classList.add('capsule-tumbling');
+      }
+      if (sunburst) sunburst.style.opacity = '0.9';
+      if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING GACHA CAPSULE...';
+      if (subEl) subEl.textContent = 'Querying global courier requisition database...';
+
+      // Execute pull logic
+      const results = [];
+      if (pullCount === 10) {
+        let gotEpicOrHigher = false;
+        for (let i = 0; i < 9; i++) {
+          const res = executeSingleGachaPull(false);
+          if (res.rarity === 'EPIC' || res.rarity === 'LEGENDARY') gotEpicOrHigher = true;
+          results.push(res);
+        }
+        // 10th pull is guaranteed Epic+ if none hit yet
+        results.push(executeSingleGachaPull(!gotEpicOrHigher));
       } else {
-        wonVan = PLAYABLE_VANS[Math.floor(Math.random() * PLAYABLE_VANS.length)];
+        results.push(executeSingleGachaPull(false));
       }
 
-      // Keep the vehicle image 100% HIDDEN during the blind draw shake!
-      mysteryCrate.classList.remove('hidden');
-      vehicleImg.classList.add('hidden');
-      stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
-      stageBox.classList.add('capsule-tumbling');
-      sunburst.style.opacity = '0.9';
-      titleEl.textContent = 'OPENING SUPPLY CRATE...';
-      subEl.textContent = 'Requisitioning vehicle for your courier fleet...';
-
-      const mysteryBadges = ['SUPPLY', 'RARE', 'EPIC', 'LEGENDARY', 'FLEET RIG', 'UNLOCKED!'];
-      const totalSteps = 16;
+      // Mystery badges animation
+      const mysteryBadges = ['COMMON ★', 'RARE ★★', 'EPIC ★★★', 'LEGENDARY ★★★★★', 'LOCKED RIG', 'UNBOXING!'];
+      const totalSteps = pullCount === 10 ? 18 : 14;
       let step = 0;
 
-      function nextBlindShakeTick() {
-        tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
-        soundFX.playReelTick(320 + step * 32);
-
+      function nextTick() {
+        if (tierPill) tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
+        soundFX.playReelTick(320 + step * 28);
         step++;
         if (step < totalSteps) {
-          const delay = 55 + Math.pow(step / totalSteps, 2.0) * 165;
-          setTimeout(nextBlindShakeTick, delay);
+          const delay = 45 + Math.pow(step / totalSteps, 2.0) * 150;
+          setTimeout(nextTick, delay);
         } else {
-          // Supply Crate Opens to Deploy the Requisitioned Vehicle!
-          stageBox.classList.remove('capsule-tumbling');
-          mysteryCrate.classList.add('hidden');
-          vehicleImg.src = vanIconDataURLs[wonVan.id];
-          vehicleImg.classList.remove('hidden');
-          tierPill.textContent = wonVan.tier;
-
-          void stageBox.offsetWidth;
-          stageBox.classList.add('prize-reveal-anim');
-
-          const wasNew = !gameState.ownedVans.includes(wonVan.id);
-          if (wasNew) {
-            gameState.ownedVans.push(wonVan.id);
-            soundFX.playCityGateChime();
-            triggerPrizeConfetti();
-            titleEl.textContent = `UNLOCKED NEW RIG: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `${wonVan.tier} • Deployed directly to your 3D Fleet Showroom!`;
+          // Reveal Results!
+          if (stageBox) stageBox.classList.remove('capsule-tumbling');
+          if (pullCount === 10) {
+            renderGachaMultiResult(results);
           } else {
-            gameState.coins += 60;
-            soundFX.playDeliverSuccess();
-            triggerPrizeConfetti();
-            titleEl.textContent = `FLEET DUPLICATE: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `Scrapped into +60 Earned Delivery Coins!`;
+            renderGachaSingleResult(results[0]);
           }
-
-          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === wonVan.id);
-          gameState.equippedVanId = wonVan.id;
-          rebuildGarageTurntableVan();
-          isSpinningDraw = false;
+          isSpinningGacha = false;
+          saveProgression();
+          updateHomeGarageUI();
+          updateGachaPityUI();
         }
       }
-
-      nextBlindShakeTick();
+      nextTick();
     }
 
-    // ============================================================================
-    // RETENTION & PROGRESSION LOOP: CONTRACTS, COURIER RANKS & RIG TUNING
+    function renderGachaSingleResult(res) {
+      const stageBox = document.getElementById('draw-stage-box');
+      const mysteryCrate = document.getElementById('draw-mystery-crate');
+      const vehicleImg = document.getElementById('draw-vehicle-img');
+      const tierPill = document.getElementById('draw-tier-pill');
+      const titleEl = document.getElementById('draw-result-title');
+      const subEl = document.getElementById('draw-result-sub');
+      const singleActions = document.getElementById('gacha-single-actions');
+
+      if (mysteryCrate) mysteryCrate.classList.add('hidden');
+      if (vehicleImg) {
+        vehicleImg.src = vanIconDataURLs[res.van.id] || vanIconDataURLs['classic'] || '';
+        vehicleImg.classList.remove('hidden');
+      }
+
+      lastWonVanId = res.van.id;
+
+      if (tierPill) {
+        tierPill.textContent = `${res.tierInfo.stars} ${res.van.rarity}`;
+        tierPill.className = `px-2.5 py-0.5 rounded-md font-extrabold text-[9px] uppercase tracking-wider -mt-1 ${res.tierInfo.bgClass || 'bg-slate-700 text-white'}`;
+      }
+
+      if (stageBox) {
+        stageBox.style.borderColor = res.tierInfo.color || '#facc15';
+        stageBox.style.boxShadow = `0 0 32px ${res.tierInfo.glowColor || 'rgba(250,204,21,0.5)'}`;
+        void stageBox.offsetWidth;
+        stageBox.classList.add('prize-reveal-anim');
+      }
+
+      if (res.wasNew) {
+        soundFX.playGachaFanfare(res.van.rarity);
+        triggerPrizeConfetti();
+        if (titleEl) titleEl.textContent = `✨ UNLOCKED: ${res.van.name.toUpperCase()}!`;
+        if (subEl) subEl.textContent = `${res.tierInfo.stars} ${res.van.rarity} • Added to your Garage Fleet!`;
+      } else {
+        soundFX.playDeliverSuccess();
+        triggerPrizeConfetti();
+        if (titleEl) titleEl.textContent = `FLEET DUPLICATE: ${res.van.name.toUpperCase()}`;
+        if (subEl) subEl.textContent = `Scrapped into +${res.scrapCoins} Coins Refund!`;
+      }
+
+      if (singleActions) singleActions.classList.remove('hidden');
+    }
+
+    function renderGachaMultiResult(results) {
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const grid = document.getElementById('gacha-multi-grid');
+      const summaryEl = document.getElementById('gacha-multi-summary');
+
+      if (singleView) singleView.classList.add('hidden');
+      if (multiView) {
+        multiView.classList.remove('hidden');
+        multiView.classList.add('flex');
+      }
+
+      // Count new rigs and scrap refund
+      const newCount = results.filter(r => r.wasNew).length;
+      const totalScrap = results.reduce((sum, r) => sum + r.scrapCoins, 0);
+
+      // Highest rarity pulled
+      const rarityRank = { 'LEGENDARY': 4, 'EPIC': 3, 'RARE': 2, 'COMMON': 1 };
+      let highestRarity = 'COMMON';
+      let bestVanId = results[0].van.id;
+      results.forEach(r => {
+        if (rarityRank[r.rarity] > rarityRank[highestRarity]) {
+          highestRarity = r.rarity;
+          bestVanId = r.van.id;
+        }
+      });
+      lastWonVanId = bestVanId;
+
+      soundFX.playGachaFanfare(highestRarity);
+      triggerPrizeConfetti();
+
+      if (summaryEl) {
+        summaryEl.textContent = `✨ ${newCount} New Rig(s) Unlocked • +${totalScrap} Coins Refunded`;
+      }
+
+      if (grid) {
+        grid.innerHTML = results.map((r) => {
+          const t = r.tierInfo;
+          const cardClass = `gacha-card-${t.id || 'common'}`;
+          return `
+            <div class="${cardClass} rounded-2xl p-2 flex flex-col items-center justify-between text-center relative overflow-hidden transition-transform hover:scale-105">
+              <div class="flex items-center justify-between w-full text-[8px] font-extrabold">
+                <span class="text-amber-300 font-mono">${t.stars}</span>
+                <span class="px-1.5 py-0.2 rounded text-[7px] ${t.bgClass || 'bg-slate-700 text-white'}">${r.rarity}</span>
+              </div>
+              <img src="${vanIconDataURLs[r.van.id] || ''}" alt="${r.van.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-contain my-1 drop-shadow" />
+              <div class="text-[9px] sm:text-[10px] font-extrabold text-white truncate max-w-full">${r.van.name}</div>
+              <div class="mt-1">
+                ${r.wasNew 
+                  ? '<span class="px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950 font-black text-[8px] animate-pulse">NEW!</span>'
+                  : `<span class="px-1.5 py-0.5 rounded-full bg-amber-400/30 text-amber-300 font-extrabold text-[8px]">+${r.scrapCoins} 🪙</span>`}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+        // RETENTION & PROGRESSION LOOP: CONTRACTS, COURIER RANKS & RIG TUNING
     // ============================================================================
     function initSavedProgression() {
       const saved = loadSavedProgression();
@@ -5765,6 +6176,9 @@ function createApartmentBuilding(side, zPos, index) {
         if (typeof saved.bestDeliveries === 'number') gameState.bestDeliveries = saved.bestDeliveries;
         if (Array.isArray(saved.ownedVans) && saved.ownedVans.length > 0) gameState.ownedVans = saved.ownedVans;
         if (saved.equippedVanId) gameState.equippedVanId = saved.equippedVanId;
+        if (typeof saved.gachaPityEpic === 'number') gameState.gachaPityEpic = saved.gachaPityEpic;
+        if (typeof saved.gachaPityLegendary === 'number') gameState.gachaPityLegendary = saved.gachaPityLegendary;
+        if (typeof saved.gachaTotalPulls === 'number') gameState.gachaTotalPulls = saved.gachaTotalPulls;
         if (Array.isArray(saved.unlockedItems)) gameState.unlockedItems = saved.unlockedItems;
         if (Array.isArray(saved.unlockedChars)) gameState.unlockedChars = saved.unlockedChars;
         if (typeof saved.courierXP === 'number') gameState.courierXP = saved.courierXP;
@@ -5992,7 +6406,11 @@ function createApartmentBuilding(side, zPos, index) {
 
       if (imgEl) imgEl.src = vanIconDataURLs[vanSpec.id] || vanIconDataURLs['classic'] || '';
       if (nameEl) nameEl.textContent = vanSpec.name;
-      if (tierEl) tierEl.textContent = isOwned ? vanSpec.tier : 'LOCKED RIG';
+      if (tierEl) {
+        const rInfo = (typeof RARITY_TIERS !== 'undefined' && RARITY_TIERS[vanSpec.rarity]) ? RARITY_TIERS[vanSpec.rarity] : { stars: '', bgClass: 'bg-slate-700 text-white' };
+        tierEl.textContent = isOwned ? `${rInfo.stars} ${vanSpec.rarity || vanSpec.tier}` : 'LOCKED RIG';
+        tierEl.className = `px-2 py-0.5 rounded font-extrabold text-[8px] uppercase ${isOwned ? (rInfo.bgClass || 'bg-amber-400 text-slate-950') : 'bg-rose-500 text-white'}`;
+      }
       if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
 
       if (!container) return;
@@ -6108,6 +6526,12 @@ function createApartmentBuilding(side, zPos, index) {
       document.getElementById('hall-subtitle').textContent = `${totalUnlocked}/${totalPossible} Discovered`;
 
       document.getElementById('home-van-name').textContent = spec.name;
+      const rarityBadge = document.getElementById('home-van-rarity');
+      if (rarityBadge) {
+        const rInfo = (typeof RARITY_TIERS !== 'undefined' && RARITY_TIERS[spec.rarity]) ? RARITY_TIERS[spec.rarity] : { stars: '★', bgClass: 'bg-slate-700 text-white' };
+        rarityBadge.textContent = `${rInfo.stars} ${spec.rarity || 'COMMON'}`;
+        rarityBadge.className = `px-2 py-0.5 rounded-md text-[8px] sm:text-[10px] font-extrabold uppercase shadow-sm ${rInfo.bgClass || 'bg-slate-700 text-white'}`;
+      }
       document.getElementById('home-van-sub').textContent =
         `Owned Fleet: ${gameState.ownedVans.length} / ${PLAYABLE_VANS.length} Vehicles`;
 
@@ -6142,6 +6566,7 @@ function createApartmentBuilding(side, zPos, index) {
       } else {
         statusBadge.textContent = 'LOCKED';
         statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-rose-500 text-white font-extrabold text-[10px] uppercase';
+        quickDrawBtn.innerHTML = `<span>🎰</span><span>FLEET GACHA (100)</span>`;
         quickDrawBtn.classList.remove('hidden');
         quickDrawBtn.classList.add('flex');
       }
@@ -7718,15 +8143,51 @@ function createApartmentBuilding(side, zPos, index) {
 
     document.getElementById('menu-btn-draw').addEventListener('click', () => {
       updateHomeGarageUI();
-      resetBlindDrawModalStage();
+      resetGachaModalStage();
       openModal('modal-draw');
     });
     document.getElementById('btn-home-quick-draw').addEventListener('click', () => {
       updateHomeGarageUI();
-      resetBlindDrawModalStage();
+      resetGachaModalStage();
       openModal('modal-draw');
     });
-    document.getElementById('btn-spin-draw').addEventListener('click', spinMysteryVehicleDraw);
+    document.getElementById('btn-spin-draw').addEventListener('click', () => spinGacha(1));
+    const btnGacha10x = document.getElementById('btn-gacha-10x');
+    if (btnGacha10x) btnGacha10x.addEventListener('click', () => spinGacha(10));
+
+    const btnEquipWon = document.getElementById('btn-gacha-equip-won');
+    if (btnEquipWon) {
+      btnEquipWon.addEventListener('click', () => {
+        if (lastWonVanId) {
+          gameState.equippedVanId = lastWonVanId;
+          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
+          rebuildGarageTurntableVan();
+          updateHomeGarageUI();
+          soundFX.playDeliverSuccess();
+          closeModal('modal-draw');
+        }
+      });
+    }
+
+    const btnEquipHighest = document.getElementById('btn-gacha-equip-highest');
+    if (btnEquipHighest) {
+      btnEquipHighest.addEventListener('click', () => {
+        if (lastWonVanId) {
+          gameState.equippedVanId = lastWonVanId;
+          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
+          rebuildGarageTurntableVan();
+          updateHomeGarageUI();
+          soundFX.playDeliverSuccess();
+          closeModal('modal-draw');
+        }
+      });
+    }
+
+    const btnSpinAnother = document.getElementById('btn-gacha-spin-another');
+    if (btnSpinAnother) btnSpinAnother.addEventListener('click', () => spinGacha(1));
+
+    const btnSpin10xAgain = document.getElementById('btn-gacha-spin-10x-again');
+    if (btnSpin10xAgain) btnSpin10xAgain.addEventListener('click', () => spinGacha(10));
 
     document.getElementById('menu-btn-tutorial').addEventListener('click', () => {
       const spec = PLAYABLE_VANS[gameState.selectedVanIndex];

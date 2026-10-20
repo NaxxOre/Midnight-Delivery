@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link rel="stylesheet" href="styles/main.css?v=20261020_garage_bgm" />
+  <link rel="stylesheet" href="styles/main.css?v=20261020_gacha_v1" />
 </head>
 <body>
 
@@ -313,8 +313,8 @@
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zm-4 17v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2H8zm4-14a4 4 0 0 1 4 4h-2a2 2 0 0 0-2-2V5z"/></svg>
           </div>
           <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">CRATE</div>
-            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / DROP</div>
+            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">GACHA</div>
+            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">FLEET CAPSULE</div>
           </div>
         </button>
 
@@ -377,6 +377,7 @@
       <div class="arcade-panel rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-1.5 sm:py-2 flex flex-col items-center gap-1 pointer-events-auto sm:mx-auto">
         <div class="flex items-center justify-center gap-2">
           <span id="home-van-name" class="arcade-font text-sm sm:text-2xl text-white tracking-wide truncate">Express Courier GTI</span>
+          <span id="home-van-rarity" class="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">★★★★★ LEGENDARY</span>
           <span id="home-van-status" class="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">EQUIPPED</span>
         </div>
         <div id="home-van-dots" class="flex items-center gap-1.5">
@@ -493,59 +494,124 @@
     </div>
   </div>
 
-  <!-- 3. COURIER SUPPLY DROP & FLEET REQUISITION CRATE MODAL -->
+  <!-- 3. FLEET GACHA CAPSULE MACHINE MODAL -->
   <div id="modal-draw" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-4">
-    <div class="arcade-panel rounded-3xl max-w-xl w-full p-5 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden">
-      <div class="flex items-center justify-between pb-3 border-b-2 border-sky-400/30 relative z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center border-2 border-white">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
+    <div class="arcade-panel rounded-3xl max-w-xl w-full p-4 sm:p-6 text-white text-center border-4 border-amber-400 relative overflow-hidden flex flex-col max-h-[95dvh]">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b-2 border-sky-400/30 relative z-10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center border-2 border-white text-xl shadow">
+            🎰
           </div>
           <div class="text-left">
-            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">COURIER SUPPLY DROP</h2>
-            <p class="text-[11px] text-sky-200 font-bold mt-0.5">Requisition a Courier Supply Crate with earned coins to expand your fleet!</p>
+            <h2 class="arcade-font text-lg sm:text-2xl text-amber-300 leading-none">FLEET GACHA MACHINE</h2>
+            <p class="text-[10px] sm:text-[11px] text-sky-200 font-bold mt-0.5">Draw courier rigs with earned coins • Duplicate scrap refund</p>
           </div>
         </div>
-        <button data-close-modal="modal-draw" class="w-10 h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
+        <button data-close-modal="modal-draw" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn flex items-center justify-center">✕</button>
       </div>
 
-      <!-- Courier Supply Drop Crate & Reveal Stage -->
-      <div class="my-4 bg-slate-950 border-3 border-sky-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center min-h-[245px] relative overflow-hidden shadow-inner">
+      <!-- Live Pity & Rates Bar -->
+      <div class="my-2 bg-slate-950/90 p-2 sm:p-2.5 rounded-2xl border border-sky-400/30 flex items-center justify-between text-[10px] sm:text-xs flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1 font-bold text-purple-300">
+            <span>⭐</span>
+            <span>Epic+: <b id="gacha-pity-epic" class="text-white">10</b> pulls</span>
+          </span>
+          <span class="flex items-center gap-1 font-bold text-amber-300">
+            <span>👑</span>
+            <span>Legendary: <b id="gacha-pity-legendary" class="text-white">30</b> pulls</span>
+          </span>
+        </div>
+        <div class="hidden sm:flex items-center gap-1 text-[9px] text-sky-300 font-bold">
+          <span class="text-slate-400">★ 45%</span>
+          <span>•</span>
+          <span class="text-sky-400">★★ 35%</span>
+          <span>•</span>
+          <span class="text-purple-400">★★★ 16%</span>
+          <span>•</span>
+          <span class="text-amber-400">★★★★★ 4%</span>
+        </div>
+      </div>
+
+      <!-- Main Stage Container: Machine / Single Pull / 10x Grid -->
+      <div id="gacha-stage-container" class="my-1 bg-slate-950 border-3 border-sky-400 rounded-3xl p-3 sm:p-4 flex flex-col items-center justify-center min-h-[260px] relative overflow-hidden shadow-inner flex-1">
         <div id="draw-sunburst" class="sunburst-rays absolute inset-[-50%] opacity-35 pointer-events-none"></div>
         <canvas id="draw-confetti-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
 
-        <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
-          <!-- Supply Crate Graphic -->
-          <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
-            <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
-              <rect x="8" y="14" width="48" height="42" rx="8" fill="#1e293b" stroke="#facc15" stroke-width="4"/>
-              <path d="M8 26H56" stroke="#38bdf8" stroke-width="4"/>
-              <rect x="26" y="20" width="12" height="12" rx="3" fill="#facc15"/>
-              <text x="32" y="48" text-anchor="middle" fill="#ffffff" font-family="Fredoka, sans-serif" font-weight="700" font-size="22">📦</text>
-            </svg>
+        <!-- View A: Capsule Machine / Single Pull Reveal -->
+        <div id="gacha-single-view" class="relative z-10 flex flex-col items-center justify-center w-full">
+          <div id="draw-stage-box" class="relative z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(250,204,21,0.45)] flex flex-col items-center justify-center p-2 blind-crate-idle">
+            <!-- Gacha Capsule Machine / Crate Graphic -->
+            <div id="draw-mystery-crate" class="flex flex-col items-center justify-center w-full h-full">
+              <svg class="w-24 h-24 sm:w-28 sm:h-28 text-amber-400" viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="28" r="22" fill="#0f172a" stroke="#facc15" stroke-width="4"/>
+                <circle cx="26" cy="24" r="7" fill="#38bdf8"/>
+                <circle cx="38" cy="22" r="6" fill="#c084fc"/>
+                <circle cx="33" cy="34" r="6.5" fill="#facc15"/>
+                <rect x="18" y="44" width="28" height="14" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+                <circle cx="32" cy="51" r="3.5" fill="#facc15"/>
+              </svg>
+            </div>
+            <!-- Unboxed 3D Vehicle Image -->
+            <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
+            <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">FLEET CAPSULE</span>
           </div>
-          <!-- Unboxed 3D Vehicle Image -->
-          <img id="draw-vehicle-img" src="" alt="Courier Rig" class="hidden w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.7)]" />
-          <span id="draw-tier-pill" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1">SUPPLY CRATE</span>
+
+          <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET GACHA MACHINE</div>
+          <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Spin for Common, Rare, Epic, &amp; Legendary Rigs</div>
+
+          <!-- Single Equip Action (shown when a rig is won) -->
+          <div id="gacha-single-actions" class="hidden relative z-10 mt-3 flex items-center gap-2">
+            <button id="btn-gacha-equip-won" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              EQUIP RIG
+            </button>
+            <button id="btn-gacha-spin-another" class="px-4 py-2 rounded-xl bg-sky-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              SPIN AGAIN
+            </button>
+          </div>
         </div>
 
-        <div id="draw-result-title" class="relative z-10 arcade-font text-base sm:text-2xl text-white mt-3 tracking-wide">FLEET SUPPLY REQUISITION</div>
-        <div id="draw-result-sub" class="relative z-10 text-xs text-sky-300 font-bold mt-0.5">Unlock 3D delivery vehicles with coins earned in-game &bull; Fleet Scrap Value +60 Coins</div>
+        <!-- View B: 10x Multi-Pull Results Grid -->
+        <div id="gacha-multi-view" class="hidden relative z-10 w-full flex-col items-center">
+          <div class="flex items-center justify-between w-full mb-2">
+            <span class="arcade-font text-xs sm:text-sm text-amber-300">10x GACHA RESULTS</span>
+            <span id="gacha-multi-summary" class="text-[10px] text-emerald-300 font-bold">New Rigs Unlocked!</span>
+          </div>
+          <div id="gacha-multi-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full max-h-[220px] overflow-y-auto p-1">
+            <!-- Populated dynamically with 10 pull cards -->
+          </div>
+          <div class="flex items-center gap-2 mt-3">
+            <button id="btn-gacha-equip-highest" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              EQUIP HIGHEST
+            </button>
+            <button id="btn-gacha-spin-10x-again" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-xs arcade-font arcade-btn">
+              PULL 10X AGAIN
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center justify-between bg-slate-950/90 px-4 py-3 rounded-2xl border-2 border-sky-500/40 mb-4 relative z-10">
+      <!-- Balance Readout -->
+      <div class="flex items-center justify-between bg-slate-950/90 px-4 py-2.5 rounded-2xl border-2 border-sky-500/40 my-2 relative z-10 flex-shrink-0">
         <span class="text-xs font-extrabold text-sky-200 uppercase tracking-wider">EARNED COIN BALANCE</span>
         <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">$</div>
+          <div class="w-6 h-6 rounded-full bg-amber-400 border border-white flex items-center justify-center text-slate-950 font-extrabold text-xs">🪙</div>
           <span id="draw-coins-Readout" class="arcade-font text-xl text-amber-300">250</span>
           <span class="text-xs font-bold text-amber-200">COINS</span>
         </div>
       </div>
 
-      <div class="flex gap-2.5 relative z-10">
-        <button id="btn-spin-draw" class="flex-1 py-4 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-base sm:text-xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V14h-2v2.93A8 8 0 0 1 4.07 11H7V9H4.07A8 8 0 0 1 11 4.07V7h2V4.07A8 8 0 0 1 19.93 11H17v2h2.93A8 8 0 0 1 13 16.93z"/></svg>
-          <span>REQUISITION CRATE (100 COINS)</span>
+      <!-- 1x and 10x Pull Buttons -->
+      <div id="gacha-action-buttons" class="flex flex-col sm:flex-row gap-2 relative z-10 flex-shrink-0">
+        <button id="btn-spin-draw" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-sky-400 via-sky-500 to-indigo-600 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn flex items-center justify-center gap-2 shadow">
+          <span>🎰</span>
+          <span>1x PULL (100 🪙)</span>
+        </button>
+        <button id="btn-gacha-10x" class="flex-1 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-sm sm:text-base arcade-font arcade-btn flex items-center justify-center gap-2 shadow relative">
+          <span class="absolute -top-2 right-3 px-2 py-0.5 rounded-full bg-rose-500 text-white font-extrabold text-[8px] tracking-wide animate-pulse shadow">EPIC+ GUARANTEED!</span>
+          <span>🌟</span>
+          <span>10x PULL (900 🪙)</span>
         </button>
       </div>
     </div>
@@ -797,9 +863,9 @@
 
 
   <!-- Core Modular Scripts (Shared Global Scope) -->
-  <script src="scripts/audio.js?v=20261020_garage_bgm"></script>
-  <script src="scripts/data.js?v=20261020_garage_bgm"></script>
-  <script src="scripts/voxels.js?v=20261020_garage_bgm"></script>
-  <script src="scripts/game.js?v=20261020_garage_bgm"></script>
+  <script src="scripts/audio.js?v=20261020_gacha_v1"></script>
+  <script src="scripts/data.js?v=20261020_gacha_v1"></script>
+  <script src="scripts/voxels.js?v=20261020_gacha_v1"></script>
+  <script src="scripts/game.js?v=20261020_gacha_v1"></script>
 </body>
 </html>

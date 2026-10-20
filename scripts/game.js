@@ -119,116 +119,310 @@
       garageVanHolder.add(mesh);
       updateHomeGarageUI();
     }
-    function resetBlindDrawModalStage() {
+    function updateGachaPityUI() {
+      const pityEpicEl = document.getElementById('gacha-pity-epic');
+      const pityLegEl = document.getElementById('gacha-pity-legendary');
+      const coinsReadout = document.getElementById('draw-coins-Readout');
+
+      const pityEpic = gameState.gachaPityEpic || 0;
+      const pityLeg = gameState.gachaPityLegendary || 0;
+
+      if (pityEpicEl) pityEpicEl.textContent = `${Math.max(1, 10 - (pityEpic % 10))}`;
+      if (pityLegEl) pityLegEl.textContent = `${Math.max(1, 30 - Math.min(29, pityLeg))}`;
+      if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
+    }
+
+    function resetGachaModalStage() {
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const singleActions = document.getElementById('gacha-single-actions');
       const mysteryCrate = document.getElementById('draw-mystery-crate');
       const vehicleImg = document.getElementById('draw-vehicle-img');
       const tierPill = document.getElementById('draw-tier-pill');
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
       const stageBox = document.getElementById('draw-stage-box');
+      const sunburst = document.getElementById('draw-sunburst');
+      const actionButtons = document.getElementById('gacha-action-buttons');
 
+      if (singleView) singleView.classList.remove('hidden');
+      if (multiView) {
+        multiView.classList.add('hidden');
+        multiView.classList.remove('flex');
+      }
+      if (singleActions) singleActions.classList.add('hidden');
       if (mysteryCrate) mysteryCrate.classList.remove('hidden');
       if (vehicleImg) vehicleImg.classList.add('hidden');
-      if (tierPill) tierPill.textContent = 'SUPPLY CRATE';
-      if (titleEl) titleEl.textContent = 'FLEET SUPPLY REQUISITION';
-      if (subEl) subEl.textContent = 'Unlock 3D delivery vehicles with coins earned in-game • Fleet Scrap Value +60 Coins';
+      if (actionButtons) actionButtons.classList.remove('hidden');
+      if (tierPill) {
+        tierPill.textContent = 'FLEET CAPSULE';
+        tierPill.className = 'px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1';
+      }
+      if (titleEl) titleEl.textContent = 'FLEET GACHA MACHINE';
+      if (subEl) subEl.textContent = 'Spin for Common, Rare, Epic, & Legendary Delivery Rigs';
+      if (sunburst) sunburst.style.opacity = '0.35';
       if (stageBox) {
         stageBox.classList.remove('prize-reveal-anim', 'capsule-tumbling');
         stageBox.classList.add('blind-crate-idle');
+        stageBox.style.borderColor = '#facc15';
+        stageBox.style.boxShadow = '0 0 30px rgba(250,204,21,0.45)';
       }
+      updateGachaPityUI();
     }
 
-    let isSpinningDraw = false;
-    function spinMysteryVehicleDraw() {
-      if (isSpinningDraw) return;
-      const stageBox = document.getElementById('draw-stage-box');
-      const mysteryCrate = document.getElementById('draw-mystery-crate');
-      const vehicleImg = document.getElementById('draw-vehicle-img');
-      const tierPill = document.getElementById('draw-tier-pill');
+    function rollGachaRarity(guaranteeEpicOrHigher = false) {
+      const pityLeg = gameState.gachaPityLegendary || 0;
+      const pityEpic = gameState.gachaPityEpic || 0;
+
+      if (pityLeg >= 29) return 'LEGENDARY';
+      if (guaranteeEpicOrHigher || pityEpic >= 9) {
+        return Math.random() < 0.20 ? 'LEGENDARY' : 'EPIC';
+      }
+
+      const rand = Math.random();
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate) return 'LEGENDARY';
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate + RARITY_TIERS.EPIC.dropRate) return 'EPIC';
+      if (rand < RARITY_TIERS.LEGENDARY.dropRate + RARITY_TIERS.EPIC.dropRate + RARITY_TIERS.RARE.dropRate) return 'RARE';
+      return 'COMMON';
+    }
+
+    function executeSingleGachaPull(guaranteeEpicOrHigher = false) {
+      const rarity = rollGachaRarity(guaranteeEpicOrHigher);
+      const tierInfo = RARITY_TIERS[rarity] || RARITY_TIERS.COMMON;
+      const matchingVans = PLAYABLE_VANS.filter(v => v.rarity === rarity);
+      const pool = matchingVans.length > 0 ? matchingVans : PLAYABLE_VANS;
+
+      // 80% bias toward unowned vehicles in that rarity tier if any exist
+      const unowned = pool.filter(v => !gameState.ownedVans.includes(v.id));
+      let wonVan;
+      if (unowned.length > 0 && Math.random() < 0.80) {
+        wonVan = unowned[Math.floor(Math.random() * unowned.length)];
+      } else {
+        wonVan = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      // Update Pity counters
+      if (rarity === 'LEGENDARY') {
+        gameState.gachaPityLegendary = 0;
+        gameState.gachaPityEpic = 0;
+      } else if (rarity === 'EPIC') {
+        gameState.gachaPityEpic = 0;
+        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+      } else {
+        gameState.gachaPityEpic = (gameState.gachaPityEpic || 0) + 1;
+        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+      }
+      gameState.gachaTotalPulls = (gameState.gachaTotalPulls || 0) + 1;
+
+      const wasNew = !gameState.ownedVans.includes(wonVan.id);
+      let scrapCoins = 0;
+      if (wasNew) {
+        gameState.ownedVans.push(wonVan.id);
+      } else {
+        scrapCoins = tierInfo.scrapCoins || 60;
+        gameState.coins += scrapCoins;
+      }
+
+      return { van: wonVan, rarity, tierInfo, wasNew, scrapCoins };
+    }
+
+    let isSpinningGacha = false;
+    let lastWonVanId = null;
+
+    function spinGacha(pullCount = 1) {
+      if (isSpinningGacha) return;
+      const cost = pullCount === 10 ? 900 : 100;
+
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
-      const sunburst = document.getElementById('draw-sunburst');
 
-      if (gameState.coins < 100) {
+      if (gameState.coins < cost) {
         soundFX.playCrash();
-        titleEl.textContent = 'INSUFFICIENT COINS (NEED 100)';
-        subEl.textContent = 'Deliver wishes on the road or claim the +300 Coins grant in Options!';
+        if (titleEl) titleEl.textContent = `INSUFFICIENT COINS (NEED ${cost})`;
+        if (subEl) subEl.textContent = 'Deliver wishes on the road to earn coins or complete shift contracts!';
         return;
       }
 
       soundFX.init();
-      isSpinningDraw = true;
-      gameState.coins -= 100;
+      isSpinningGacha = true;
+      gameState.coins -= cost;
       updateHomeGarageUI();
+      updateGachaPityUI();
+      saveProgression();
 
-      // Determine target winning vehicle (82% bias toward unowned vehicles!)
-      const lockedVans = PLAYABLE_VANS.filter(v => !gameState.ownedVans.includes(v.id));
-      let wonVan;
-      if (lockedVans.length > 0 && Math.random() < 0.82) {
-        wonVan = lockedVans[Math.floor(Math.random() * lockedVans.length)];
+      const stageBox = document.getElementById('draw-stage-box');
+      const mysteryCrate = document.getElementById('draw-mystery-crate');
+      const vehicleImg = document.getElementById('draw-vehicle-img');
+      const tierPill = document.getElementById('draw-tier-pill');
+      const sunburst = document.getElementById('draw-sunburst');
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const singleActions = document.getElementById('gacha-single-actions');
+
+      if (singleView) singleView.classList.remove('hidden');
+      if (multiView) {
+        multiView.classList.add('hidden');
+        multiView.classList.remove('flex');
+      }
+      if (singleActions) singleActions.classList.add('hidden');
+      if (mysteryCrate) mysteryCrate.classList.remove('hidden');
+      if (vehicleImg) vehicleImg.classList.add('hidden');
+
+      if (stageBox) {
+        stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
+        stageBox.classList.add('capsule-tumbling');
+      }
+      if (sunburst) sunburst.style.opacity = '0.9';
+      if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING GACHA CAPSULE...';
+      if (subEl) subEl.textContent = 'Querying global courier requisition database...';
+
+      // Execute pull logic
+      const results = [];
+      if (pullCount === 10) {
+        let gotEpicOrHigher = false;
+        for (let i = 0; i < 9; i++) {
+          const res = executeSingleGachaPull(false);
+          if (res.rarity === 'EPIC' || res.rarity === 'LEGENDARY') gotEpicOrHigher = true;
+          results.push(res);
+        }
+        // 10th pull is guaranteed Epic+ if none hit yet
+        results.push(executeSingleGachaPull(!gotEpicOrHigher));
       } else {
-        wonVan = PLAYABLE_VANS[Math.floor(Math.random() * PLAYABLE_VANS.length)];
+        results.push(executeSingleGachaPull(false));
       }
 
-      // Keep the vehicle image 100% HIDDEN during the blind draw shake!
-      mysteryCrate.classList.remove('hidden');
-      vehicleImg.classList.add('hidden');
-      stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
-      stageBox.classList.add('capsule-tumbling');
-      sunburst.style.opacity = '0.9';
-      titleEl.textContent = 'OPENING SUPPLY CRATE...';
-      subEl.textContent = 'Requisitioning vehicle for your courier fleet...';
-
-      const mysteryBadges = ['SUPPLY', 'RARE', 'EPIC', 'LEGENDARY', 'FLEET RIG', 'UNLOCKED!'];
-      const totalSteps = 16;
+      // Mystery badges animation
+      const mysteryBadges = ['COMMON ★', 'RARE ★★', 'EPIC ★★★', 'LEGENDARY ★★★★★', 'LOCKED RIG', 'UNBOXING!'];
+      const totalSteps = pullCount === 10 ? 18 : 14;
       let step = 0;
 
-      function nextBlindShakeTick() {
-        tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
-        soundFX.playReelTick(320 + step * 32);
-
+      function nextTick() {
+        if (tierPill) tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
+        soundFX.playReelTick(320 + step * 28);
         step++;
         if (step < totalSteps) {
-          const delay = 55 + Math.pow(step / totalSteps, 2.0) * 165;
-          setTimeout(nextBlindShakeTick, delay);
+          const delay = 45 + Math.pow(step / totalSteps, 2.0) * 150;
+          setTimeout(nextTick, delay);
         } else {
-          // Supply Crate Opens to Deploy the Requisitioned Vehicle!
-          stageBox.classList.remove('capsule-tumbling');
-          mysteryCrate.classList.add('hidden');
-          vehicleImg.src = vanIconDataURLs[wonVan.id];
-          vehicleImg.classList.remove('hidden');
-          tierPill.textContent = wonVan.tier;
-
-          void stageBox.offsetWidth;
-          stageBox.classList.add('prize-reveal-anim');
-
-          const wasNew = !gameState.ownedVans.includes(wonVan.id);
-          if (wasNew) {
-            gameState.ownedVans.push(wonVan.id);
-            soundFX.playCityGateChime();
-            triggerPrizeConfetti();
-            titleEl.textContent = `UNLOCKED NEW RIG: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `${wonVan.tier} • Deployed directly to your 3D Fleet Showroom!`;
+          // Reveal Results!
+          if (stageBox) stageBox.classList.remove('capsule-tumbling');
+          if (pullCount === 10) {
+            renderGachaMultiResult(results);
           } else {
-            gameState.coins += 60;
-            soundFX.playDeliverSuccess();
-            triggerPrizeConfetti();
-            titleEl.textContent = `FLEET DUPLICATE: ${wonVan.name.toUpperCase()}`;
-            subEl.textContent = `Scrapped into +60 Earned Delivery Coins!`;
+            renderGachaSingleResult(results[0]);
           }
-
-          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === wonVan.id);
-          gameState.equippedVanId = wonVan.id;
-          rebuildGarageTurntableVan();
-          isSpinningDraw = false;
+          isSpinningGacha = false;
+          saveProgression();
+          updateHomeGarageUI();
+          updateGachaPityUI();
         }
       }
-
-      nextBlindShakeTick();
+      nextTick();
     }
 
-    // ============================================================================
-    // RETENTION & PROGRESSION LOOP: CONTRACTS, COURIER RANKS & RIG TUNING
+    function renderGachaSingleResult(res) {
+      const stageBox = document.getElementById('draw-stage-box');
+      const mysteryCrate = document.getElementById('draw-mystery-crate');
+      const vehicleImg = document.getElementById('draw-vehicle-img');
+      const tierPill = document.getElementById('draw-tier-pill');
+      const titleEl = document.getElementById('draw-result-title');
+      const subEl = document.getElementById('draw-result-sub');
+      const singleActions = document.getElementById('gacha-single-actions');
+
+      if (mysteryCrate) mysteryCrate.classList.add('hidden');
+      if (vehicleImg) {
+        vehicleImg.src = vanIconDataURLs[res.van.id] || vanIconDataURLs['classic'] || '';
+        vehicleImg.classList.remove('hidden');
+      }
+
+      lastWonVanId = res.van.id;
+
+      if (tierPill) {
+        tierPill.textContent = `${res.tierInfo.stars} ${res.van.rarity}`;
+        tierPill.className = `px-2.5 py-0.5 rounded-md font-extrabold text-[9px] uppercase tracking-wider -mt-1 ${res.tierInfo.bgClass || 'bg-slate-700 text-white'}`;
+      }
+
+      if (stageBox) {
+        stageBox.style.borderColor = res.tierInfo.color || '#facc15';
+        stageBox.style.boxShadow = `0 0 32px ${res.tierInfo.glowColor || 'rgba(250,204,21,0.5)'}`;
+        void stageBox.offsetWidth;
+        stageBox.classList.add('prize-reveal-anim');
+      }
+
+      if (res.wasNew) {
+        soundFX.playGachaFanfare(res.van.rarity);
+        triggerPrizeConfetti();
+        if (titleEl) titleEl.textContent = `✨ UNLOCKED: ${res.van.name.toUpperCase()}!`;
+        if (subEl) subEl.textContent = `${res.tierInfo.stars} ${res.van.rarity} • Added to your Garage Fleet!`;
+      } else {
+        soundFX.playDeliverSuccess();
+        triggerPrizeConfetti();
+        if (titleEl) titleEl.textContent = `FLEET DUPLICATE: ${res.van.name.toUpperCase()}`;
+        if (subEl) subEl.textContent = `Scrapped into +${res.scrapCoins} Coins Refund!`;
+      }
+
+      if (singleActions) singleActions.classList.remove('hidden');
+    }
+
+    function renderGachaMultiResult(results) {
+      const singleView = document.getElementById('gacha-single-view');
+      const multiView = document.getElementById('gacha-multi-view');
+      const grid = document.getElementById('gacha-multi-grid');
+      const summaryEl = document.getElementById('gacha-multi-summary');
+
+      if (singleView) singleView.classList.add('hidden');
+      if (multiView) {
+        multiView.classList.remove('hidden');
+        multiView.classList.add('flex');
+      }
+
+      // Count new rigs and scrap refund
+      const newCount = results.filter(r => r.wasNew).length;
+      const totalScrap = results.reduce((sum, r) => sum + r.scrapCoins, 0);
+
+      // Highest rarity pulled
+      const rarityRank = { 'LEGENDARY': 4, 'EPIC': 3, 'RARE': 2, 'COMMON': 1 };
+      let highestRarity = 'COMMON';
+      let bestVanId = results[0].van.id;
+      results.forEach(r => {
+        if (rarityRank[r.rarity] > rarityRank[highestRarity]) {
+          highestRarity = r.rarity;
+          bestVanId = r.van.id;
+        }
+      });
+      lastWonVanId = bestVanId;
+
+      soundFX.playGachaFanfare(highestRarity);
+      triggerPrizeConfetti();
+
+      if (summaryEl) {
+        summaryEl.textContent = `✨ ${newCount} New Rig(s) Unlocked • +${totalScrap} Coins Refunded`;
+      }
+
+      if (grid) {
+        grid.innerHTML = results.map((r) => {
+          const t = r.tierInfo;
+          const cardClass = `gacha-card-${t.id || 'common'}`;
+          return `
+            <div class="${cardClass} rounded-2xl p-2 flex flex-col items-center justify-between text-center relative overflow-hidden transition-transform hover:scale-105">
+              <div class="flex items-center justify-between w-full text-[8px] font-extrabold">
+                <span class="text-amber-300 font-mono">${t.stars}</span>
+                <span class="px-1.5 py-0.2 rounded text-[7px] ${t.bgClass || 'bg-slate-700 text-white'}">${r.rarity}</span>
+              </div>
+              <img src="${vanIconDataURLs[r.van.id] || ''}" alt="${r.van.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-contain my-1 drop-shadow" />
+              <div class="text-[9px] sm:text-[10px] font-extrabold text-white truncate max-w-full">${r.van.name}</div>
+              <div class="mt-1">
+                ${r.wasNew 
+                  ? '<span class="px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950 font-black text-[8px] animate-pulse">NEW!</span>'
+                  : `<span class="px-1.5 py-0.5 rounded-full bg-amber-400/30 text-amber-300 font-extrabold text-[8px]">+${r.scrapCoins} 🪙</span>`}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+        // RETENTION & PROGRESSION LOOP: CONTRACTS, COURIER RANKS & RIG TUNING
     // ============================================================================
     function initSavedProgression() {
       const saved = loadSavedProgression();
@@ -238,6 +432,9 @@
         if (typeof saved.bestDeliveries === 'number') gameState.bestDeliveries = saved.bestDeliveries;
         if (Array.isArray(saved.ownedVans) && saved.ownedVans.length > 0) gameState.ownedVans = saved.ownedVans;
         if (saved.equippedVanId) gameState.equippedVanId = saved.equippedVanId;
+        if (typeof saved.gachaPityEpic === 'number') gameState.gachaPityEpic = saved.gachaPityEpic;
+        if (typeof saved.gachaPityLegendary === 'number') gameState.gachaPityLegendary = saved.gachaPityLegendary;
+        if (typeof saved.gachaTotalPulls === 'number') gameState.gachaTotalPulls = saved.gachaTotalPulls;
         if (Array.isArray(saved.unlockedItems)) gameState.unlockedItems = saved.unlockedItems;
         if (Array.isArray(saved.unlockedChars)) gameState.unlockedChars = saved.unlockedChars;
         if (typeof saved.courierXP === 'number') gameState.courierXP = saved.courierXP;
@@ -465,7 +662,11 @@
 
       if (imgEl) imgEl.src = vanIconDataURLs[vanSpec.id] || vanIconDataURLs['classic'] || '';
       if (nameEl) nameEl.textContent = vanSpec.name;
-      if (tierEl) tierEl.textContent = isOwned ? vanSpec.tier : 'LOCKED RIG';
+      if (tierEl) {
+        const rInfo = (typeof RARITY_TIERS !== 'undefined' && RARITY_TIERS[vanSpec.rarity]) ? RARITY_TIERS[vanSpec.rarity] : { stars: '', bgClass: 'bg-slate-700 text-white' };
+        tierEl.textContent = isOwned ? `${rInfo.stars} ${vanSpec.rarity || vanSpec.tier}` : 'LOCKED RIG';
+        tierEl.className = `px-2 py-0.5 rounded font-extrabold text-[8px] uppercase ${isOwned ? (rInfo.bgClass || 'bg-amber-400 text-slate-950') : 'bg-rose-500 text-white'}`;
+      }
       if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
 
       if (!container) return;
@@ -581,6 +782,12 @@
       document.getElementById('hall-subtitle').textContent = `${totalUnlocked}/${totalPossible} Discovered`;
 
       document.getElementById('home-van-name').textContent = spec.name;
+      const rarityBadge = document.getElementById('home-van-rarity');
+      if (rarityBadge) {
+        const rInfo = (typeof RARITY_TIERS !== 'undefined' && RARITY_TIERS[spec.rarity]) ? RARITY_TIERS[spec.rarity] : { stars: '★', bgClass: 'bg-slate-700 text-white' };
+        rarityBadge.textContent = `${rInfo.stars} ${spec.rarity || 'COMMON'}`;
+        rarityBadge.className = `px-2 py-0.5 rounded-md text-[8px] sm:text-[10px] font-extrabold uppercase shadow-sm ${rInfo.bgClass || 'bg-slate-700 text-white'}`;
+      }
       document.getElementById('home-van-sub').textContent =
         `Owned Fleet: ${gameState.ownedVans.length} / ${PLAYABLE_VANS.length} Vehicles`;
 
@@ -615,6 +822,7 @@
       } else {
         statusBadge.textContent = 'LOCKED';
         statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-rose-500 text-white font-extrabold text-[10px] uppercase';
+        quickDrawBtn.innerHTML = `<span>🎰</span><span>FLEET GACHA (100)</span>`;
         quickDrawBtn.classList.remove('hidden');
         quickDrawBtn.classList.add('flex');
       }
@@ -2232,15 +2440,51 @@
 
     document.getElementById('menu-btn-draw').addEventListener('click', () => {
       updateHomeGarageUI();
-      resetBlindDrawModalStage();
+      resetGachaModalStage();
       openModal('modal-draw');
     });
     document.getElementById('btn-home-quick-draw').addEventListener('click', () => {
       updateHomeGarageUI();
-      resetBlindDrawModalStage();
+      resetGachaModalStage();
       openModal('modal-draw');
     });
-    document.getElementById('btn-spin-draw').addEventListener('click', spinMysteryVehicleDraw);
+    document.getElementById('btn-spin-draw').addEventListener('click', () => spinGacha(1));
+    const btnGacha10x = document.getElementById('btn-gacha-10x');
+    if (btnGacha10x) btnGacha10x.addEventListener('click', () => spinGacha(10));
+
+    const btnEquipWon = document.getElementById('btn-gacha-equip-won');
+    if (btnEquipWon) {
+      btnEquipWon.addEventListener('click', () => {
+        if (lastWonVanId) {
+          gameState.equippedVanId = lastWonVanId;
+          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
+          rebuildGarageTurntableVan();
+          updateHomeGarageUI();
+          soundFX.playDeliverSuccess();
+          closeModal('modal-draw');
+        }
+      });
+    }
+
+    const btnEquipHighest = document.getElementById('btn-gacha-equip-highest');
+    if (btnEquipHighest) {
+      btnEquipHighest.addEventListener('click', () => {
+        if (lastWonVanId) {
+          gameState.equippedVanId = lastWonVanId;
+          gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
+          rebuildGarageTurntableVan();
+          updateHomeGarageUI();
+          soundFX.playDeliverSuccess();
+          closeModal('modal-draw');
+        }
+      });
+    }
+
+    const btnSpinAnother = document.getElementById('btn-gacha-spin-another');
+    if (btnSpinAnother) btnSpinAnother.addEventListener('click', () => spinGacha(1));
+
+    const btnSpin10xAgain = document.getElementById('btn-gacha-spin-10x-again');
+    if (btnSpin10xAgain) btnSpin10xAgain.addEventListener('click', () => spinGacha(10));
 
     document.getElementById('menu-btn-tutorial').addEventListener('click', () => {
       const spec = PLAYABLE_VANS[gameState.selectedVanIndex];

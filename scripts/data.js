@@ -160,11 +160,64 @@
       { id: 'cyberpunk', name: 'Neon Samurai',     phrase: '"Laser-Sharp Delivery!"' }
     ];
 
+    const RARITY_TIERS = {
+      COMMON: {
+        id: 'common',
+        name: 'COMMON',
+        stars: '★',
+        starCount: 1,
+        color: '#94a3b8',
+        bgClass: 'bg-slate-700 text-slate-100',
+        borderClass: 'border-slate-500',
+        glowColor: 'rgba(148, 163, 184, 0.45)',
+        dropRate: 0.45,
+        scrapCoins: 40
+      },
+      RARE: {
+        id: 'rare',
+        name: 'RARE',
+        stars: '★★',
+        starCount: 2,
+        color: '#38bdf8',
+        bgClass: 'bg-sky-500 text-slate-950 font-extrabold',
+        borderClass: 'border-sky-400',
+        glowColor: 'rgba(56, 189, 248, 0.55)',
+        dropRate: 0.35,
+        scrapCoins: 80
+      },
+      EPIC: {
+        id: 'epic',
+        name: 'EPIC',
+        stars: '★★★',
+        starCount: 3,
+        color: '#c084fc',
+        bgClass: 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-extrabold',
+        borderClass: 'border-purple-400',
+        glowColor: 'rgba(192, 132, 252, 0.65)',
+        dropRate: 0.16,
+        scrapCoins: 160
+      },
+      LEGENDARY: {
+        id: 'legendary',
+        name: 'LEGENDARY',
+        stars: '★★★★★',
+        starCount: 5,
+        color: '#facc15',
+        bgClass: 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 text-slate-950 font-extrabold',
+        borderClass: 'border-amber-400',
+        glowColor: 'rgba(250, 204, 21, 0.85)',
+        dropRate: 0.04,
+        scrapCoins: 350
+      }
+    };
+
     const PLAYABLE_VANS = [
       {
         id: 'classic',
         name: 'Express Courier GTI',
-        tier: 'STARTER RIG',
+        rarity: 'COMMON',
+        stars: '★',
+        tier: 'COMMON RIG',
         speedStat: 80,
         handStat: 90,
         coinBonus: 0,
@@ -176,6 +229,8 @@
       {
         id: 'ramen',
         name: 'Harajuku Ramen Truck',
+        rarity: 'RARE',
+        stars: '★★',
         tier: 'RARE RIG',
         speedStat: 85,
         handStat: 93,
@@ -188,6 +243,8 @@
       {
         id: 'cyber',
         name: 'Cyber-Blade 2099',
+        rarity: 'EPIC',
+        stars: '★★★',
         tier: 'EPIC RIG',
         speedStat: 95,
         handStat: 96,
@@ -200,6 +257,8 @@
       {
         id: 'goldtuktuk',
         name: 'Royal Bangkok Tuk-Tuk',
+        rarity: 'RARE',
+        stars: '★★',
         tier: 'RARE RIG',
         speedStat: 89,
         handStat: 99,
@@ -212,6 +271,8 @@
       {
         id: 'bullion',
         name: 'Fort Knox Bullion Rig',
+        rarity: 'EPIC',
+        stars: '★★★',
         tier: 'EPIC RIG',
         speedStat: 87,
         handStat: 89,
@@ -224,6 +285,8 @@
       {
         id: 'moairig',
         name: 'Mecha-Moai Interceptor',
+        rarity: 'LEGENDARY',
+        stars: '★★★★★',
         tier: 'LEGENDARY',
         speedStat: 100,
         handStat: 97,
@@ -543,6 +606,9 @@
       courierRankLevel: 1,
       shiftContracts: [],
       vanTuning: {},
+      gachaPityEpic: 0,
+      gachaPityLegendary: 0,
+      gachaTotalPulls: 0,
       // Step-by-Step Tutorial State
       tutorialActive: false,
       tutorialStep: 0,
@@ -624,7 +690,10 @@
           courierXP: gameState.courierXP,
           courierRankLevel: gameState.courierRankLevel,
           shiftContracts: gameState.shiftContracts,
-          vanTuning: gameState.vanTuning
+          vanTuning: gameState.vanTuning,
+          gachaPityEpic: gameState.gachaPityEpic || 0,
+          gachaPityLegendary: gameState.gachaPityLegendary || 0,
+          gachaTotalPulls: gameState.gachaTotalPulls || 0
         };
         localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
       } catch (e) {
