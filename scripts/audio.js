@@ -1,5 +1,5 @@
-        // ============================================================================
-    // 1. BACKGROUND MUSIC ("Passing Streetlights") & SFX SYSTEM
+            // ============================================================================
+    // 1. BACKGROUND MUSIC ("Passing Streetlights") & CUSTOMIZABLE SFX SYSTEM
     // ============================================================================
     class SoundSystem {
       constructor() {
@@ -7,7 +7,14 @@
         this._enabled = true;
         this.isPlayingMusic = false;
         this.bgm = null;
-        this.bgmVolume = 0.22; // "not too loud" - gentle, cozy background level
+        this.sfxGainNode = null;
+
+        // Load saved volume preferences or default to comfortable levels
+        const savedMusicVol = typeof localStorage !== 'undefined' ? localStorage.getItem('md_volume_music') : null;
+        const savedSfxVol = typeof localStorage !== 'undefined' ? localStorage.getItem('md_volume_sfx') : null;
+
+        this.bgmVolume = savedMusicVol !== null ? parseFloat(savedMusicVol) : 0.25; // 25% default cozy level
+        this.sfxVolume = savedSfxVol !== null ? parseFloat(savedSfxVol) : 0.75; // 75% default SFX level
         this._wasPlayingBeforeHide = false;
       }
 
@@ -17,6 +24,10 @@
 
       set enabled(val) {
         this._enabled = !!val;
+        this.syncMuteState();
+      }
+
+      syncMuteState() {
         if (this.bgm) {
           if (!this._enabled) {
             this.bgm.pause();
@@ -24,6 +35,9 @@
             this.bgm.volume = this.bgmVolume;
             this.bgm.play().catch(() => {});
           }
+        }
+        if (this.sfxGainNode && this.ctx) {
+          this.sfxGainNode.gain.setValueAtTime(this._enabled ? this.sfxVolume : 0, this.ctx.currentTime);
         }
       }
 
@@ -36,12 +50,27 @@
           if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume().catch(() => {});
           }
+          if (this.ctx && !this.sfxGainNode) {
+            this.sfxGainNode = this.ctx.createGain();
+            this.sfxGainNode.gain.setValueAtTime(this._enabled ? this.sfxVolume : 0, this.ctx.currentTime);
+            this.sfxGainNode.connect(this.ctx.destination);
+          }
           if (!this.bgm) {
             this.initBGM();
           }
         } catch (e) {
           console.warn('AudioContext initialization deferred:', e);
         }
+      }
+
+      getSFXDestination() {
+        if (!this.ctx) return null;
+        if (!this.sfxGainNode) {
+          this.sfxGainNode = this.ctx.createGain();
+          this.sfxGainNode.gain.setValueAtTime(this._enabled ? this.sfxVolume : 0, this.ctx.currentTime);
+          this.sfxGainNode.connect(this.ctx.destination);
+        }
+        return this.sfxGainNode;
       }
 
       initBGM() {
@@ -105,10 +134,23 @@
         }
       }
 
-      setVolume(vol) {
+      setMusicVolume(vol) {
         this.bgmVolume = Math.max(0, Math.min(1, vol));
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('md_volume_music', this.bgmVolume.toString());
+        }
         if (this.bgm && this._enabled) {
           this.bgm.volume = this.bgmVolume;
+        }
+      }
+
+      setSFXVolume(vol) {
+        this.sfxVolume = Math.max(0, Math.min(1, vol));
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('md_volume_sfx', this.sfxVolume.toString());
+        }
+        if (this.sfxGainNode && this.ctx) {
+          this.sfxGainNode.gain.setValueAtTime(this._enabled ? this.sfxVolume : 0, this.ctx.currentTime);
         }
       }
 
@@ -125,7 +167,7 @@
         gain.gain.setValueAtTime(0.075, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.getSFXDestination() || this.ctx.destination);
         osc.start(now);
         osc.stop(now + 0.18);
       }
@@ -143,7 +185,7 @@
           gain.gain.setValueAtTime(0.085, now + i * 0.05);
           gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.24);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now + i * 0.05);
           osc.stop(now + i * 0.05 + 0.25);
         });
@@ -163,7 +205,7 @@
           gain.gain.setValueAtTime(0.04, now + offset);
           gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.1);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now + offset);
           osc.stop(now + offset + 0.11);
         });
@@ -182,7 +224,7 @@
           gain.gain.setValueAtTime(0.07, now + idx * 0.07);
           gain.gain.exponentialRampToValueAtTime(0.0008, now + idx * 0.07 + 0.65);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now + idx * 0.07);
           osc.stop(now + idx * 0.07 + 0.68);
         });
@@ -201,7 +243,7 @@
         gain.gain.setValueAtTime(0.12, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.getSFXDestination() || this.ctx.destination);
         osc.start(now);
         osc.stop(now + 0.35);
       }
@@ -219,7 +261,7 @@
         gain.gain.setValueAtTime(0.06, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.getSFXDestination() || this.ctx.destination);
         osc.start(now);
         osc.stop(now + 0.055);
       }
@@ -239,7 +281,7 @@
           gain.gain.setValueAtTime(0.055, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.30);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.31);
         } else if (type === 'tuktuk') {
@@ -251,7 +293,7 @@
             gain.gain.setValueAtTime(0.035, now + i * 0.09);
             gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.07);
             osc.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(this.getSFXDestination() || this.ctx.destination);
             osc.start(now + i * 0.09);
             osc.stop(now + i * 0.09 + 0.08);
           });
@@ -264,7 +306,7 @@
             gain.gain.setValueAtTime(0.032, now + i * 0.14);
             gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.14 + 0.13);
             osc.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(this.getSFXDestination() || this.ctx.destination);
             osc.start(now + i * 0.14);
             osc.stop(now + i * 0.14 + 0.14);
           });
@@ -277,7 +319,7 @@
           gain.gain.setValueAtTime(0.04, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.32);
         }
@@ -297,7 +339,7 @@
           gain.gain.setValueAtTime(0.08, now + idx * 0.055);
           gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.28);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getSFXDestination() || this.ctx.destination);
           osc.start(now + idx * 0.055);
           osc.stop(now + idx * 0.055 + 0.30);
         });
@@ -318,7 +360,7 @@
         gain.gain.linearRampToValueAtTime(0.08, now + 0.07);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.27);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.getSFXDestination() || this.ctx.destination);
         osc.start(now);
         osc.stop(now + 0.28);
       }

@@ -2035,6 +2035,25 @@
           ? 'px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold arcade-btn'
           : 'px-4 py-2 rounded-xl bg-rose-500 text-white font-extrabold arcade-btn';
       }
+      syncVolumeSlidersUI();
+    }
+
+    function syncVolumeSlidersUI() {
+      const musicSlider = document.getElementById('setting-volume-music');
+      const musicVal = document.getElementById('setting-volume-music-val');
+      const sfxSlider = document.getElementById('setting-volume-sfx');
+      const sfxVal = document.getElementById('setting-volume-sfx-val');
+
+      if (musicSlider && musicVal) {
+        const mPct = Math.round(soundFX.bgmVolume * 100);
+        musicSlider.value = mPct;
+        musicVal.textContent = mPct + '%';
+      }
+      if (sfxSlider && sfxVal) {
+        const sPct = Math.round(soundFX.sfxVolume * 100);
+        sfxSlider.value = sPct;
+        sfxVal.textContent = sPct + '%';
+      }
     }
 
     document.getElementById('btn-audio').addEventListener('click', () => {
@@ -2043,6 +2062,42 @@
       syncAudioButtonsUI();
       if (soundFX.enabled && !soundFX.isPlayingMusic) soundFX.startCozyMusic();
     });
+
+    // Volume Sliders (Music BGM & Sound SFX)
+    const musicSlider = document.getElementById('setting-volume-music');
+    const musicVal = document.getElementById('setting-volume-music-val');
+    if (musicSlider) {
+      musicSlider.addEventListener('input', (e) => {
+        soundFX.init();
+        const val = parseInt(e.target.value, 10) / 100;
+        soundFX.setMusicVolume(val);
+        if (musicVal) musicVal.textContent = e.target.value + '%';
+        if (soundFX.enabled && !soundFX.isPlayingMusic && val > 0) {
+          soundFX.startCozyMusic();
+        }
+      });
+    }
+
+    const sfxSlider = document.getElementById('setting-volume-sfx');
+    const sfxVal = document.getElementById('setting-volume-sfx-val');
+    if (sfxSlider) {
+      sfxSlider.addEventListener('input', (e) => {
+        soundFX.init();
+        const val = parseInt(e.target.value, 10) / 100;
+        soundFX.setSFXVolume(val);
+        if (sfxVal) sfxVal.textContent = e.target.value + '%';
+      });
+      sfxSlider.addEventListener('change', () => {
+        soundFX.playReelTick(480);
+      });
+    }
+
+    const btnPauseSettings = document.getElementById('btn-pause-settings');
+    if (btnPauseSettings) {
+      btnPauseSettings.addEventListener('click', () => {
+        openModal('modal-settings');
+      });
+    }
 
     // Pause & 3-Second Countdown Resume Logic
     let activeCountdownTimer = null;
@@ -2127,7 +2182,7 @@
       if (m) {
         m.classList.remove('hidden');
         m.classList.add('flex');
-        if (id === 'modal-settings') renderCitySelectorUI();
+        if (id === 'modal-settings') { renderCitySelectorUI(); syncVolumeSlidersUI(); }
       }
     }
     function closeModal(id) {
