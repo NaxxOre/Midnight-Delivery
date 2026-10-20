@@ -985,15 +985,22 @@
 
     function replaceActivePlayerVan(vanId) {
       gameState.equippedVanId = vanId;
-      if (playerVan) {
-        scene.remove(playerVan);
+      const currentVan = (typeof playerVan !== 'undefined' ? playerVan : (typeof window !== 'undefined' ? window.playerVan : null));
+      if (currentVan) {
+        scene.remove(currentVan);
       }
-      playerVan = createPlayableVanMesh(vanId, true);
-      playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
-      const isLightsOn = TIME_PRESETS[gameState.timeIndex].lightsOn;
-      if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = isLightsOn;
-      if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = isLightsOn;
-      scene.add(playerVan);
+      const newVan = createPlayableVanMesh(vanId, true);
+      if (typeof playerVan !== 'undefined') {
+        playerVan = newVan;
+      }
+      if (typeof window !== 'undefined') {
+        window.playerVan = newVan;
+      }
+      newVan.position.set(gameState.currentX, 0, gameState.vanZ);
+      const isLightsOn = (typeof TIME_PRESETS !== 'undefined' && TIME_PRESETS[gameState.timeIndex]) ? TIME_PRESETS[gameState.timeIndex].lightsOn : false;
+      if (newVan.userData.beamLeft) newVan.userData.beamLeft.visible = isLightsOn;
+      if (newVan.userData.beamRight) newVan.userData.beamRight.visible = isLightsOn;
+      scene.add(newVan);
     }
 
     function createTrafficVehicle(type) {

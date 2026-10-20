@@ -1,7 +1,8 @@
     // ============================================================================
     // 10. GAME STATE, 3D SHOWROOM GARAGE STAGE & ANIMATED PRIZE MACHINE
     // ============================================================================
-    let playerVan = createPlayerDeliveryVan();
+    var playerVan = createPlayerDeliveryVan();
+    window.playerVan = playerVan;
     playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
     scene.add(playerVan);
 
@@ -2343,7 +2344,7 @@
 
       gameState.distanceMeters = 0;
       gameState.nextGateDistance = 210;
-      gameState.invulnerableTimer = 0;
+      gameState.invulnerableTimer = 1.5;
       gameState.cityIndex = 0;
       document.getElementById('immortal-hud-pill').classList.add('hidden');
       document.getElementById('slowmo-hud-pill').classList.remove('hidden');
@@ -2377,8 +2378,20 @@
       });
       flyingParcels.length = 0;
 
-      exhaustParticles.forEach(ep => scene.remove(ep.mesh));
-      exhaustParticles.length = 0;
+      if (typeof exhaustPool !== 'undefined' && exhaustPool) {
+        exhaustPool.forEach(ep => {
+          ep.active = false;
+          if (ep.mesh) ep.mesh.visible = false;
+        });
+      }
+      if (typeof exhaustParticles !== 'undefined' && exhaustParticles) {
+        exhaustParticles.forEach(ep => scene.remove(ep.mesh));
+        exhaustParticles.length = 0;
+      }
+      if (typeof particles !== 'undefined' && particles) {
+        particles.forEach(p => scene.remove(p.mesh));
+        particles.length = 0;
+      }
 
       flyingRagdolls.forEach(rg => scene.remove(rg.mesh));
       flyingRagdolls.length = 0;
@@ -2502,7 +2515,7 @@
       }
 
       // Freeze world movement while Paused or in 3-2-1 Countdown
-      if (gameState.mode === 'paused' || gameState.mode === 'countdown') {
+      if (gameState.mode === 'paused' || gameState.mode === 'countdown' || gameState.mode === 'gameover') {
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
         camera.lookAt(PLAY_CAM_LOOK);

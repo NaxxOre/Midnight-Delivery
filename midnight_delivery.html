@@ -3275,15 +3275,22 @@
 
     function replaceActivePlayerVan(vanId) {
       gameState.equippedVanId = vanId;
-      if (playerVan) {
-        scene.remove(playerVan);
+      const currentVan = (typeof playerVan !== 'undefined' ? playerVan : (typeof window !== 'undefined' ? window.playerVan : null));
+      if (currentVan) {
+        scene.remove(currentVan);
       }
-      playerVan = createPlayableVanMesh(vanId, true);
-      playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
-      const isLightsOn = TIME_PRESETS[gameState.timeIndex].lightsOn;
-      if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = isLightsOn;
-      if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = isLightsOn;
-      scene.add(playerVan);
+      const newVan = createPlayableVanMesh(vanId, true);
+      if (typeof playerVan !== 'undefined') {
+        playerVan = newVan;
+      }
+      if (typeof window !== 'undefined') {
+        window.playerVan = newVan;
+      }
+      newVan.position.set(gameState.currentX, 0, gameState.vanZ);
+      const isLightsOn = (typeof TIME_PRESETS !== 'undefined' && TIME_PRESETS[gameState.timeIndex]) ? TIME_PRESETS[gameState.timeIndex].lightsOn : false;
+      if (newVan.userData.beamLeft) newVan.userData.beamLeft.visible = isLightsOn;
+      if (newVan.userData.beamRight) newVan.userData.beamRight.visible = isLightsOn;
+      scene.add(newVan);
     }
 
     function createTrafficVehicle(type) {
@@ -5443,7 +5450,8 @@ function createApartmentBuilding(side, zPos, index) {
     // ============================================================================
     // 10. GAME STATE, 3D SHOWROOM GARAGE STAGE & ANIMATED PRIZE MACHINE
     // ============================================================================
-    let playerVan = createPlayerDeliveryVan();
+    var playerVan = createPlayerDeliveryVan();
+    window.playerVan = playerVan;
     playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
     scene.add(playerVan);
 
@@ -7744,7 +7752,7 @@ function createApartmentBuilding(side, zPos, index) {
 
       gameState.distanceMeters = 0;
       gameState.nextGateDistance = 210;
-      gameState.invulnerableTimer = 0;
+      gameState.invulnerableTimer = 1.5;
       gameState.cityIndex = 0;
       document.getElementById('immortal-hud-pill').classList.add('hidden');
       document.getElementById('slowmo-hud-pill').classList.remove('hidden');
@@ -7772,8 +7780,20 @@ function createApartmentBuilding(side, zPos, index) {
       });
       flyingParcels.length = 0;
 
-      exhaustParticles.forEach(ep => scene.remove(ep.mesh));
-      exhaustParticles.length = 0;
+      if (typeof exhaustPool !== 'undefined' && exhaustPool) {
+        exhaustPool.forEach(ep => {
+          ep.active = false;
+          if (ep.mesh) ep.mesh.visible = false;
+        });
+      }
+      if (typeof exhaustParticles !== 'undefined' && exhaustParticles) {
+        exhaustParticles.forEach(ep => scene.remove(ep.mesh));
+        exhaustParticles.length = 0;
+      }
+      if (typeof particles !== 'undefined' && particles) {
+        particles.forEach(p => scene.remove(p.mesh));
+        particles.length = 0;
+      }
 
       flyingRagdolls.forEach(rg => scene.remove(rg.mesh));
       flyingRagdolls.length = 0;
@@ -7895,7 +7915,7 @@ function createApartmentBuilding(side, zPos, index) {
       }
 
       // Freeze world movement while Paused or in 3-2-1 Countdown
-      if (gameState.mode === 'paused' || gameState.mode === 'countdown') {
+      if (gameState.mode === 'paused' || gameState.mode === 'countdown' || gameState.mode === 'gameover') {
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
         camera.lookAt(PLAY_CAM_LOOK);
