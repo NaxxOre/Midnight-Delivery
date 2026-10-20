@@ -1,12 +1,30 @@
-    // ============================================================================
-    // 1. UPBEAT 118 BPM CITY-POP / ARCADE DRIVING GROOVE + PRIZE REEL SFX
+        // ============================================================================
+    // 1. BACKGROUND MUSIC ("Passing Streetlights") & SFX SYSTEM
     // ============================================================================
     class SoundSystem {
       constructor() {
         this.ctx = null;
-        this.enabled = true;
+        this._enabled = true;
         this.isPlayingMusic = false;
-        this.step = 0;
+        this.bgm = null;
+        this.bgmVolume = 0.22; // "not too loud" - gentle, cozy background level
+        this._wasPlayingBeforeHide = false;
+      }
+
+      get enabled() {
+        return this._enabled;
+      }
+
+      set enabled(val) {
+        this._enabled = !!val;
+        if (this.bgm) {
+          if (!this._enabled) {
+            this.bgm.pause();
+          } else if (this.isPlayingMusic) {
+            this.bgm.volume = this.bgmVolume;
+            this.bgm.play().catch(() => {});
+          }
+        }
       }
 
       init() {
@@ -18,112 +36,80 @@
           if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume().catch(() => {});
           }
+          if (!this.bgm) {
+            this.initBGM();
+          }
         } catch (e) {
           console.warn('AudioContext initialization deferred:', e);
         }
       }
 
+      initBGM() {
+        try {
+          const existingEl = typeof document !== 'undefined' ? document.getElementById('bgm-audio') : null;
+          if (existingEl) {
+            this.bgm = existingEl;
+          } else if (typeof Audio !== 'undefined') {
+            this.bgm = new Audio('resources/Passing_Streetlights.mp3');
+            this.bgm.id = 'bgm-audio';
+          }
+          if (this.bgm) {
+            this.bgm.loop = true;
+            this.bgm.volume = this._enabled ? this.bgmVolume : 0;
+            this.bgm.preload = 'auto';
+          }
+        } catch (e) {
+          console.warn('BGM initialization deferred:', e);
+        }
+      }
+
       startCozyMusic() {
         this.init();
-        if (!this.ctx || this.isPlayingMusic) return;
         this.isPlayingMusic = true;
+        if (!this._enabled) return;
 
-        const chords = [
-          [261.63, 329.63, 392.00, 493.88],
-          [220.00, 261.63, 329.63, 392.00],
-          [174.61, 220.00, 261.63, 349.23],
-          [196.00, 246.94, 293.66, 392.00]
-        ];
-        const bassRoot = [65.41, 55.00, 43.65, 49.00];
-        const leadNotes = [
-          523.25, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33, 523.25,
-          659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 587.33, 659.25
-        ];
-
-        const tick = () => {
-          if (!this.isPlayingMusic) return;
-          if (this.enabled && this.ctx && this.ctx.state === 'running') {
-            const now = this.ctx.currentTime;
-            const bar = Math.floor(this.step / 16) % 4;
-            const s16 = this.step % 16;
-
-            if (s16 % 4 === 0) {
-              const kOsc = this.ctx.createOscillator();
-              const kGain = this.ctx.createGain();
-              kOsc.type = 'sine';
-              kOsc.frequency.setValueAtTime(135, now);
-              kOsc.frequency.exponentialRampToValueAtTime(38, now + 0.09);
-              kGain.gain.setValueAtTime(0.075, now);
-              kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-              kOsc.connect(kGain);
-              kGain.connect(this.ctx.destination);
-              kOsc.start(now);
-              kOsc.stop(now + 0.12);
-            }
-
-            if (s16 === 4 || s16 === 12) {
-              const sOsc = this.ctx.createOscillator();
-              const sGain = this.ctx.createGain();
-              sOsc.type = 'triangle';
-              sOsc.frequency.setValueAtTime(290, now);
-              sOsc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
-              sGain.gain.setValueAtTime(0.045, now);
-              sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-              sOsc.connect(sGain);
-              sGain.connect(this.ctx.destination);
-              sOsc.start(now);
-              sOsc.stop(now + 0.09);
-            }
-
-            if (s16 % 2 === 0) {
-              const bOsc = this.ctx.createOscillator();
-              const bGain = this.ctx.createGain();
-              bOsc.type = 'sawtooth';
-              const isOctave = (s16 % 4 === 2);
-              const freq = bassRoot[bar] * (isOctave ? 2.0 : 1.0);
-              bOsc.frequency.setValueAtTime(freq, now);
-              bGain.gain.setValueAtTime(0.032, now);
-              bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-              bOsc.connect(bGain);
-              bGain.connect(this.ctx.destination);
-              bOsc.start(now);
-              bOsc.stop(now + 0.12);
-            }
-
-            if (s16 === 0 || s16 === 3 || s16 === 6 || s16 === 10 || s16 === 12) {
-              chords[bar].forEach((freq, idx) => {
-                const cOsc = this.ctx.createOscillator();
-                const cGain = this.ctx.createGain();
-                cOsc.type = 'triangle';
-                cOsc.frequency.setValueAtTime(freq, now);
-                cGain.gain.setValueAtTime(0.016 - idx * 0.002, now);
-                cGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.18);
-                cOsc.connect(cGain);
-                cGain.connect(this.ctx.destination);
-                cOsc.start(now);
-                cOsc.stop(now + 0.19);
-              });
-            }
-
-            if (s16 === 0 || s16 === 2 || s16 === 5 || s16 === 8 || s16 === 11 || s16 === 14) {
-              const lOsc = this.ctx.createOscillator();
-              const lGain = this.ctx.createGain();
-              lOsc.type = 'square';
-              const note = leadNotes[(s16 + bar * 3) % leadNotes.length];
-              lOsc.frequency.setValueAtTime(note, now);
-              lGain.gain.setValueAtTime(0.014, now);
-              lGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.15);
-              lOsc.connect(lGain);
-              lGain.connect(this.ctx.destination);
-              lOsc.start(now);
-              lOsc.stop(now + 0.16);
-            }
-
-            this.step++;
+        if (!this.bgm) {
+          this.initBGM();
+        }
+        if (this.bgm) {
+          this.bgm.volume = this.bgmVolume;
+          const playPromise = this.bgm.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              // Browser autoplay policy waiting for user interaction
+              console.log('BGM playback waiting for user interaction:', err);
+            });
           }
-          setTimeout(tick, 127);
-        };
-        tick();
+        }
+      }
+
+      stopMusic() {
+        this.isPlayingMusic = false;
+        if (this.bgm) {
+          this.bgm.pause();
+        }
+      }
+
+      pauseMusic() {
+        if (this.bgm && !this.bgm.paused) {
+          this.bgm.pause();
+          this._wasPlayingBeforeHide = true;
+        }
+      }
+
+      resumeMusic() {
+        if (this.bgm && this._enabled && this.isPlayingMusic) {
+          this.bgm.volume = this.bgmVolume;
+          this.bgm.play().catch(() => {});
+          this._wasPlayingBeforeHide = false;
+        }
+      }
+
+      setVolume(vol) {
+        this.bgmVolume = Math.max(0, Math.min(1, vol));
+        if (this.bgm && this._enabled) {
+          this.bgm.volume = this.bgmVolume;
+        }
       }
 
       playThrow() {

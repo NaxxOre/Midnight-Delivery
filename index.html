@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link rel="stylesheet" href="styles/main.css?v=20261019_landmarks_v1" />
+  <link rel="stylesheet" href="styles/main.css?v=20261020_bgm_v1" />
 </head>
 <body>
 
@@ -24,6 +24,10 @@
       LOADING 3D VOXEL TOUR...
     </div>
   </div>
+
+  <!-- 3D WebGL Canvas -->
+  <!-- Background Music Track (Passing Streetlights) -->
+  <audio id="bgm-audio" src="resources/Passing_Streetlights.mp3" loop preload="auto"></audio>
 
   <!-- 3D WebGL Canvas -->
   <canvas id="game-canvas"></canvas>
@@ -558,7 +562,7 @@
         <div class="flex items-center justify-between bg-slate-950/85 p-3.5 rounded-2xl border-2 border-sky-500/30">
           <div>
             <div class="font-extrabold text-white">Cozy Driving Music &amp; Sirens</div>
-            <div class="text-[10px] text-sky-300">118 BPM City-Pop Groove &amp; Vehicle SFX</div>
+            <div class="text-[10px] text-sky-300">Passing Streetlights &amp; Vehicle SFX</div>
           </div>
           <button id="setting-toggle-audio" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold arcade-btn">ON</button>
         </div>
@@ -750,9 +754,9 @@
 
 
   <!-- Core Modular Scripts (Shared Global Scope) -->
-  <script src="scripts/audio.js?v=20261019_landmarks_v1"></script>
-  <script src="scripts/data.js?v=20261019_landmarks_v1"></script>
-  <script src="scripts/voxels.js?v=20261019_landmarks_v1"></script>
-  <script src="scripts/game.js?v=20261019_landmarks_v1"></script>
+  <script src="scripts/audio.js?v=20261020_bgm_v1"></script>
+  <script src="scripts/data.js?v=20261020_bgm_v1"></script>
+  <script src="scripts/voxels.js?v=20261020_bgm_v1"></script>
+  <script src="scripts/game.js?v=20261020_bgm_v1"></script>
 </body>
 </html>

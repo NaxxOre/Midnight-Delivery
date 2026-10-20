@@ -3122,19 +3122,37 @@
       setTimeout(updateCameraForViewport, 120);
     });
 
-    // Handle tab backgrounding & inactivity: Pause Web Audio to avoid buffer lag and reset lastTime
+    // Handle tab backgrounding & inactivity: Pause Web Audio & BGM to avoid buffer lag and reset lastTime
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         if (soundFX && soundFX.ctx && soundFX.ctx.state === 'running') {
           soundFX.ctx.suspend().catch(() => {});
+        }
+        if (soundFX && soundFX.pauseMusic) {
+          soundFX.pauseMusic();
         }
       } else {
         lastTime = performance.now();
         if (soundFX && soundFX.ctx && soundFX.ctx.state === 'suspended' && soundFX.enabled) {
           soundFX.ctx.resume().catch(() => {});
         }
+        if (soundFX && soundFX.resumeMusic) {
+          soundFX.resumeMusic();
+        }
       }
     });
+
+    // Start cozy background music on first user interaction anywhere
+    const startAudioOnFirstInteraction = () => {
+      soundFX.init();
+      if (soundFX.enabled && !soundFX.isPlayingMusic) {
+        soundFX.startCozyMusic();
+      }
+      window.removeEventListener('pointerdown', startAudioOnFirstInteraction);
+      window.removeEventListener('keydown', startAudioOnFirstInteraction);
+    };
+    window.addEventListener('pointerdown', startAudioOnFirstInteraction, { once: true });
+    window.addEventListener('keydown', startAudioOnFirstInteraction, { once: true });
 
     function hideLoadingOverlay() {
       const loader = document.getElementById('loading-overlay');
