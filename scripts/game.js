@@ -48,44 +48,53 @@
     const blueprintGarageGroup = new THREE.Group();
     scene.add(blueprintGarageGroup);
 
-    // Rich Blueprint Studio Floor Plane with Subtle Reflection
+    // Deep Midnight Wet-Look Asphalt Floor
     const studioFloor = new THREE.Mesh(
-      new THREE.PlaneGeometry(220, 220),
-      new THREE.MeshStandardMaterial({ color: 0x0b2559, roughness: 0.65, metalness: 0.15 })
+      new THREE.PlaneGeometry(240, 240),
+      new THREE.MeshStandardMaterial({ color: 0x090b12, roughness: 0.18, metalness: 0.55 })
     );
     studioFloor.rotation.x = -Math.PI / 2;
     studioFloor.position.y = -0.36;
     studioFloor.receiveShadow = true;
     blueprintGarageGroup.add(studioFloor);
 
-    // Crisp Dual-Layer Technical CAD Blueprint Grids
-    const blueprintGridMajor = new THREE.GridHelper(90, 30, 0x38bdf8, 0x1e40af);
-    blueprintGridMajor.position.y = -0.34;
-    blueprintGarageGroup.add(blueprintGridMajor);
+    // Subtle Industrial Asphalt Seams
+    const asphaltSeams = new THREE.GridHelper(48, 12, 0x181c28, 0x0e111a);
+    asphaltSeams.position.y = -0.34;
+    blueprintGarageGroup.add(asphaltSeams);
 
-    const blueprintGridMinor = new THREE.GridHelper(36, 36, 0x7dd3fc, 0x1d4ed8);
-    blueprintGridMinor.position.y = -0.33;
-    blueprintGarageGroup.add(blueprintGridMinor);
+    // High-Contrast Cyan & Magenta Neon Reflections
+    const garageNeonCyan = new THREE.PointLight(0x06b6d4, 2.4, 24, 1.8);
+    garageNeonCyan.position.set(5.5, 1.6, -4.5);
+    blueprintGarageGroup.add(garageNeonCyan);
 
-    // Surrounding Voxel Showroom Skyline Pillars pushed far back (dist = 38+) so they NEVER block the 360° camera!
+    const garageNeonMagenta = new THREE.PointLight(0xd946ef, 1.9, 24, 1.8);
+    garageNeonMagenta.position.set(-5.5, 2.2, -2.0);
+    blueprintGarageGroup.add(garageNeonMagenta);
+
+    // Warm Sodium Streetlamp Rim Light above-rear
+    const garageStreetlampRim = new THREE.DirectionalLight(0xf59e0b, 1.85);
+    garageStreetlampRim.position.set(-6, 15, 6);
+    blueprintGarageGroup.add(garageStreetlampRim);
+
+    // Surrounding Voxel Showroom Skyline Pillars pushed far back
     for (let i = 0; i < 16; i++) {
       const angle = (i / 16) * Math.PI * 2;
       const dist = 38 + (i % 3) * 5;
-      const h = 6 + (i % 4) * 3.5;
+      const h = 7 + (i % 4) * 4;
       const w = 3.2 + (i % 2) * 1.5;
       const bx = Math.cos(angle) * dist;
       const bz = Math.sin(angle) * dist;
-      const block = addVoxelBox(blueprintGarageGroup, w, h, w, bx, h / 2 - 0.35, bz, 0x102e6b);
-      decorateGroupWithCADEdges(block, false);
+      addVoxelBox(blueprintGarageGroup, w, h, w, bx, h / 2 - 0.35, bz, 0x0b0d14);
     }
 
-    // Multi-Tiered Mechanical Turntable Podium
+    // Multi-Tiered Tactical Mechanical Turntable Podium
     const turntableGroup = new THREE.Group();
     blueprintGarageGroup.add(turntableGroup);
 
     const outerPodium = new THREE.Mesh(
       new THREE.CylinderGeometry(4.85, 5.25, 0.32, 32),
-      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.45 })
+      new THREE.MeshStandardMaterial({ color: 0x0d0f17, roughness: 0.4, metalness: 0.6 })
     );
     outerPodium.position.y = -0.20;
     outerPodium.receiveShadow = true;
@@ -93,13 +102,13 @@
 
     const innerPodium = new THREE.Mesh(
       new THREE.CylinderGeometry(4.15, 4.35, 0.18, 32),
-      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.35, metalness: 0.3 })
+      new THREE.MeshStandardMaterial({ color: 0x131722, roughness: 0.35, metalness: 0.5 })
     );
     innerPodium.position.y = -0.05;
     innerPodium.receiveShadow = true;
     turntableGroup.add(innerPodium);
 
-    // 16 Mechanical Voxel Gear Teeth around Turntable Rim
+    // Hazard Yellow & Dark Steel Rim Markings around Turntable
     for (let g = 0; g < 16; g++) {
       const a = (g / 16) * Math.PI * 2;
       const tooth = addVoxelBox(
@@ -110,39 +119,50 @@
         Math.cos(a) * 4.55,
         -0.08,
         Math.sin(a) * 4.55,
-        g % 2 === 0 ? 0xfacc15 : 0x38bdf8,
-        { emissive: g % 2 === 0 ? 0xf59e0b : 0x0284c7, emissiveIntensity: 0.55 }
+        g % 2 === 0 ? 0xfacc15 : 0x1e2433,
+        { emissive: g % 2 === 0 ? 0xd97706 : 0x000000, emissiveIntensity: g % 2 === 0 ? 0.35 : 0 }
       );
       tooth.rotation.y = -a;
     }
 
     const outerGlowRing = new THREE.Mesh(
-      new THREE.RingGeometry(4.02, 4.22, 48),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+      new THREE.RingGeometry(4.02, 4.18, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
     );
     outerGlowRing.rotation.x = -Math.PI / 2;
     outerGlowRing.position.y = 0.05;
     turntableGroup.add(outerGlowRing);
 
     const innerGlowRing = new THREE.Mesh(
-      new THREE.RingGeometry(2.75, 2.90, 48),
-      new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+      new THREE.RingGeometry(2.75, 2.85, 48),
+      new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide })
     );
     innerGlowRing.rotation.x = -Math.PI / 2;
     innerGlowRing.position.y = 0.05;
     turntableGroup.add(innerGlowRing);
 
+    // Twin Glowing Headlight Ground Reflection Discs on the wet asphalt
+    const garageHeadlightSpotL = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.32, depthWrite: false })
+    );
+    garageHeadlightSpotL.rotation.x = -Math.PI / 2;
+    garageHeadlightSpotL.position.set(-0.75, 0.02, -5.2);
+    turntableGroup.add(garageHeadlightSpotL);
+
+    const garageHeadlightSpotR = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.32, depthWrite: false })
+    );
+    garageHeadlightSpotR.rotation.x = -Math.PI / 2;
+    garageHeadlightSpotR.position.set(0.75, 0.02, -5.2);
+    turntableGroup.add(garageHeadlightSpotR);
+
     // Display Van Container on the Turntable
     const garageVanHolder = new THREE.Group();
     turntableGroup.add(garageVanHolder);
 
-    // Always-On Glowing Blue Holographic Scan Ring that sweeps up & down in the Showroom!
-    const holoScanRing = new THREE.Mesh(
-      new THREE.RingGeometry(2.45, 4.05, 48),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.72 })
-    );
-    holoScanRing.rotation.x = -Math.PI / 2;
-    turntableGroup.add(holoScanRing);
+    const holoScanRing = { position: { y: 0 } };
 
     function rebuildGarageTurntableVan() {
       while (garageVanHolder.children.length > 0) {
@@ -151,8 +171,14 @@
       const vanSpec = PLAYABLE_VANS[gameState.selectedVanIndex];
       const mesh = createPlayableVanMesh(vanSpec.id, true);
       mesh.position.set(0, 0.04, 0);
-      if (mesh.userData.beamLeft) mesh.userData.beamLeft.visible = true;
-      if (mesh.userData.beamRight) mesh.userData.beamRight.visible = true;
+      if (mesh.userData.beamLeft) {
+        mesh.userData.beamLeft.visible = true;
+        mesh.userData.beamLeft.material.opacity = 0.45;
+      }
+      if (mesh.userData.beamRight) {
+        mesh.userData.beamRight.visible = true;
+        mesh.userData.beamRight.material.opacity = 0.45;
+      }
 
       garageVanHolder.add(mesh);
       updateHomeGarageUI();
@@ -348,12 +374,7 @@
         const newRank = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel);
         gameState.coins += 200;
         triggerDiscoveryToast(`PROMOTED: ${newRank.title}! (+200 COINS)`, vanIconDataURLs[gameState.equippedVanId]);
-        const rankBadge = document.getElementById('home-rank-badge');
-        if (rankBadge) {
-          rankBadge.classList.remove('level-up-anim');
-          void rankBadge.offsetWidth;
-          rankBadge.classList.add('level-up-anim');
-        }
+        // Rank level up
       }
       updateRankUI();
       saveProgression();
@@ -393,23 +414,11 @@
       const rankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel) || COURIER_RANKS[0];
       const nextRankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel + 1);
 
-      const homeBadge = document.getElementById('home-rank-badge');
-      const homeTitle = document.getElementById('home-rank-title');
-      const homeBar = document.getElementById('home-rank-bar');
-
-      if (homeBadge) {
-        homeBadge.textContent = `R${rankSpec.level}`;
-        homeBadge.className = `w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${rankSpec.badgeBg} border-2 border-white flex items-center justify-center font-extrabold text-xs arcade-font shadow flex-shrink-0`;
-      }
-      if (homeTitle) homeTitle.textContent = rankSpec.title;
-
       const prevXpNeeded = rankSpec.level === 1 ? 0 : (COURIER_RANKS[rankSpec.level - 2]?.xpNeeded || 0);
       const targetXp = rankSpec.xpNeeded;
       const progressPercent = nextRankSpec
         ? Math.min(100, Math.max(0, ((gameState.courierXP - prevXpNeeded) / (targetXp - prevXpNeeded)) * 100))
         : 100;
-
-      if (homeBar) homeBar.style.width = `${progressPercent}%`;
 
       const modalBadge = document.getElementById('modal-rank-badge');
       const modalTag = document.getElementById('modal-rank-level-tag');
@@ -432,32 +441,9 @@
     }
 
     function renderHomeContractsUI() {
-      const container = document.getElementById('home-contracts-list');
-      if (!container) return;
       if (!gameState.shiftContracts || gameState.shiftContracts.length === 0) {
         ensureActiveContracts();
       }
-      container.innerHTML = gameState.shiftContracts.map((c) => {
-        const pct = Math.min(100, Math.round((c.current / c.target) * 100));
-        const isDone = c.completed;
-        return `
-          <div class="contract-card ${isDone ? 'contract-card-completed' : ''}">
-            <div class="flex items-center justify-between text-[9px] mb-1">
-              <span class="font-extrabold text-white truncate max-w-[145px]">${c.title}</span>
-              <span class="${isDone ? 'text-emerald-300 font-extrabold' : 'text-amber-300 font-bold'} flex-shrink-0">
-                ${isDone ? '✓ DONE' : `${c.current}/${c.target}`}
-              </span>
-            </div>
-            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/20">
-              <div class="h-full ${isDone ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-cyan-300'} transition-all duration-200" style="width: ${pct}%"></div>
-            </div>
-            <div class="flex items-center justify-between text-[8px] text-sky-200 font-semibold mt-1">
-              <span>Reward: +${c.rewardCoins} 🪙</span>
-              <span class="text-cyan-300 font-bold">+${c.rewardXP} XP</span>
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
     function renderContractsModal() {
@@ -620,8 +606,17 @@
       document.getElementById('home-best-dist').textContent = `${Math.round(gameState.bestDistance)}m`;
       const totalUnlocked = gameState.unlockedItems.length + gameState.unlockedChars.length;
       const totalPossible = PARCEL_TYPES.length + CHARACTER_TYPES.length;
-      document.getElementById('home-unlocked-count').textContent = `${totalUnlocked} / ${totalPossible}`;
-      document.getElementById('hall-subtitle').textContent = `${totalUnlocked}/${totalPossible} Discovered`;
+      const unlockedEl = document.getElementById('home-unlocked-count');
+      if (unlockedEl) unlockedEl.textContent = `${totalUnlocked} / ${totalPossible}`;
+      const hallSub = document.getElementById('hall-subtitle');
+      if (hallSub) hallSub.textContent = `${totalUnlocked}/${totalPossible} Discovered`;
+
+      const cityTag = document.getElementById('home-city-tag');
+      if (cityTag) {
+        const currentCity = CITY_THEMES[gameState.cityIndex] || CITY_THEMES[0];
+        const num = String(gameState.cityIndex + 1).padStart(2, '0');
+        cityTag.textContent = `SHIFT ${num} — ${currentCity.name.toUpperCase()}`;
+      }
 
       document.getElementById('home-van-name').textContent = spec.name;
       document.getElementById('home-van-sub').textContent =
@@ -632,8 +627,8 @@
         dotsEl.innerHTML = PLAYABLE_VANS.map((v, idx) => {
           const owned = gameState.ownedVans.includes(v.id);
           const active = idx === gameState.selectedVanIndex;
-          return `<button data-van-idx="${idx}" class="h-2.5 rounded-full transition-all ${
-            active ? 'w-7 bg-amber-400' : (owned ? 'w-2.5 bg-emerald-400/80' : 'w-2.5 bg-slate-600')
+          return `<button data-van-idx="${idx}" class="h-2 rounded transition-all ${
+            active ? 'w-6 bg-amber-400' : (owned ? 'w-2 bg-emerald-400' : 'w-2 bg-slate-700')
           }"></button>`;
         }).join('');
         dotsEl.querySelectorAll('button').forEach((btn) => {
@@ -647,19 +642,13 @@
       }
 
       const statusBadge = document.getElementById('home-van-status');
-      const quickDrawBtn = document.getElementById('btn-home-quick-draw');
-
       if (isOwned) {
         gameState.equippedVanId = spec.id;
         statusBadge.textContent = 'EQUIPPED';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[10px] uppercase';
-        quickDrawBtn.classList.add('hidden');
-        quickDrawBtn.classList.remove('flex');
+        statusBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase';
       } else {
         statusBadge.textContent = 'LOCKED';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-rose-500 text-white font-extrabold text-[10px] uppercase';
-        quickDrawBtn.classList.remove('hidden');
-        quickDrawBtn.classList.add('flex');
+        statusBadge.className = 'px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase';
       }
 
       updateRankUI();
@@ -688,15 +677,16 @@
         apartments.forEach(apt => apt.cloudEl.classList.add('hidden'));
         if (window.cityLeftLandmarkGroup) window.cityLeftLandmarkGroup.visible = false;
 
-        // Vibrant Blueprint Showroom Cobalt Sky & Lighting
-        scene.background.setHex(0x0d2b6b);
-        scene.fog.color.setHex(0x0d2b6b);
-        hemiLight.color.setHex(0xe0f2fe);
-        hemiLight.groundColor.setHex(0x1e3a8a);
-        hemiLight.intensity = 1.05;
-        dirLight.color.setHex(0xffffff);
+        // Moody Deep Midnight Asphalt Garage (#070913) Sky & Lighting
+        scene.background.setHex(0x070913);
+        scene.fog.color.setHex(0x070913);
+        scene.fog.density = 0.012;
+        hemiLight.color.setHex(0x1e293b);
+        hemiLight.groundColor.setHex(0x070913);
+        hemiLight.intensity = 0.38;
+        dirLight.color.setHex(0xf59e0b);
         dirLight.intensity = 1.35;
-        dirLight.position.set(14, 24, 16);
+        dirLight.position.set(-6, 16, 6);
 
         rebuildGarageTurntableVan();
         updateCameraForViewport();
@@ -2190,6 +2180,7 @@
     let garageDragging = false;
     let garageLastX = 0;
     let garageSpinVel = 0;
+    let garageDragOffset = 0;
 
     canvas.addEventListener('pointerdown', (e) => {
       soundFX.init();
@@ -2208,8 +2199,9 @@
       if (gameState.mode === 'home' && garageDragging) {
         const deltaX = e.clientX - garageLastX;
         garageLastX = e.clientX;
-        turntableGroup.rotation.y += deltaX * 0.011;
+        garageDragOffset += deltaX * 0.011;
         garageSpinVel = deltaX * 0.004;
+        turntableGroup.rotation.y = (Math.sin(performance.now() * 0.0006) * 0.2618) + garageDragOffset;
         return;
       }
       if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing' && !gameState.dragging) {
@@ -2515,25 +2507,15 @@
       renderHallOfFameModal('chars');
     });
 
-    document.getElementById('menu-btn-draw').addEventListener('click', () => {
-      updateHomeGarageUI();
-      resetBlindDrawModalStage();
-      openModal('modal-draw');
-    });
-    document.getElementById('btn-home-quick-draw').addEventListener('click', () => {
-      updateHomeGarageUI();
-      resetBlindDrawModalStage();
-      openModal('modal-draw');
-    });
-    document.getElementById('btn-spin-draw').addEventListener('click', spinMysteryVehicleDraw);
-
-    document.getElementById('menu-btn-tutorial').addEventListener('click', () => {
-      const spec = PLAYABLE_VANS[gameState.selectedVanIndex];
-      if (gameState.ownedVans.includes(spec.id)) {
-        gameState.equippedVanId = spec.id;
-      }
-      resetGame(true);
-    });
+    const menuBtnTuning = document.getElementById('menu-btn-tuning');
+    if (menuBtnTuning) {
+      menuBtnTuning.addEventListener('click', () => {
+        renderTuningModal();
+        openModal('modal-tuning');
+      });
+    }
+    const spinDrawBtn = document.getElementById('btn-spin-draw');
+    if (spinDrawBtn) spinDrawBtn.addEventListener('click', spinMysteryVehicleDraw);
 
     function switchCityByIndex(targetIdx) {
       gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
@@ -2625,22 +2607,6 @@
     const btnOpenContracts = document.getElementById('btn-open-contracts');
     if (btnOpenContracts) {
       btnOpenContracts.addEventListener('click', () => {
-        renderContractsModal();
-        openModal('modal-contracts');
-      });
-    }
-
-    const topbarRankBtn = document.getElementById('topbar-rank-btn');
-    if (topbarRankBtn) {
-      topbarRankBtn.addEventListener('click', () => {
-        renderContractsModal();
-        openModal('modal-contracts');
-      });
-    }
-
-    const btnContractsExpand = document.getElementById('btn-contracts-expand');
-    if (btnContractsExpand) {
-      btnContractsExpand.addEventListener('click', () => {
         renderContractsModal();
         openModal('modal-contracts');
       });
@@ -2878,13 +2844,15 @@
         cm.mesh.rotation.y += rawDt * 1.2;
       });
 
-      // Home Page 3D Blueprint Turntable Rotation & Always-On Blue Holographic Scan Ring
+      // Home Page 3D Showroom Hero Angle with Slow Orbit (+/- 15 degrees)
       if (gameState.mode === 'home') {
+        const heroOrbit = Math.sin(now * 0.0006) * 0.2618;
         if (!garageDragging) {
-          turntableGroup.rotation.y += rawDt * 0.38 + garageSpinVel;
-          garageSpinVel *= 0.92;
+          garageDragOffset += garageSpinVel;
+          garageSpinVel *= 0.90;
+          garageDragOffset *= 0.95;
         }
-        holoScanRing.position.y = 0.18 + ((Math.sin(now * 0.0028) + 1) * 0.5) * 3.45;
+        turntableGroup.rotation.y = heroOrbit + garageDragOffset;
         camera.up.set(0, 1, 0);
         camera.position.copy(SHOWROOM_CAM_POS);
         camera.lookAt(SHOWROOM_CAM_LOOK);

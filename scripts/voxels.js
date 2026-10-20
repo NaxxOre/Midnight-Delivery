@@ -104,8 +104,8 @@
     // Horizon Chase-Cam Perspective matching Reference Images 1 & 2 (Sky visible at top, buildings framing street, full van above bar)
     const PLAY_CAM_POS = new THREE.Vector3(0, 9.2, 12.2);
     const PLAY_CAM_LOOK = new THREE.Vector3(0, 2.3, -42.0);
-    const SHOWROOM_CAM_POS = new THREE.Vector3(5.6, 4.1, 6.8);
-    const SHOWROOM_CAM_LOOK = new THREE.Vector3(0, 1.5, 0);
+    const SHOWROOM_CAM_POS = new THREE.Vector3(5.8, 2.3, -7.2);
+    const SHOWROOM_CAM_LOOK = new THREE.Vector3(0, 1.15, -0.2);
 
     function updateCameraForViewport() {
       const w = window.innerWidth || 375;
@@ -142,10 +142,10 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
       if (gameState.mode === 'home') {
-        const distMult = aspect < 0.75 ? 1.28 : 1.0;
-        const targetY = aspect < 0.75 ? 1.25 : 1.55;
-        SHOWROOM_CAM_POS.set(5.4 * distMult, 4.0 * distMult, 6.5 * distMult);
-        SHOWROOM_CAM_LOOK.set(0, targetY, 0);
+        const distMult = aspect < 0.75 ? 1.25 : (aspect < 1.0 ? 1.12 : 1.0);
+        const targetY = aspect < 0.75 ? 1.05 : 1.15;
+        SHOWROOM_CAM_POS.set(5.8 * distMult, 2.3 * distMult, -7.2 * distMult);
+        SHOWROOM_CAM_LOOK.set(0, targetY, -0.2);
         camera.up.set(0, 1, 0);
         camera.position.copy(SHOWROOM_CAM_POS);
         camera.lookAt(SHOWROOM_CAM_LOOK);

@@ -129,203 +129,108 @@
   <!-- ============================================================================ -->
   <!-- HOME PAGE: MIDNIGHT DELIVERY SHOWROOM GARAGE, CUSTOM LOGO & START! BUTTON    -->
   <!-- ============================================================================ -->
-  <div id="home-screen" class="fixed inset-0 z-30 showroom-overlay flex flex-col justify-between p-2 sm:p-5 pointer-events-none">
+  <div id="home-screen" class="fixed inset-0 z-30 showroom-overlay flex flex-col justify-between p-3 sm:p-6 pointer-events-none">
 
-    <!-- TOP BAR: Custom "MIDNIGHT DELIVERY" Brand Logo Emblem + Player Coins & Stats -->
-    <div class="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
-      <div class="arcade-panel rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2.5 sm:gap-3.5 pointer-events-auto min-w-0">
-        <!-- Custom Stylized Midnight Delivery Crescent Moon & Turbo Van Emblem SVG -->
-        <div class="relative w-10 h-10 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-500/40 border-2 border-amber-300 flex items-center justify-center shadow-[0_0_16px_rgba(250,204,21,0.45)] flex-shrink-0 p-1">
-          <svg class="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 64 64" fill="none">
-            <!-- Glowing Crescent Moon -->
-            <path d="M44 12C33.5 12 25 20.5 25 31C25 41.5 33.5 50 44 50C47.2 50 50.2 49.2 52.8 47.8C47.8 53.4 40.5 57 32.2 57C17.2 57 5 44.8 5 29.8C5 15.8 15.6 4.3 29.2 2.8C26.5 6.2 25.8 12 44 12Z" fill="#facc15"/>
-            <!-- Speed Lines -->
-            <rect x="6" y="28" width="12" height="3" rx="1.5" fill="#00f5d4"/>
-            <rect x="10" y="34" width="9" height="3" rx="1.5" fill="#38bdf8"/>
-            <!-- Voxel Express Van Silhouette -->
-            <rect x="22" y="24" width="26" height="18" rx="3" fill="#f97316" stroke="#ffffff" stroke-width="2"/>
-            <rect x="42" y="28" width="12" height="14" rx="2.5" fill="#fb923c" stroke="#ffffff" stroke-width="2"/>
-            <rect x="45" y="30" width="7" height="5" rx="1" fill="#38bdf8"/>
-            <rect x="22" y="33" width="26" height="3" fill="#facc15"/>
-            <circle cx="29" cy="43" r="5" fill="#0f172a" stroke="#facc15" stroke-width="2.5"/>
-            <circle cx="47" cy="43" r="5" fill="#0f172a" stroke="#facc15" stroke-width="2.5"/>
-          </svg>
+    <!-- TOP BAR: Bold Stacked Typographic Logo + Clean Minimal Currency & Best Distance -->
+    <div class="flex items-start justify-between gap-2 w-full">
+      <div class="flex flex-col items-start pointer-events-auto">
+        <div class="flex items-center gap-2">
+          <span id="home-city-tag" class="street-badge text-[9px] sm:text-[11px] font-extrabold tracking-wider">SHIFT 04 — YANGON</span>
+          <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">WORLD TOUR</span>
         </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold text-[7px] sm:text-[9px] uppercase tracking-wider">NIGHT SHIFT</span>
-            <span class="text-[8px] sm:text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest truncate">WORLD TOUR</span>
-          </div>
-          <h1 class="arcade-font text-base sm:text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-300 leading-tight tracking-wide mt-0.5 drop-shadow truncate">
-            MIDNIGHT DELIVERY
-          </h1>
-        </div>
+        <h1 class="arcade-font text-2xl sm:text-4xl text-white font-extrabold tracking-tight leading-none mt-1 drop-shadow-[2px_2px_0px_#000000]">
+          MIDNIGHT <span class="text-amber-400">//</span> DELIVERY
+        </h1>
       </div>
 
-      <!-- Right Stats: Coins, Best Run, Rank Badge & Unlocked Collection -->
-      <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto flex-shrink-0">
-        <!-- Courier Rank Pill -->
-        <button id="topbar-rank-btn" class="arcade-btn arcade-panel rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 flex items-center gap-2 text-left" title="View Courier Rank & Contracts">
-          <div id="home-rank-badge" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-700 text-sky-200 border-2 border-white flex items-center justify-center font-extrabold text-xs arcade-font shadow flex-shrink-0">
-            R1
-          </div>
-          <div class="min-w-0 hidden xs:block sm:block">
-            <div class="flex items-center gap-1">
-              <span class="text-[7px] sm:text-[8px] font-extrabold uppercase text-amber-300">RANK</span>
-              <span id="home-rank-title" class="arcade-font text-[9px] sm:text-xs text-white truncate max-w-[95px] sm:max-w-[130px]">Yangon Rookie</span>
-            </div>
-            <div class="w-16 sm:w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/30 mt-0.5">
-              <div id="home-rank-bar" class="h-full bg-gradient-to-r from-amber-400 to-cyan-300 transition-all duration-300" style="width: 25%"></div>
-            </div>
-          </div>
-        </button>
-
-        <div class="arcade-panel rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-4">
-          <div class="flex items-center gap-1.5">
-            <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-2 border-white flex items-center justify-center shadow flex-shrink-0">
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
-            </div>
-            <div>
-              <div class="text-[7px] sm:text-[8px] uppercase font-extrabold text-sky-200 tracking-wider">COINS</div>
-              <div id="home-coins-val" class="arcade-font text-xs sm:text-xl text-amber-300 leading-none">250</div>
-            </div>
-          </div>
-          <div class="h-6 w-[2px] bg-sky-400/30"></div>
+      <!-- Right: Minimal Inline Counters (No heavy multi-column SaaS cards) -->
+      <div class="flex items-center gap-2 sm:gap-3 pointer-events-auto flex-shrink-0">
+        <div class="flex items-center gap-2 bg-[#090a0f]/90 border-2 border-black rounded px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-[3px_3px_0px_#000000]">
+          <span class="text-amber-400 text-xs sm:text-sm font-bold">🪙</span>
           <div>
-            <div class="text-[7px] sm:text-[8px] uppercase font-extrabold text-sky-200 tracking-wider">BEST RUN</div>
-            <div id="home-best-dist" class="arcade-font text-xs sm:text-lg text-emerald-300 leading-none">0m</div>
-          </div>
-          <div class="h-6 w-[2px] bg-sky-400/30 hidden md:block"></div>
-          <div class="hidden md:block">
-            <div class="text-[8px] uppercase font-extrabold text-sky-200 tracking-wider">COLLECTION</div>
-            <div id="home-unlocked-count" class="arcade-font text-sm sm:text-lg text-white leading-none">5 / 20</div>
+            <div class="text-[7px] uppercase font-bold text-slate-400 tracking-wider">COINS</div>
+            <div id="home-coins-val" class="arcade-font text-xs sm:text-base text-amber-300 font-bold leading-none">250</div>
           </div>
         </div>
+
+        <div class="flex items-center gap-2 bg-[#090a0f]/90 border-2 border-black rounded px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-[3px_3px_0px_#000000]">
+          <span class="text-emerald-400 text-xs sm:text-sm font-bold">🏁</span>
+          <div>
+            <div class="text-[7px] uppercase font-bold text-slate-400 tracking-wider">BEST DISTANCE</div>
+            <div id="home-best-dist" class="arcade-font text-xs sm:text-base text-emerald-300 font-bold leading-none">0m</div>
+          </div>
+        </div>
+        <span id="home-unlocked-count" class="hidden">5 / 20</span>
+        <span id="hall-subtitle" class="hidden">12 Items &amp; 8 Cast</span>
       </div>
     </div>
 
-    <!-- MIDDLE AREA: Responsive Menu Stack (With TUTORIAL Button) | Unobstructed 3D Turntable + Edge Arrows -->
-    <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between relative my-1 sm:my-2">
-
-      <!-- MENU BUTTONS: 5-button bar on Mobile Portrait; Left vertical stack on Tablet/Desktop -->
-      <div class="grid grid-cols-5 sm:flex sm:flex-col gap-1 sm:gap-2.5 z-20 pointer-events-auto w-full sm:w-52 md:w-56">
-        <button id="menu-btn-leaderboard" class="arcade-btn rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-sky-400 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left">
-          <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-b from-amber-300 to-amber-500 border-2 border-white flex items-center justify-center flex-shrink-0 shadow">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
-          </div>
-          <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-white leading-tight truncate">RANKS</div>
-            <div class="hidden sm:block text-[9px] text-sky-300 font-bold truncate">Top Couriers</div>
-          </div>
+    <!-- MIDDLE AREA: Frameless Left Navigation Stack (Unobstructed 3D Showroom View) -->
+    <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between relative my-auto py-2">
+      <!-- LEFT NAV: 4 crisp typographic arcade buttons sliding right on hover with yellow racing stripe indicator -->
+      <div class="arcade-nav-stack z-20 pointer-events-auto py-1">
+        <button id="menu-btn-tuning" class="arcade-nav-item" title="Tune & Upgrade Rig">
+          <span class="nav-num">01</span>
+          <span>GARAGE</span>
         </button>
 
-        <button id="menu-btn-hall" class="arcade-btn rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-emerald-400 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left relative">
-          <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-b from-emerald-300 to-emerald-500 border-2 border-white flex items-center justify-center flex-shrink-0 shadow">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7v2h20V7L12 2zm-7 7v9H3v2h18v-2h-2V9h-3v9h-3V9h-2v9H8V9H5z"/></svg>
-          </div>
-          <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-white leading-tight truncate">HALL</div>
-            <div id="hall-subtitle" class="hidden sm:block text-[9px] text-emerald-300 font-bold truncate">12 Items &amp; 8 Cast</div>
-          </div>
-          <span id="hall-new-dot" class="hidden absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-rose-500 border-2 border-white text-[8px] font-extrabold text-white animate-bounce">NEW</span>
+        <button id="menu-btn-hall" class="arcade-nav-item" title="Handbook & Roster">
+          <span class="nav-num">02</span>
+          <span>HANDBOOK</span>
+          <span id="hall-new-dot" class="hidden ml-auto px-1.5 py-0.2 rounded bg-rose-500 text-[8px] font-bold text-white">NEW</span>
         </button>
 
-        <button id="menu-btn-draw" class="arcade-btn rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 bg-gradient-to-b from-amber-400 via-amber-500 to-orange-600 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left relative">
-          <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-950 border-2 border-white flex items-center justify-center flex-shrink-0 shadow">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zm-4 17v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2H8zm4-14a4 4 0 0 1 4 4h-2a2 2 0 0 0-2-2V5z"/></svg>
-          </div>
-          <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-slate-950 font-extrabold leading-tight truncate">CRATE</div>
-            <div class="hidden sm:block text-[9px] text-slate-900 font-extrabold truncate">100 COINS / DROP</div>
-          </div>
+        <button id="menu-btn-leaderboard" class="arcade-nav-item" title="High Scores & Records">
+          <span class="nav-num">03</span>
+          <span>RECORDS</span>
         </button>
 
-        <button id="menu-btn-tutorial" class="arcade-btn rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 bg-gradient-to-b from-indigo-700 to-indigo-950 border-2 border-cyan-300 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left">
-          <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-b from-cyan-300 to-sky-500 border-2 border-white flex items-center justify-center flex-shrink-0 shadow">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-          </div>
-          <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-white leading-tight truncate">TUTORIAL</div>
-            <div class="hidden sm:block text-[9px] text-cyan-300 font-bold truncate">Interactive Guide</div>
-          </div>
+        <button id="menu-btn-settings" class="arcade-nav-item" title="Audio & City Settings">
+          <span class="nav-num">04</span>
+          <span>AUDIO</span>
         </button>
-
-        <button id="menu-btn-settings" class="arcade-btn rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-sky-400 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left">
-          <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-b from-sky-300 to-sky-500 border-2 border-white flex items-center justify-center flex-shrink-0 shadow">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36-2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          </div>
-          <div class="min-w-0">
-            <div class="arcade-font text-[8px] sm:text-sm text-white leading-tight truncate">OPTIONS</div>
-            <div class="hidden sm:block text-[9px] text-sky-300 font-bold truncate">Audio &amp; Grants</div>
-          </div>
-        </button>
-      </div>
-
-      <!-- CENTER SHOWROOM TURNTABLE ARROWS (No Right Telemetry Card — 100% Unobstructed View!) -->
-      <div class="flex-1 flex items-center justify-between px-2 sm:px-6 lg:px-12 pointer-events-none my-auto">
-        <button id="btn-prev-van" class="pointer-events-auto w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 arcade-btn flex items-center justify-center text-slate-950" title="Previous Vehicle">
-          <svg class="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-        </button>
-        <button id="btn-next-van" class="pointer-events-auto w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 arcade-btn flex items-center justify-center text-slate-950" title="Next Vehicle">
-          <svg class="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-        </button>
-      </div>
-
-      <!-- RIGHT: COMPACT ACTIVE SHIFT CONTRACTS WIDGET (Desktop/Tablet) -->
-      <div id="home-contracts-widget" class="hidden lg:flex flex-col gap-1.5 z-20 pointer-events-auto w-64 xl:w-72 arcade-panel rounded-2xl p-2.5 border-2 border-sky-400">
-        <div class="flex items-center justify-between border-b border-sky-400/30 pb-1">
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs">📋</span>
-            <span class="arcade-font text-[11px] text-white">ACTIVE SHIFT CONTRACTS</span>
-          </div>
-          <button id="btn-contracts-expand" class="text-[8px] font-bold text-sky-300 hover:text-white uppercase">VIEW ALL &rarr;</button>
-        </div>
-        <div id="home-contracts-list" class="space-y-1.5">
-          <!-- Populated dynamically with 3 active contracts -->
-        </div>
       </div>
     </div>
 
-    <!-- BOTTOM BAR: Responsive Vehicle Plate + Giant Bottom-Right START! Button -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 w-full">
-      <div class="hidden xl:flex items-center gap-2 text-[11px] text-sky-100 font-bold arcade-panel rounded-2xl px-4 py-2.5 pointer-events-auto">
-        <svg class="w-4 h-4 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9"/></svg>
-        <span>DRAG TO ORBIT 360°</span>
-        <span class="text-sky-400">&bull;</span>
-        <span>USE ARROWS TO SWITCH RIG</span>
-      </div>
-
-      <!-- Selected Vehicle Name Plate & Mini Selector Pills + Tuning & Contracts Actions -->
-      <div class="arcade-panel rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-1.5 sm:py-2 flex flex-col items-center gap-1 pointer-events-auto sm:mx-auto">
-        <div class="flex items-center justify-center gap-2">
-          <span id="home-van-name" class="arcade-font text-sm sm:text-2xl text-white tracking-wide truncate">Express Courier GTI</span>
-          <span id="home-van-status" class="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[8px] sm:text-[10px] uppercase">EQUIPPED</span>
-        </div>
-        <div id="home-van-dots" class="flex items-center gap-1.5">
-          <!-- Populated dynamically with vehicle selector pills -->
-        </div>
-        <div class="flex items-center gap-2 mt-0.5">
-          <button id="btn-open-tuning" class="arcade-btn px-2.5 sm:px-3.5 py-1 rounded-xl bg-gradient-to-b from-amber-400 via-amber-500 to-orange-600 text-slate-950 font-extrabold text-[9px] sm:text-[11px] arcade-font flex items-center gap-1">
-            <span>⚙️</span>
-            <span>TUNE RIG</span>
-          </button>
-          <button id="btn-open-contracts" class="arcade-btn px-2.5 sm:px-3.5 py-1 rounded-xl bg-gradient-to-b from-sky-400 via-sky-500 to-indigo-600 text-slate-950 font-extrabold text-[9px] sm:text-[11px] arcade-font flex items-center gap-1">
-            <span>📋</span>
-            <span>CONTRACTS</span>
-          </button>
-        </div>
-        <div id="home-van-sub" class="text-[8px] sm:text-[9px] text-sky-200 font-bold">Owned Fleet: 1 / 6 Vehicles</div>
-      </div>
-
-      <!-- BOTTOM-RIGHT: GIANT TACTILE START! BUTTON -->
-      <div class="flex items-center gap-2 pointer-events-auto w-full sm:w-auto justify-end">
-        <button id="btn-home-quick-draw" class="hidden py-3 sm:py-4 px-4 sm:px-5 rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs sm:text-base arcade-font arcade-btn items-center justify-center gap-1.5 flex-1 sm:flex-initial">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/></svg>
-          <span>SUPPLY DROP (100)</span>
+    <!-- BOTTOM BAR: Sleek Integrated Vehicle Nameplate & Hazard-Yellow START CTA -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 sm:gap-3 w-full">
+      <!-- Bottom-Center Vehicle Nameplate with Integrated Prev/Next Arrows -->
+      <div class="vehicle-selector-bar pointer-events-auto sm:mx-auto">
+        <button id="btn-prev-van" class="selector-nav-btn" title="Previous Rig">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
-        <button id="btn-start-play" class="flex-1 sm:flex-initial py-3 sm:py-4 px-7 sm:px-12 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-emerald-300 via-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-lg sm:text-3xl arcade-font arcade-btn flex items-center justify-center gap-2.5">
-          <span>START!</span>
-          <svg class="w-5 h-5 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+
+        <div class="flex flex-col items-center px-2 sm:px-4 min-w-[160px] sm:min-w-[220px]">
+          <div class="flex items-center gap-2">
+            <span id="home-van-name" class="arcade-font text-sm sm:text-base text-white font-bold tracking-wide truncate max-w-[160px] sm:max-w-[240px]">Express Courier GTI</span>
+            <span id="home-van-status" class="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase">EQUIPPED</span>
+          </div>
+          <div id="home-van-dots" class="flex items-center gap-1.5 my-1">
+            <!-- Populated dynamically -->
+          </div>
+          <div class="flex items-center gap-2 mt-0.5">
+            <button id="btn-open-tuning" class="upgrade-rig-btn" title="Upgrade Rig Performance">
+              <span>⚡</span>
+              <span>UPGRADE RIG</span>
+            </button>
+            <button id="btn-open-contracts" class="upgrade-rig-btn !border-slate-700 !text-slate-300" title="Shift Contracts">
+              <span>📋</span>
+              <span>CONTRACTS</span>
+            </button>
+          </div>
+          <div id="home-van-sub" class="text-[8px] text-slate-400 font-semibold mt-0.5">Owned Fleet: 1 / 6 Vehicles</div>
+        </div>
+
+        <button id="btn-next-van" class="selector-nav-btn" title="Next Rig">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+        </button>
+      </div>
+
+      <!-- Bottom-Right: Bold Oversized Hazard-Yellow Arcade Trigger -->
+      <div class="flex items-center justify-end pointer-events-auto flex-shrink-0">
+        <button id="btn-start-play" class="btn-start-shift w-full sm:w-auto" title="Start Shift (Spacebar)">
+          <span>START SHIFT</span>
+          <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
         </button>
       </div>
     </div>
