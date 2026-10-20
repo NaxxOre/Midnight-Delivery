@@ -320,6 +320,81 @@
           { top: 'BAKERY', bottom: 'SWEET DONUTS', bg: '#be185d', fg: '#fef08a' },
           { top: 'GAMING', bottom: 'CYBER SHOP',   bg: '#1e1b4b', fg: '#38bdf8' }
         ]
+      },
+      {
+        id: 'paris',
+        name: 'Paris',
+        banner: 'BIENVENUE À PARIS',
+        gatePrimary: 0x2563eb,
+        gateSecondary: 0xef4444,
+        walls: [0xfef3c7, 0xf8fafc, 0xfde68a],
+        roofs: [0x475569, 0x334155, 0x1e293b],
+        accent: 0x2563eb,
+        signs: [
+          { top: 'BOULANGERIE', bottom: 'CROISSANTS & PAIN', bg: '#1e3a8a', fg: '#fef08a' },
+          { top: 'CAFÉ DE PARIS', bottom: 'BISTRO PARISIEN',  bg: '#7f1d1d', fg: '#ffffff' },
+          { top: 'PÂTISSERIE',   bottom: 'MACARONS ROYAUX',   bg: '#047857', fg: '#fde047' }
+        ]
+      },
+      {
+        id: 'rio',
+        name: 'Rio de Janeiro',
+        banner: 'BEM-VINDO AO RIO DE JANEIRO',
+        gatePrimary: 0x16a34a,
+        gateSecondary: 0xfacc15,
+        walls: [0xf8fafc, 0xfef08a, 0x67e8f9],
+        roofs: [0x0284c7, 0x15803d, 0xf97316],
+        accent: 0x16a34a,
+        signs: [
+          { top: 'ÁGUA DE COCO', bottom: 'COPACABANA BEACH', bg: '#15803d', fg: '#facc15' },
+          { top: 'CHURRASCARIA', bottom: 'SAMBA & GRILL',    bg: '#991b1b', fg: '#ffffff' },
+          { top: 'AÇAÍ TROPICAL', bottom: 'PRAIA DE IPANEMA', bg: '#4a044e', fg: '#38bdf8' }
+        ]
+      },
+      {
+        id: 'washington',
+        name: 'Washington D.C.',
+        banner: 'WELCOME TO WASHINGTON D.C.',
+        gatePrimary: 0x1d4ed8,
+        gateSecondary: 0xef4444,
+        walls: [0xf8fafc, 0xe2e8f0, 0x991b1b],
+        roofs: [0x1e293b, 0x334155, 0x0f172a],
+        accent: 0xef4444,
+        signs: [
+          { top: 'CAPITOL DINER', bottom: 'HOT DOGS & PIES',   bg: '#1e3a8a', fg: '#ffffff' },
+          { top: 'SMITHSONIAN',   bottom: 'NATIONAL ARCHIVES', bg: '#0f172a', fg: '#facc15' },
+          { top: 'THE MALL CAFE', bottom: 'COFFEE & PRETZELS', bg: '#b91c1c', fg: '#f8fafc' }
+        ]
+      },
+      {
+        id: 'dubai',
+        name: 'Dubai',
+        banner: 'مرحباً بكم في دبي (WELCOME TO DUBAI)',
+        gatePrimary: 0xfacc15,
+        gateSecondary: 0x0284c7,
+        walls: [0x334155, 0x0f172a, 0xfef3c7],
+        roofs: [0xfacc15, 0x38bdf8, 0xd97706],
+        accent: 0x38bdf8,
+        signs: [
+          { top: 'سوق الذهب',     bottom: 'DUBAI GOLD SOUK',   bg: '#78350f', fg: '#facc15' },
+          { top: 'مقهى القهوة',   bottom: 'ARABIC GAHWA CAFE', bg: '#0f172a', fg: '#00f5d4' },
+          { top: 'برج مارينا',   bottom: 'MARINA SKY LOUNGE', bg: '#0369a1', fg: '#ffffff' }
+        ]
+      },
+      {
+        id: 'cairo',
+        name: 'Cairo',
+        banner: 'مرحباً بكم في القاهرة (WELCOME TO CAIRO)',
+        gatePrimary: 0xc27803,
+        gateSecondary: 0x1e3a8a,
+        walls: [0xdfb887, 0xe2c499, 0xc89658],
+        roofs: [0x8c5e34, 0x78350f, 0x5c2b09],
+        accent: 0x1e3a8a,
+        signs: [
+          { top: 'خان الخليلي',  bottom: 'KHAN EL-KHALILI BAZAAR', bg: '#7f1d1d', fg: '#facc15' },
+          { top: 'قهوة النيل',   bottom: 'NILE-SIDE AHWA TEAHOUSE', bg: '#064e3b', fg: '#fef08a' },
+          { top: 'أهرامات الجيزة', bottom: 'GIZA PYRAMID MARKET',   bg: '#78350f', fg: '#ffffff' }
+        ]
       }
     ];
 

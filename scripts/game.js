@@ -686,6 +686,7 @@
         activeGates.forEach(g => (g.mesh.visible = false));
         activeCrosswalks.forEach(cw => (cw.group.visible = false));
         apartments.forEach(apt => apt.cloudEl.classList.add('hidden'));
+        if (window.cityLeftLandmarkGroup) window.cityLeftLandmarkGroup.visible = false;
 
         // Vibrant Blueprint Showroom Cobalt Sky & Lighting
         scene.background.setHex(0x0d2b6b);
@@ -707,6 +708,12 @@
 
         blueprintGarageGroup.visible = false;
         envGroup.visible = true;
+        if (window.cityLeftLandmarkGroup) {
+          const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+          const targetX = isCairo ? -34.0 : -28.0;
+          window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+          window.cityLeftLandmarkGroup.visible = true;
+        }
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
@@ -2528,7 +2535,70 @@
       resetGame(true);
     });
 
+    function switchCityByIndex(targetIdx) {
+      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
+      const theme = CITY_THEMES[gameState.cityIndex];
+      transformAllApartmentsToCity(theme);
+      soundFX.playCityGateChime();
+      showCityToast(theme);
+      if (theme.id === 'tokyo') applyWeatherMode(4);
+      else if (theme.id === 'chinatown') applyWeatherMode(1);
+      else if (theme.id === 'yangon') applyWeatherMode(1);
+      else if (theme.id === 'littleindia') applyWeatherMode(1);
+      else if (theme.id === 'pastel') applyWeatherMode(4);
+      else if (theme.id === 'paris') applyWeatherMode(4);
+      else if (theme.id === 'rio') applyWeatherMode(1);
+      else if (theme.id === 'washington') applyWeatherMode(4);
+      else if (theme.id === 'dubai') applyWeatherMode(1);
+      else if (theme.id === 'cairo') applyWeatherMode(1);
+      if (window.cityLeftLandmarkGroup) {
+        const isCairo = (theme.id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+        window.cityLeftLandmarkGroup.visible = true;
+      }
+      renderCitySelectorUI();
+    }
+
+    function renderCitySelectorUI() {
+      const container = document.getElementById('setting-city-buttons');
+      const label = document.getElementById('setting-current-city');
+      if (label && CITY_THEMES[gameState.cityIndex]) {
+        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
+      }
+      if (!container) return;
+      container.innerHTML = '';
+      const cityIcons = {
+        tokyo: '🗼',
+        chinatown: '🏮',
+        littleindia: '🛕',
+        yangon: '🇲🇲',
+        pastel: '🌆',
+        paris: '🥐',
+        rio: '🌴',
+        washington: '🏛️',
+        dubai: '🏙️',
+        cairo: '🐪'
+      };
+      CITY_THEMES.forEach((ct, idx) => {
+        const isCur = idx === gameState.cityIndex;
+        const btn = document.createElement('button');
+        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
+          isCur
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
+            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
+        );
+        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
+        btn.addEventListener('click', () => {
+          soundFX.init();
+          switchCityByIndex(idx);
+        });
+        container.appendChild(btn);
+      });
+    }
+
     document.getElementById('menu-btn-settings').addEventListener('click', () => {
+      renderCitySelectorUI();
       openModal('modal-settings');
     });
     document.getElementById('setting-toggle-audio').addEventListener('click', () => {
@@ -2639,6 +2709,15 @@
 
       applyTimeOfDay(0, true);
       applyWeatherMode(0);
+      if (window.cityLeftLandmarkGroup) {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+        window.cityLeftLandmarkGroup.visible = true;
+      }
+      if (typeof updateCityLeftLandmark === 'function' && CITY_THEMES[gameState.cityIndex]) {
+        updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
+      }
       updateHUD();
 
       if (forceTutorial || !gameState.tutorialCompletedOnce) {
@@ -2934,6 +3013,22 @@
         if (dash.position.z > 36) dash.position.z -= 280;
       });
 
+      // Grand Distant Left Landmark approaches smoothly in 3D perspective
+      if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.x = targetX;
+
+        if (window.cityLeftLandmarkGroup.visible) {
+          window.cityLeftLandmarkGroup.position.z += playerSpeed * dt * 0.35;
+
+          // When landmark passes behind the camera, hide it so only ONE exists per city
+          if (window.cityLeftLandmarkGroup.position.z > 45.0) {
+            window.cityLeftLandmarkGroup.visible = false;
+          }
+        }
+      }
+
       // Scroll Streetlamps at the exact road speed so they never follow the car!
       streetLamps.forEach((lampGroup) => {
         lampGroup.position.z += playerSpeed * dt;
@@ -3175,6 +3270,12 @@
             transformAllApartmentsToCity(newTheme);
             soundFX.playCityGateChime();
             showCityToast(newTheme);
+            if (window.cityLeftLandmarkGroup) {
+              const isCairo = (newTheme.id === 'cairo');
+              const targetX = isCairo ? -34.0 : -28.0;
+              window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+              window.cityLeftLandmarkGroup.visible = true;
+            }
 
             if (newTheme.id === 'tokyo') applyWeatherMode(4);
             else if (newTheme.id === 'chinatown') applyWeatherMode(1);
@@ -3908,6 +4009,7 @@
         }
         renderBottomParcelHandUI();
         initializeNightSystems();
+        if (typeof updateCityLeftLandmark === 'function') updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
         setHomePageMode(true);
         updateHomeGarageUI();
         initializeCourierUI();
