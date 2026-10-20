@@ -510,7 +510,9 @@
   </div>
 
   <!-- 3D WebGL Canvas -->
-  <!-- Background Music Track (Passing Streetlights) -->
+  <!-- Background Music Tracks (Highway Drive & Showroom Garage) -->
+  <audio id="bgm-drive" src="resources/Passing_Streetlights.mp3" loop preload="auto"></audio>
+  <audio id="bgm-garage" src="resources/Asphalt_Reflections.mp3" loop preload="auto"></audio>
   <audio id="bgm-audio" src="resources/Passing_Streetlights.mp3" loop preload="auto"></audio>
 
   <!-- 3D WebGL Canvas -->
@@ -1052,7 +1054,7 @@
           <div class="flex items-center justify-between">
             <div>
               <div class="font-extrabold text-white text-sm">Audio &amp; Volume Controls</div>
-              <div class="text-[10px] text-sky-300">Passing Streetlights &amp; Sound Effects</div>
+              <div class="text-[10px] text-sky-300">Passing Streetlights &amp; Asphalt Reflections</div>
             </div>
             <button id="setting-toggle-audio" class="px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold arcade-btn">ON</button>
           </div>
@@ -1289,6 +1291,9 @@
         this._enabled = true;
         this.isPlayingMusic = false;
         this.bgm = null;
+        this.bgmDrive = null;
+        this.bgmGarage = null;
+        this.currentTrack = 'garage';
         this.sfxGainNode = null;
 
         // Load saved volume preferences or default to comfortable levels
@@ -1310,12 +1315,19 @@
       }
 
       syncMuteState() {
-        if (this.bgm) {
+        const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        const other = this.currentTrack === 'garage' ? this.bgmDrive : this.bgmGarage;
+
+        if (other && !other.paused) {
+          other.pause();
+        }
+
+        if (active) {
           if (!this._enabled) {
-            this.bgm.pause();
+            active.pause();
           } else if (this.isPlayingMusic) {
-            this.bgm.volume = this.bgmVolume;
-            this.bgm.play().catch(() => {});
+            active.volume = this.bgmVolume;
+            active.play().catch(() => {});
           }
         }
         if (this.sfxGainNode && this.ctx) {
@@ -1337,7 +1349,7 @@
             this.sfxGainNode.gain.setValueAtTime(this._enabled ? this.sfxVolume : 0, this.ctx.currentTime);
             this.sfxGainNode.connect(this.ctx.destination);
           }
-          if (!this.bgm) {
+          if (!this.bgmDrive || !this.bgmGarage) {
             this.initBGM();
           }
         } catch (e) {
@@ -1357,61 +1369,124 @@
 
       initBGM() {
         try {
-          const existingEl = typeof document !== 'undefined' ? document.getElementById('bgm-audio') : null;
-          if (existingEl) {
-            this.bgm = existingEl;
-          } else if (typeof Audio !== 'undefined') {
-            this.bgm = new Audio('resources/Passing_Streetlights.mp3');
-            this.bgm.id = 'bgm-audio';
+          if (!this.bgmDrive) {
+            const driveEl = typeof document !== 'undefined' ? (document.getElementById('bgm-drive') || document.getElementById('bgm-audio')) : null;
+            if (driveEl) {
+              this.bgmDrive = driveEl;
+            } else if (typeof Audio !== 'undefined') {
+              this.bgmDrive = new Audio('resources/Passing_Streetlights.mp3');
+              this.bgmDrive.id = 'bgm-drive';
+            }
+            if (this.bgmDrive) {
+              this.bgmDrive.loop = true;
+              this.bgmDrive.volume = this._enabled ? this.bgmVolume : 0;
+              this.bgmDrive.preload = 'auto';
+            }
           }
-          if (this.bgm) {
-            this.bgm.loop = true;
-            this.bgm.volume = this._enabled ? this.bgmVolume : 0;
-            this.bgm.preload = 'auto';
+
+          if (!this.bgmGarage) {
+            const garageEl = typeof document !== 'undefined' ? document.getElementById('bgm-garage') : null;
+            if (garageEl) {
+              this.bgmGarage = garageEl;
+            } else if (typeof Audio !== 'undefined') {
+              this.bgmGarage = new Audio('resources/Asphalt_Reflections.mp3');
+              this.bgmGarage.id = 'bgm-garage';
+            }
+            if (this.bgmGarage) {
+              this.bgmGarage.loop = true;
+              this.bgmGarage.volume = this._enabled ? this.bgmVolume : 0;
+              this.bgmGarage.preload = 'auto';
+            }
           }
+
+          if (!this.currentTrack) {
+            this.currentTrack = (typeof gameState !== 'undefined' && gameState && gameState.mode === 'playing') ? 'drive' : 'garage';
+          }
+          this.bgm = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
         } catch (e) {
           console.warn('BGM initialization deferred:', e);
         }
       }
 
-      startCozyMusic() {
+      playTrack(trackName = 'garage') {
         this.init();
-        this.isPlayingMusic = true;
-        if (!this._enabled) return;
-
-        if (!this.bgm) {
+        if (!this.bgmDrive || !this.bgmGarage) {
           this.initBGM();
         }
-        if (this.bgm) {
-          this.bgm.volume = this.bgmVolume;
-          const playPromise = this.bgm.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              // Browser autoplay policy waiting for user interaction
-              console.log('BGM playback waiting for user interaction:', err);
-            });
+
+        const prevTrack = this.currentTrack;
+        this.currentTrack = trackName;
+        const targetBgm = trackName === 'garage' ? this.bgmGarage : this.bgmDrive;
+        const otherBgm = trackName === 'garage' ? this.bgmDrive : this.bgmGarage;
+        this.bgm = targetBgm;
+
+        // Smoothly fade out previous track if playing
+        if (otherBgm && !otherBgm.paused) {
+          try {
+            let fadeVol = otherBgm.volume;
+            const step = Math.max(0.03, fadeVol / 8);
+            const fadeTimer = setInterval(() => {
+              fadeVol = Math.max(0, fadeVol - step);
+              try { otherBgm.volume = fadeVol; } catch (e) {}
+              if (fadeVol <= 0) {
+                clearInterval(fadeTimer);
+                try {
+                  otherBgm.pause();
+                  otherBgm.currentTime = 0;
+                } catch (e) {}
+              }
+            }, 25);
+          } catch (e) {
+            otherBgm.pause();
+          }
+        }
+
+        if (this._enabled && this.isPlayingMusic && targetBgm) {
+          targetBgm.volume = this.bgmVolume;
+          if (targetBgm.paused || prevTrack !== trackName) {
+            const playPromise = targetBgm.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(err => {
+                console.log('BGM playback waiting for user interaction:', err);
+              });
+            }
           }
         }
       }
 
+      startCozyMusic(trackName) {
+        this.init();
+        this.isPlayingMusic = true;
+        const target = trackName || this.currentTrack || ((typeof gameState !== 'undefined' && gameState && gameState.mode === 'playing') ? 'drive' : 'garage');
+        this.playTrack(target);
+      }
+
       stopMusic() {
         this.isPlayingMusic = false;
-        if (this.bgm) {
-          this.bgm.pause();
+        if (this.bgmDrive) {
+          this.bgmDrive.pause();
+          this.bgmDrive.currentTime = 0;
+        }
+        if (this.bgmGarage) {
+          this.bgmGarage.pause();
+          this.bgmGarage.currentTime = 0;
         }
       }
 
       pauseMusic() {
-        if (this.bgm && !this.bgm.paused) {
-          this.bgm.pause();
+        const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        if (active && !active.paused) {
+          active.pause();
           this._wasPlayingBeforeHide = true;
         }
       }
 
       resumeMusic() {
-        if (this.bgm && this._enabled && this.isPlayingMusic) {
-          this.bgm.volume = this.bgmVolume;
-          this.bgm.play().catch(() => {});
+        if (!this._enabled || !this.isPlayingMusic) return;
+        const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        if (active) {
+          active.volume = this.bgmVolume;
+          active.play().catch(() => {});
           this._wasPlayingBeforeHide = false;
         }
       }
@@ -1421,8 +1496,11 @@
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('md_volume_music', this.bgmVolume.toString());
         }
-        if (this.bgm && this._enabled) {
-          this.bgm.volume = this.bgmVolume;
+        if (this.bgmDrive && this._enabled) {
+          this.bgmDrive.volume = this.bgmVolume;
+        }
+        if (this.bgmGarage && this._enabled) {
+          this.bgmGarage.volume = this.bgmVolume;
         }
       }
 
@@ -6104,6 +6182,7 @@ function createApartmentBuilding(side, zPos, index) {
 
         rebuildGarageTurntableVan();
         updateCameraForViewport();
+        if (typeof soundFX !== 'undefined' && soundFX && soundFX.playTrack) soundFX.playTrack('garage');
       } else {
         homeScreen.classList.add('hidden');
         homeScreen.classList.remove('flex');
@@ -6115,6 +6194,7 @@ function createApartmentBuilding(side, zPos, index) {
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
+        if (typeof soundFX !== 'undefined' && soundFX && soundFX.playTrack) soundFX.playTrack('drive');
       }
     }
 
@@ -7469,7 +7549,7 @@ function createApartmentBuilding(side, zPos, index) {
       soundFX.init();
       soundFX.enabled = !soundFX.enabled;
       syncAudioButtonsUI();
-      if (soundFX.enabled && !soundFX.isPlayingMusic) soundFX.startCozyMusic();
+      if (soundFX.enabled && !soundFX.isPlayingMusic) soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
     });
 
     // Volume Sliders (Music BGM & Sound SFX)
@@ -7482,7 +7562,7 @@ function createApartmentBuilding(side, zPos, index) {
         soundFX.setMusicVolume(val);
         if (musicVal) musicVal.textContent = e.target.value + '%';
         if (soundFX.enabled && !soundFX.isPlayingMusic && val > 0) {
-          soundFX.startCozyMusic();
+          soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
         }
       });
     }
@@ -7706,7 +7786,7 @@ function createApartmentBuilding(side, zPos, index) {
 
     function resetGame(forceTutorial = false) {
       soundFX.init();
-      soundFX.startCozyMusic();
+      soundFX.startCozyMusic('drive');
 
       const currentSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
       gameState.baseSpeed = 30 + (currentSpec.speedStat - 75) * 0.25;
@@ -8615,7 +8695,7 @@ function createApartmentBuilding(side, zPos, index) {
     const startAudioOnFirstInteraction = () => {
       soundFX.init();
       if (soundFX.enabled && !soundFX.isPlayingMusic) {
-        soundFX.startCozyMusic();
+        soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
       }
       window.removeEventListener('pointerdown', startAudioOnFirstInteraction);
       window.removeEventListener('keydown', startAudioOnFirstInteraction);

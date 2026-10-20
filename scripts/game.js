@@ -656,6 +656,7 @@
 
         rebuildGarageTurntableVan();
         updateCameraForViewport();
+        if (typeof soundFX !== 'undefined' && soundFX && soundFX.playTrack) soundFX.playTrack('garage');
       } else {
         homeScreen.classList.add('hidden');
         homeScreen.classList.remove('flex');
@@ -673,6 +674,7 @@
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
+        if (typeof soundFX !== 'undefined' && soundFX && soundFX.playTrack) soundFX.playTrack('drive');
       }
     }
 
@@ -2061,7 +2063,7 @@
       soundFX.init();
       soundFX.enabled = !soundFX.enabled;
       syncAudioButtonsUI();
-      if (soundFX.enabled && !soundFX.isPlayingMusic) soundFX.startCozyMusic();
+      if (soundFX.enabled && !soundFX.isPlayingMusic) soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
     });
 
     // Volume Sliders (Music BGM & Sound SFX)
@@ -2074,7 +2076,7 @@
         soundFX.setMusicVolume(val);
         if (musicVal) musicVal.textContent = e.target.value + '%';
         if (soundFX.enabled && !soundFX.isPlayingMusic && val > 0) {
-          soundFX.startCozyMusic();
+          soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
         }
       });
     }
@@ -2298,7 +2300,7 @@
 
     function resetGame(forceTutorial = false) {
       soundFX.init();
-      soundFX.startCozyMusic();
+      soundFX.startCozyMusic('drive');
 
       const currentSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
       gameState.baseSpeed = 30 + (currentSpec.speedStat - 75) * 0.25;
@@ -3214,7 +3216,7 @@
     const startAudioOnFirstInteraction = () => {
       soundFX.init();
       if (soundFX.enabled && !soundFX.isPlayingMusic) {
-        soundFX.startCozyMusic();
+        soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
       }
       window.removeEventListener('pointerdown', startAudioOnFirstInteraction);
       window.removeEventListener('keydown', startAudioOnFirstInteraction);
