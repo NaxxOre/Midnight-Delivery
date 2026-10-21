@@ -184,35 +184,38 @@
     }
 
     // ============================================================================
-    // 3B. VIBRANT CELESTIAL NIGHT STARFIELD & GLOWING VOXEL MOON
+    // 3B. VIBRANT CELESTIAL NIGHT STARFIELD, GEM SPARKLES & GLOWING VOXEL MOON
     // ============================================================================
-    const STAR_COUNT = 450;
+    const STAR_COUNT = 420;
     const starPositions = new Float32Array(STAR_COUNT * 3);
     const starColors = new Float32Array(STAR_COUNT * 3);
     let starFieldPoints = null;
     let starFieldMaterial = null;
+    let starFieldGems = null;
+    let starFieldGemMaterial = null;
+    let celestialVoxelStarsGroup = null;
     let celestialMoonGroup = null;
 
     function initCelestialStars() {
       if (starFieldPoints) return;
 
       const palette = [
-        new THREE.Color(0xffffff), // Diamond white
-        new THREE.Color(0xdbeafe), // Icy starlight
+        new THREE.Color(0xffffff), // Brilliant diamond white
+        new THREE.Color(0xe0f2fe), // Icy celestial blue
         new THREE.Color(0x93c5fd), // Soft cyan blue
-        new THREE.Color(0xfef08a), // Warm golden twinkle
-        new THREE.Color(0xe0e7ff), // Pale violet
-        new THREE.Color(0x67e8f9)  // Cyber cyan
+        new THREE.Color(0xfef08a), // Warm golden starlight
+        new THREE.Color(0xe0e7ff), // Lilac crystal
+        new THREE.Color(0x67e8f9), // Cyber cyan
+        new THREE.Color(0xfbcfe8)  // Rose quartz star
       ];
 
+      // Distribute primary starfield across the camera's visible night sky dome
+      // Camera is at (0, 9, 12), looks at (0, -0.2, -42) with FOV 44-58 deg.
+      // Visible sky dome is in Z: -85 to -230, Y: 12 to 58, X: -135 to +135
       for (let i = 0; i < STAR_COUNT; i++) {
-        const radius = 130 + Math.random() * 190;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = 0.20 + Math.random() * 0.95;
-
-        const x = radius * Math.sin(phi) * Math.cos(theta);
-        const y = 32 + radius * Math.cos(phi);
-        const z = -65 + radius * Math.sin(phi) * Math.sin(theta);
+        const x = (Math.random() - 0.5) * 270;
+        const y = 12.0 + Math.random() * 46.0;
+        const z = -85.0 - Math.random() * 145.0;
 
         starPositions[i * 3] = x;
         starPositions[i * 3 + 1] = y;
@@ -228,15 +231,15 @@
       starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
       starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
 
-      // Circular soft starlight sprite
+      // Circular high-contrast starlight sprite with solid bright core
       const starCanvas = document.createElement('canvas');
       starCanvas.width = 32;
       starCanvas.height = 32;
       const sCtx = starCanvas.getContext('2d');
       const grad = sCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
       grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.85)');
-      grad.addColorStop(0.7, 'rgba(200, 230, 255, 0.35)');
+      grad.addColorStop(0.25, 'rgba(255, 255, 255, 0.95)');
+      grad.addColorStop(0.65, 'rgba(220, 240, 255, 0.5)');
       grad.addColorStop(1.0, 'rgba(150, 200, 255, 0.0)');
       sCtx.fillStyle = grad;
       sCtx.fillRect(0, 0, 32, 32);
@@ -244,11 +247,12 @@
       const starTexture = new THREE.CanvasTexture(starCanvas);
 
       starFieldMaterial = new THREE.PointsMaterial({
-        size: 3.4,
+        size: 4.2,
+        sizeAttenuation: false, // Guarantees crisp screen-pixel visibility without distance culling!
         map: starTexture,
         vertexColors: true,
         transparent: true,
-        opacity: 0.95,
+        opacity: 0.96,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         fog: false // Crucial: Stars shine through the night sky unhindered by fog!
@@ -259,6 +263,96 @@
       scene.add(starFieldPoints);
       window.starFieldPoints = starFieldPoints;
       window.starFieldMaterial = starFieldMaterial;
+
+      // -------------------------------------------------------------
+      // 3B-2. RADIANT 4-POINT CROSS GEM SPARKLE STARS
+      // -------------------------------------------------------------
+      const GEM_COUNT = 70;
+      const gemPositions = new Float32Array(GEM_COUNT * 3);
+      const gemColors = new Float32Array(GEM_COUNT * 3);
+
+      for (let i = 0; i < GEM_COUNT; i++) {
+        gemPositions[i * 3] = (Math.random() - 0.5) * 250;
+        gemPositions[i * 3 + 1] = 16.0 + Math.random() * 42.0;
+        gemPositions[i * 3 + 2] = -95.0 - Math.random() * 125.0;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        gemColors[i * 3] = color.r;
+        gemColors[i * 3 + 1] = color.g;
+        gemColors[i * 3 + 2] = color.b;
+      }
+
+      const gemGeometry = new THREE.BufferGeometry();
+      gemGeometry.setAttribute('position', new THREE.BufferAttribute(gemPositions, 3));
+      gemGeometry.setAttribute('color', new THREE.BufferAttribute(gemColors, 3));
+
+      // 4-Point Starburst Lens Flare Canvas
+      const gemCanvas = document.createElement('canvas');
+      gemCanvas.width = 64;
+      gemCanvas.height = 64;
+      const gCtx = gemCanvas.getContext('2d');
+      // Horizontal flare beam
+      const hGrad = gCtx.createLinearGradient(0, 32, 64, 32);
+      hGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0)');
+      hGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)');
+      hGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
+      gCtx.fillStyle = hGrad;
+      gCtx.fillRect(0, 29, 64, 6);
+      // Vertical flare beam
+      const vGrad = gCtx.createLinearGradient(32, 0, 32, 64);
+      vGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0)');
+      vGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)');
+      vGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
+      gCtx.fillStyle = vGrad;
+      gCtx.fillRect(29, 0, 6, 64);
+      // Central brilliant diamond core
+      const cGrad = gCtx.createRadialGradient(32, 32, 0, 32, 32, 12);
+      cGrad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
+      cGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.9)');
+      cGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
+      gCtx.fillStyle = cGrad;
+      gCtx.fillRect(20, 20, 24, 24);
+
+      const gemTexture = new THREE.CanvasTexture(gemCanvas);
+
+      starFieldGemMaterial = new THREE.PointsMaterial({
+        size: 7.2,
+        sizeAttenuation: false,
+        map: gemTexture,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.96,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false
+      });
+
+      starFieldGems = new THREE.Points(gemGeometry, starFieldGemMaterial);
+      starFieldGems.frustumCulled = false;
+      scene.add(starFieldGems);
+      window.starFieldGems = starFieldGems;
+      window.starFieldGemMaterial = starFieldGemMaterial;
+
+      // -------------------------------------------------------------
+      // 3B-3. STYLIZED 3D VOXEL TWINKLING STARS
+      // -------------------------------------------------------------
+      celestialVoxelStarsGroup = new THREE.Group();
+      const voxelStarCoords = [
+        [-52, 36, -155], [-28, 46, -175], [-12, 32, -135], [16, 42, -145],
+        [34, 34, -165],  [58, 48, -185],  [-72, 40, -200], [-38, 26, -125],
+        [6,  50, -180],  [24, 28, -130],  [48, 40, -150],  [68, 32, -160]
+      ];
+      const voxelStarGlow = { emissive: 0xffffff, emissiveIntensity: 2.6 };
+      voxelStarCoords.forEach(([vx, vy, vz]) => {
+        const starCross = new THREE.Group();
+        starCross.position.set(vx, vy, vz);
+        addVoxelBox(starCross, 1.4, 1.4, 0.8, 0, 0, 0, 0xffffff, voxelStarGlow);
+        addVoxelBox(starCross, 3.2, 0.7, 0.7, 0, 0, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
+        addVoxelBox(starCross, 0.7, 3.2, 0.7, 0, 0, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
+        celestialVoxelStarsGroup.add(starCross);
+      });
+      scene.add(celestialVoxelStarsGroup);
+      window.celestialVoxelStarsGroup = celestialVoxelStarsGroup;
 
       // Glowing Stylized Voxel Crescent Moon high in the upper right sky
       celestialMoonGroup = new THREE.Group();
@@ -1505,8 +1599,8 @@ function createGrandTokyoTower(parent, px, py, pz) {
 
 // 2. YANGON
 // 2. YANGON - Grand Shwedagon Pagoda (ရွှေတိဂုံစေတီတော်)
-// Colossal 99m golden stupa on Singuttara Hill: 4 cardinal Pyatthat prayer halls (Tazaungs),
-// corner guardian Chinthes, 3-tier octagonal plinth, Khaunglaung-pon bell with relief rings,
+// Colossal golden stupa on Singuttara Hill: 4 cardinal Pyatthat prayer halls (Tazaungs),
+// corner guardian Chinthes, stepped octagonal plinth, Khaunglaung-pon bell with relief rings,
 // Kyar-hmauk & Kyar-hlan lotus petals, Hnget-pyaw-bu banana bud, 7-tier filigree Hti umbrella,
 // and radiant Sein-bu diamond orb pinnacle!
 function createGrandShwedagonPagoda(parent, px, py, pz) {
@@ -1521,88 +1615,89 @@ function createGrandShwedagonPagoda(parent, px, py, pz) {
   const lacquerRed = 0x991b1b; // Burmese royal crimson lacquer
   const rubyGlow = 0xef4444;
 
-  // 1. SINGUTTARA HILL & GRAND MARBLE TERRACE (ရင်ပြင်တော် ပစ္စယံ, w=22, h=2.4)
-  addVoxelBox(root, 22.0, 1.8, 22.0, 0, 0.9, 0, hillStone);
-  addVoxelBox(root, 22.8, 0.5, 22.8, 0, 2.0, 0, richGold);
+  // 1. SINGUTTARA HILL & GRAND MARBLE TERRACE (ရင်ပြင်တော် ပစ္စယံ, w=30, h=3.0)
+  addVoxelBox(root, 30.0, 2.4, 30.0, 0, 1.2, 0, hillStone);
+  addVoxelBox(root, 30.8, 0.6, 30.8, 0, 2.7, 0, richGold);
 
   // 2. FOUR CARDINAL PRAYER SHRINES (တန်ဆောင်းများ - Tazaungs with Pyatthat Multi-Tier Roofs)
   const tazaungCoords = [
-    { x: 0, z: -10.2, rot: 0 },
-    { x: 0, z: 10.2, rot: Math.PI },
-    { x: -10.2, z: 0, rot: Math.PI / 2 },
-    { x: 10.2, z: 0, rot: -Math.PI / 2 }
+    { x: 0, z: -13.8, rot: 0 },
+    { x: 0, z: 13.8, rot: Math.PI },
+    { x: -13.8, z: 0, rot: Math.PI / 2 },
+    { x: 13.8, z: 0, rot: -Math.PI / 2 }
   ];
   tazaungCoords.forEach(tz => {
     // Teakwood colonnade hall
-    addVoxelBox(root, 4.2, 3.2, 3.4, tz.x, 3.6, tz.z, teakWood);
-    addVoxelBox(root, 3.4, 2.4, 2.8, tz.x, 3.4, tz.z, radiantGold, { emissive: richGold, emissiveIntensity: 0.6 });
-    // 3-tier Burmese Pyatthat multi-roof with golden eaves
-    addVoxelBox(root, 5.0, 0.5, 4.2, tz.x, 5.45, tz.z, lacquerRed);
-    addVoxelBox(root, 3.8, 0.5, 3.2, tz.x, 6.3, tz.z, lacquerRed);
-    addVoxelBox(root, 2.6, 0.5, 2.2, tz.x, 7.1, tz.z, lacquerRed);
-    addVoxelBox(root, 0.6, 2.2, 0.6, tz.x, 8.4, tz.z, brightGold, { emissive: radiantGold, emissiveIntensity: 1.0 });
+    addVoxelBox(root, 5.4, 4.2, 4.4, tz.x, 4.8, tz.z, teakWood);
+    addVoxelBox(root, 4.4, 3.2, 3.6, tz.x, 4.6, tz.z, radiantGold, { emissive: richGold, emissiveIntensity: 0.6 });
+    // 4-tier Burmese Pyatthat multi-roof with golden eaves
+    addVoxelBox(root, 6.4, 0.6, 5.4, tz.x, 7.2, tz.z, lacquerRed);
+    addVoxelBox(root, 5.0, 0.6, 4.2, tz.x, 8.2, tz.z, lacquerRed);
+    addVoxelBox(root, 3.6, 0.6, 3.0, tz.x, 9.2, tz.z, lacquerRed);
+    addVoxelBox(root, 2.2, 0.6, 1.8, tz.x, 10.2, tz.z, lacquerRed);
+    addVoxelBox(root, 0.8, 2.6, 0.8, tz.x, 11.8, tz.z, brightGold, { emissive: radiantGold, emissiveIntensity: 1.1 });
   });
 
   // 3. FOUR CORNER GUARDIAN CHINTHES & SATELLITE STUPAS (ခြင်္သေ့ နှင့် အရံစေတီများ)
-  const cornerCoords = [[-9.0, -9.0], [9.0, -9.0], [-9.0, 9.0], [9.0, 9.0]];
+  const cornerCoords = [[-12.2, -12.2], [12.2, -12.2], [-12.2, 12.2], [12.2, 12.2]];
   cornerCoords.forEach(([cx, cz]) => {
     // Guardian Chinthe Lion
-    addVoxelBox(root, 1.8, 2.4, 1.8, cx, 3.2, cz, brightGold);
-    addVoxelBox(root, 1.2, 1.4, 1.2, cx, 4.8, cz, richGold);
+    addVoxelBox(root, 2.4, 3.2, 2.4, cx, 4.6, cz, brightGold);
+    addVoxelBox(root, 1.6, 1.8, 1.6, cx, 6.8, cz, richGold);
     // Miniature Satellite Stupa (အရံစေတီ) next to corner
     const sx = cx * 0.72;
     const sz = cz * 0.72;
-    addVoxelBox(root, 2.6, 1.2, 2.6, sx, 2.6, sz, richGold);
-    addVoxelBox(root, 2.0, 2.2, 2.0, sx, 4.2, sz, brightGold);
-    addVoxelBox(root, 1.4, 2.2, 1.4, sx, 6.2, sz, radiantGold, { emissive: richGold, emissiveIntensity: 0.4 });
-    addVoxelBox(root, 0.5, 2.0, 0.5, sx, 8.2, sz, radiantGold, { emissive: radiantGold, emissiveIntensity: 0.9 });
+    addVoxelBox(root, 3.4, 1.5, 3.4, sx, 3.7, sz, richGold);
+    addVoxelBox(root, 2.6, 2.8, 2.6, sx, 5.8, sz, brightGold);
+    addVoxelBox(root, 1.8, 2.8, 1.8, sx, 8.4, sz, radiantGold, { emissive: richGold, emissiveIntensity: 0.5 });
+    addVoxelBox(root, 0.7, 2.6, 0.7, sx, 10.9, sz, radiantGold, { emissive: radiantGold, emissiveIntensity: 1.0 });
   });
 
-  // 4. STEPPED OCTAGONAL PLINTH (ရှစ်မြှောင့် ပစ္စယံ ၃ ဆင့်, height 2.2 to 8.2)
-  addVoxelBox(root, 16.0, 1.8, 16.0, 0, 3.1, 0, richGold);
-  addVoxelBox(root, 14.0, 1.8, 14.0, 0, 4.9, 0, brightGold);
-  addVoxelBox(root, 12.2, 1.8, 12.2, 0, 6.7, 0, richGold);
-  addVoxelBox(root, 10.8, 1.6, 10.8, 0, 8.4, 0, brightGold);
+  // 4. STEPPED OCTAGONAL PLINTH (ရှစ်မြှောင့် ပစ္စယံ ၄ ဆင့်, height 3.0 to 12.5)
+  addVoxelBox(root, 21.5, 2.4, 21.5, 0, 4.2, 0, richGold);
+  addVoxelBox(root, 18.8, 2.4, 18.8, 0, 6.6, 0, brightGold);
+  addVoxelBox(root, 16.2, 2.4, 16.2, 0, 9.0, 0, richGold);
+  addVoxelBox(root, 14.0, 2.2, 14.0, 0, 11.3, 0, brightGold);
 
-  // 5. THE BELL (ခေါင်းလောင်းပုံ - Khaunglaung-pon, height 9.2 to 14.5)
+  // 5. THE BELL (ခေါင်းလောင်းပုံ - Khaunglaung-pon, height 12.5 to 19.5)
   // Stepped embossed waist bands (Hpaung-yit)
-  addVoxelBox(root, 9.6, 1.8, 9.6, 0, 10.1, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.35 });
-  addVoxelBox(root, 8.8, 1.8, 8.8, 0, 11.8, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.45 });
-  addVoxelBox(root, 8.0, 1.6, 8.0, 0, 13.4, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.55 });
+  addVoxelBox(root, 12.6, 2.4, 12.6, 0, 13.6, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.38 });
+  addVoxelBox(root, 11.4, 2.4, 11.4, 0, 16.0, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.48 });
+  addVoxelBox(root, 10.2, 2.2, 10.2, 0, 18.2, 0, brightGold, { metalness: 0.85, roughness: 0.15, emissive: richGold, emissiveIntensity: 0.58 });
 
-  // 6. INVERTED BOWL & LOTUS PETALS (သပိတ်မှောက် နှင့် ကြာမှောက် ကြာလှန်, height 14.2 to 19.5)
+  // 6. INVERTED BOWL & LOTUS PETALS (သပိတ်မှောက် နှင့် ကြာမှောက် ကြာလှန်, height 19.3 to 26.0)
   // Downward-turned lotus (Kyar-hmauk)
-  addVoxelBox(root, 7.2, 1.6, 7.2, 0, 15.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.65 });
+  addVoxelBox(root, 9.2, 2.2, 9.2, 0, 20.3, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.68 });
   // Glass bead molding rim (Hpan-khar-thee)
-  addVoxelBox(root, 7.6, 0.45, 7.6, 0, 16.0, 0, richGold);
+  addVoxelBox(root, 9.8, 0.6, 9.8, 0, 21.7, 0, richGold);
   // Upward-turned lotus (Kyar-hlan)
-  addVoxelBox(root, 6.2, 1.6, 6.2, 0, 17.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.75 });
+  addVoxelBox(root, 8.0, 2.2, 8.0, 0, 23.0, 0, radiantGold, { metalness: 0.88, roughness: 0.12, emissive: brightGold, emissiveIntensity: 0.78 });
 
-  // 7. BANANA BUD SPIRE (ငှက်ပျောဖူး - Hnget-pyaw-bu, height 18.0 to 25.5)
-  addVoxelBox(root, 5.0, 1.8, 5.0, 0, 18.6, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.7 });
-  addVoxelBox(root, 4.0, 2.0, 4.0, 0, 20.4, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.8 });
-  addVoxelBox(root, 3.0, 2.0, 3.0, 0, 22.3, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.85 });
-  addVoxelBox(root, 2.0, 2.2, 2.0, 0, 24.3, 0, radiantGold, { metalness: 0.95, emissive: radiantGold, emissiveIntensity: 0.95 });
+  // 7. BANANA BUD SPIRE (ငှက်ပျောဖူး - Hnget-pyaw-bu, height 24.5 to 35.0)
+  addVoxelBox(root, 6.6, 2.5, 6.6, 0, 25.2, 0, brightGold, { metalness: 0.9, emissive: brightGold, emissiveIntensity: 0.72 });
+  addVoxelBox(root, 5.2, 2.8, 5.2, 0, 27.7, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.82 });
+  addVoxelBox(root, 3.9, 2.8, 3.9, 0, 30.4, 0, radiantGold, { metalness: 0.92, emissive: brightGold, emissiveIntensity: 0.88 });
+  addVoxelBox(root, 2.6, 3.0, 2.6, 0, 33.2, 0, radiantGold, { metalness: 0.95, emissive: radiantGold, emissiveIntensity: 0.98 });
 
-  // 8. SEVEN-TIER GILDED UMBRELLA CROWN (ထီးတော် - Hti-daw, height 25.4 to 30.0)
-  // Concentric radiating umbrella tiers
+  // 8. SEVEN-TIER GILDED ROYAL HTI UMBRELLA (ထီးတော် - Hti-daw, height 34.8 to 41.5)
   [
-    { w: 4.8, h: 0.35, y: 25.6 },
-    { w: 4.2, h: 0.35, y: 26.3 },
-    { w: 3.5, h: 0.35, y: 27.0 },
-    { w: 2.8, h: 0.35, y: 27.7 },
-    { w: 2.2, h: 0.35, y: 28.4 },
-    { w: 1.6, h: 0.35, y: 29.1 }
+    { w: 6.4, h: 0.45, y: 35.0 },
+    { w: 5.6, h: 0.45, y: 36.0 },
+    { w: 4.7, h: 0.45, y: 37.0 },
+    { w: 3.8, h: 0.45, y: 38.0 },
+    { w: 3.0, h: 0.45, y: 39.0 },
+    { w: 2.2, h: 0.45, y: 40.0 },
+    { w: 1.5, h: 0.45, y: 41.0 }
   ].forEach(hti => {
-    addVoxelBox(root, hti.w, hti.h, hti.w, 0, hti.y, 0, radiantGold, { emissive: radiantGold, emissiveIntensity: 1.4 });
+    addVoxelBox(root, hti.w, hti.h, hti.w, 0, hti.y, 0, radiantGold, { emissive: radiantGold, emissiveIntensity: 1.5 });
   });
 
-  // 9. VANE & SEIN-BU DIAMOND ORB (ငှက်မြတ်နား နှင့် စိန်ဖူးတော်, height 29.5 to 33.8)
+  // 9. VANE & SEIN-BU DIAMOND ORB (ငှက်မြတ်နား နှင့် စိန်ဖူးတော်, height 41.5 to 47.5)
   // Golden central mast & jewel vane
-  addVoxelBox(root, 0.7, 2.8, 0.7, 0, 30.5, 0, radiantGold, { emissive: 0xffffff, emissiveIntensity: 1.8 });
-  addVoxelBox(root, 0.3, 1.4, 1.8, 0, 31.8, 0.6, richGold, { emissive: rubyGlow, emissiveIntensity: 1.5 });
+  addVoxelBox(root, 0.9, 3.8, 0.9, 0, 42.8, 0, radiantGold, { emissive: 0xffffff, emissiveIntensity: 2.0 });
+  addVoxelBox(root, 0.4, 1.8, 2.4, 0, 44.5, 0.8, richGold, { emissive: rubyGlow, emissiveIntensity: 1.8 });
   // Dazzling diamond orb radiating supreme spiritual white light
-  addVoxelBox(root, 1.4, 1.4, 1.4, 0, 33.2, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 3.8 });
+  addVoxelBox(root, 1.8, 1.8, 1.8, 0, 46.5, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 4.2 });
 
   parent.add(root);
   return root;
@@ -1824,7 +1919,7 @@ function createGrandEiffelTower(parent, px, py, pz) {
 // 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado
 // Calibrated height (~16.0 units) so head, serene face & golden halo are 100% visible on screen!
 // 7. RIO DE JANEIRO - Christ the Redeemer on Mount Corcovado (Cristo Redentor)
-// Monumental scale (height ~24.0 units, arm span 17.5 units): towering Mount Corcovado peak,
+// Monumental scale (height ~40.0 units, arm span 23.5 units): towering Mount Corcovado peak,
 // octagonal chapel pedestal, soapstone mosaic robes, heroic outstretched blessing arms,
 // serene face tilted towards Rio, and radiant golden halo!
 function createGrandChristTheRedeemer(parent, px, py, pz) {
@@ -1841,48 +1936,49 @@ function createGrandChristTheRedeemer(parent, px, py, pz) {
   const jungleGreen = 0x15803d; // Lush Tijuca rainforest slopes
   const haloGold    = 0xfef08a;
 
-  // 1. MOUNT CORCOVADO PEAK (Tijuca rainforest & granite cliffs, height 0 to 7.2)
-  addVoxelBox(root, 18.0, 2.8, 18.0, 0, 1.4, 0, jungleGreen);
-  addVoxelBox(root, 14.5, 2.4, 14.5, 0, 3.8, 0, darkCliff);
-  addVoxelBox(root, 11.0, 1.8, 11.0, 0, 5.8, 0, granite);
+  // 1. MOUNT CORCOVADO PEAK (Tijuca rainforest & granite cliffs, height 0 to 15.0)
+  addVoxelBox(root, 26.0, 4.2, 26.0, 0, 2.1, 0, jungleGreen);
+  addVoxelBox(root, 20.0, 3.8, 20.0, 0, 5.9, 0, darkCliff);
+  addVoxelBox(root, 15.0, 3.8, 15.0, 0, 9.6, 0, granite);
+  addVoxelBox(root, 11.5, 3.2, 11.5, 0, 13.0, 0, darkCliff);
   // Circular panoramic viewing terrace with tourist safety railings
-  addVoxelBox(root, 11.6, 0.4, 11.6, 0, 6.8, 0, 0xe2e8f0);
+  addVoxelBox(root, 12.4, 0.6, 12.4, 0, 14.8, 0, 0xe2e8f0);
 
-  // 2. OCTAGONAL CHAPEL PEDESTAL (Base do Pedestal, height 7.0 to 10.8)
-  addVoxelBox(root, 5.4, 2.6, 5.4, 0, 8.3, 0, chapelBase);
-  addVoxelBox(root, 5.8, 0.5, 5.8, 0, 9.8, 0, granite);
-  addVoxelBox(root, 4.6, 0.8, 4.6, 0, 10.4, 0, soapDark);
+  // 2. OCTAGONAL CHAPEL PEDESTAL (Base do Pedestal, height 15.0 to 20.2)
+  addVoxelBox(root, 6.4, 3.6, 6.4, 0, 16.8, 0, chapelBase);
+  addVoxelBox(root, 6.8, 0.7, 6.8, 0, 18.9, 0, granite);
+  addVoxelBox(root, 5.4, 1.0, 5.4, 0, 19.7, 0, soapDark);
 
-  // 3. MONUMENTAL ROBED BODY (Cristo Redentor, height 10.8 to 20.8)
+  // 3. MONUMENTAL ROBED BODY (Cristo Redentor, height 20.2 to 34.0)
   // Stepped flowing tunic robes
-  addVoxelBox(root, 3.4, 3.4, 2.4, 0, 12.3, 0, soapstone);
-  addVoxelBox(root, 3.6, 3.2, 2.2, 0, 15.4, 0, soapstone);
-  addVoxelBox(root, 3.8, 2.8, 2.0, 0, 18.2, 0, soapstone);
+  addVoxelBox(root, 4.4, 4.8, 3.0, 0, 22.5, 0, soapstone);
+  addVoxelBox(root, 4.6, 4.4, 2.8, 0, 26.9, 0, soapstone);
+  addVoxelBox(root, 4.8, 3.8, 2.5, 0, 30.8, 0, soapstone);
   // Robe central vertical pleats
-  addVoxelBox(root, 0.8, 7.5, 0.4, 0, 15.0, 1.1, soapDark);
+  addVoxelBox(root, 0.9, 10.5, 0.5, 0, 26.5, 1.4, soapDark);
   // Broad heroic shoulders
-  addVoxelBox(root, 4.8, 2.0, 1.8, 0, 20.4, 0, soapstone);
+  addVoxelBox(root, 6.2, 2.8, 2.4, 0, 34.0, 0, soapstone);
 
-  // 4. WORLD-FAMOUS OUTSTRETCHED CROSS ARMS (17.5 units wide span!)
+  // 4. WORLD-FAMOUS OUTSTRETCHED CROSS ARMS (23.5 units wide span!)
   // Main horizontal arm span beam
-  addVoxelBox(root, 17.5, 1.4, 1.2, 0, 20.8, 0, soapstone);
+  addVoxelBox(root, 23.5, 1.8, 1.5, 0, 34.6, 0, soapstone);
   // Flowing robe sleeve drapes beneath the arms
-  addVoxelBox(root, 3.8, 2.2, 1.1, -4.2, 19.2, 0, soapstone);
-  addVoxelBox(root, 3.8, 2.2, 1.1,  4.2, 19.2, 0, soapstone);
-  addVoxelBox(root, 2.0, 1.4, 1.0, -6.8, 19.6, 0, soapDark);
-  addVoxelBox(root, 2.0, 1.4, 1.0,  6.8, 19.6, 0, soapDark);
+  addVoxelBox(root, 4.8, 3.0, 1.4, -5.6, 32.4, 0, soapstone);
+  addVoxelBox(root, 4.8, 3.0, 1.4,  5.6, 32.4, 0, soapstone);
+  addVoxelBox(root, 2.6, 2.0, 1.2, -9.0, 33.0, 0, soapDark);
+  addVoxelBox(root, 2.6, 2.0, 1.2,  9.0, 33.0, 0, soapDark);
   // Outstretched hands blessing the city & bay
-  addVoxelBox(root, 1.4, 1.0, 1.1, -9.2, 20.8, 0, soapstone);
-  addVoxelBox(root, 1.4, 1.0, 1.1,  9.2, 20.8, 0, soapstone);
+  addVoxelBox(root, 1.8, 1.4, 1.3, -12.2, 34.6, 0, soapstone);
+  addVoxelBox(root, 1.8, 1.4, 1.3,  12.2, 34.6, 0, soapstone);
 
-  // 5. SERENE HEAD, BEARD & DIGNIFIED FACE (Height 21.4 to 23.6)
-  addVoxelBox(root, 1.8, 2.0, 1.6, 0, 22.2, 0, soapstone);
+  // 5. SERENE HEAD, BEARD & DIGNIFIED FACE (Height 35.4 to 38.6)
+  addVoxelBox(root, 2.4, 2.8, 2.2, 0, 36.6, 0, soapstone);
   // Hair & facial tilt slightly forward/downward
-  addVoxelBox(root, 2.0, 1.0, 1.8, 0, 22.8, -0.15, soapDark);
-  addVoxelBox(root, 1.2, 0.8, 0.4, 0, 21.6, 0.8, soapstone);
+  addVoxelBox(root, 2.6, 1.4, 2.4, 0, 37.4, -0.2, soapDark);
+  addVoxelBox(root, 1.6, 1.2, 0.6, 0, 35.8, 1.1, soapstone);
 
-  // 6. RADIANT GOLDEN HALO (Height 23.6 to 24.3)
-  addVoxelBox(root, 1.6, 0.35, 1.6, 0, 23.8, 0, haloGold, { emissive: haloGold, emissiveIntensity: 2.8 });
+  // 6. RADIANT GOLDEN HALO (Height 38.6 to 39.5)
+  addVoxelBox(root, 2.2, 0.45, 2.2, 0, 38.8, 0, haloGold, { emissive: haloGold, emissiveIntensity: 3.0 });
 
   parent.add(root);
   return root;
@@ -1966,7 +2062,7 @@ function createGrandBurjKhalifaAndArab(parent, px, py, pz) {
   return root;
 }
 
-// 10. CAIRO - Authentic Giza Plateau with Real 4-Sided Geometric Pyramids (Smooth, Non-Blocky)
+// 10. CAIRO - Authentic Giza Plateau with Colossal 4-Sided Geometric Pyramids (Smooth, Non-Blocky)
 // Safe desert positioning: all components kept strictly away from road with >20 units clearance!
 function createGrandPyramidAndSphinx(parent, px, py, pz) {
   const root = new THREE.Group();
@@ -2011,132 +2107,153 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
   });
 
   // -------------------------------------------------------------
-  // 1. THE GREAT PYRAMID OF KHUFU (Real 4-Sided Smooth Pyramid)
-  // Centered at x = -6, well clear of the road
+  // 1. THE GREAT PYRAMID OF KHUFU (Colossal 4-Sided Smooth Pyramid)
+  // Centered at x = -8, well clear of the road with base radius 30 and height 36
   // -------------------------------------------------------------
   const khufuGroup = new THREE.Group();
-  khufuGroup.position.set(-6, 0, 0);
+  khufuGroup.position.set(-8, 0, 0);
 
   // Desert Plateau foundation slab
-  const base1 = new THREE.Mesh(new THREE.BoxGeometry(32, 1.2, 32), sandBaseMat);
-  base1.position.set(0, 0.6, 0);
+  const base1 = new THREE.Mesh(new THREE.BoxGeometry(46, 2.0, 46), sandBaseMat);
+  base1.position.set(0, 1.0, 0);
   base1.receiveShadow = true;
   khufuGroup.add(base1);
 
   // Main 4-Sided Geometric Pyramid (ConeGeometry with 4 radial segments)
-  const khufuGeo = new THREE.ConeGeometry(19, 20, 4);
+  const khufuGeo = new THREE.ConeGeometry(30, 36, 4);
   const khufuMesh = new THREE.Mesh(khufuGeo, khufuMat);
-  khufuMesh.position.set(0, 10.0 + 1.2, 0);
+  khufuMesh.position.set(0, 18.0 + 2.0, 0);
   khufuMesh.rotation.y = Math.PI / 4; // Align 4 triangular faces squarely with axes
   khufuMesh.castShadow = true;
   khufuMesh.receiveShadow = true;
   khufuGroup.add(khufuMesh);
 
   // Golden Pyramidion (Electrum capstone at apex)
-  const khufuCapGeo = new THREE.ConeGeometry(3.2, 3.2, 4);
+  const khufuCapGeo = new THREE.ConeGeometry(5.2, 5.5, 4);
   const khufuCap = new THREE.Mesh(khufuCapGeo, goldApexMat);
-  khufuCap.position.set(0, 20.0 + 1.2 - 1.6, 0);
+  khufuCap.position.set(0, 36.0 + 2.0 - 2.75, 0);
   khufuCap.rotation.y = Math.PI / 4;
   khufuGroup.add(khufuCap);
 
   // Ancient Tomb Entrance Passage (cut into the front face)
-  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 2.4), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
-  entMesh.position.set(12.5, 2.5, 0);
+  const entMesh = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.8, 3.6), new THREE.MeshBasicMaterial({ color: 0x1c1208 }));
+  entMesh.position.set(19.2, 3.8, 0);
   khufuGroup.add(entMesh);
 
   // Heavy stone chevron lintels above the entrance
-  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.0, 3.2), sandBaseMat);
-  lintelMesh.position.set(12.2, 4.4, 0);
+  const lintelMesh = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.6, 4.8), sandBaseMat);
+  lintelMesh.position.set(18.8, 6.8, 0);
   khufuGroup.add(lintelMesh);
 
   root.add(khufuGroup);
 
   // -------------------------------------------------------------
   // 2. THE SECOND PYRAMID OF KHAFRE (With Signature Preserved Casing Cap)
-  // Set back deeper in the desert (offset: x = -26, z = -24)
+  // Set back deeper in the desert (offset: x = -38, z = -32)
   // -------------------------------------------------------------
   const khafreGroup = new THREE.Group();
-  khafreGroup.position.set(-26, 0, -24);
+  khafreGroup.position.set(-38, 0, -32);
 
-  const base2 = new THREE.Mesh(new THREE.BoxGeometry(24, 1.0, 24), sandBaseMat);
-  base2.position.set(0, 0.5, 0);
+  const base2 = new THREE.Mesh(new THREE.BoxGeometry(36, 1.6, 36), sandBaseMat);
+  base2.position.set(0, 0.8, 0);
   khafreGroup.add(base2);
 
-  const khafreGeo = new THREE.ConeGeometry(14, 16, 4);
+  const khafreGeo = new THREE.ConeGeometry(23, 28, 4);
   const khafreMesh = new THREE.Mesh(khafreGeo, khafreMat);
-  khafreMesh.position.set(0, 8.0 + 1.0, 0);
+  khafreMesh.position.set(0, 14.0 + 1.6, 0);
   khafreMesh.rotation.y = Math.PI / 4;
   khafreMesh.castShadow = true;
   khafreMesh.receiveShadow = true;
   khafreGroup.add(khafreMesh);
 
   // Signature White Limestone Casing Stones at Khafre's Summit
-  const casingGeo = new THREE.ConeGeometry(5.2, 5.5, 4);
+  const casingGeo = new THREE.ConeGeometry(8.2, 9.0, 4);
   const casingMesh = new THREE.Mesh(casingGeo, casingMat);
-  casingMesh.position.set(0, 16.0 + 1.0 - 2.7, 0);
+  casingMesh.position.set(0, 28.0 + 1.6 - 4.5, 0);
   casingMesh.rotation.y = Math.PI / 4;
   khafreGroup.add(casingMesh);
 
   root.add(khafreGroup);
 
   // -------------------------------------------------------------
-  // 3. THE GREAT SPHINX OF GIZA
-  // Guarding in front of Khufu (offset: x = -2, z = 14, well clear of road)
+  // 3. THE THIRD PYRAMID OF MENKAURE (Completing the Giza Triad)
+  // Offset: x = -62, z = -58
+  // -------------------------------------------------------------
+  const menkaureGroup = new THREE.Group();
+  menkaureGroup.position.set(-62, 0, -58);
+
+  const base3 = new THREE.Mesh(new THREE.BoxGeometry(22, 1.2, 22), sandBaseMat);
+  base3.position.set(0, 0.6, 0);
+  menkaureGroup.add(base3);
+
+  const menkaureGeo = new THREE.ConeGeometry(14, 18, 4);
+  const menkaureMesh = new THREE.Mesh(menkaureGeo, khufuMat);
+  menkaureMesh.position.set(0, 9.0 + 1.2, 0);
+  menkaureMesh.rotation.y = Math.PI / 4;
+  menkaureMesh.castShadow = true;
+  menkaureMesh.receiveShadow = true;
+  menkaureGroup.add(menkaureMesh);
+
+  root.add(menkaureGroup);
+
+  // -------------------------------------------------------------
+  // 4. THE GREAT SPHINX OF GIZA
+  // Guarding in front of Khufu (offset: x = -4, z = 20, well clear of road)
   // -------------------------------------------------------------
   const sphGroup = new THREE.Group();
-  sphGroup.position.set(-2, 0, 14);
+  sphGroup.position.set(-4, 0, 20);
 
-  // Raised stone causeway
-  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.8, 11.0), sandBaseMat);
-  sphPlinth.position.set(0, 0.4, 0);
+  // Raised stone causeway plinth
+  const sphPlinth = new THREE.Mesh(new THREE.BoxGeometry(7.0, 1.2, 15.0), sandBaseMat);
+  sphPlinth.position.set(0, 0.6, 0);
   sphGroup.add(sphPlinth);
 
   // Couchant Lion Body
-  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 6.5), khufuMat);
-  lionBody.position.set(0, 2.0, -0.8);
+  const lionBody = new THREE.Mesh(new THREE.BoxGeometry(5.2, 4.0, 9.2), khufuMat);
+  lionBody.position.set(0, 2.8, -1.2);
   sphGroup.add(lionBody);
 
   // Lion Paws extending forward
-  [-1.2, 1.2].forEach(pxx => {
-    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 3.5), khufuMat);
-    paw.position.set(pxx, 1.1, 3.4);
+  [-1.7, 1.7].forEach(pxx => {
+    const paw = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 5.0), khufuMat);
+    paw.position.set(pxx, 1.5, 4.8);
     sphGroup.add(paw);
   });
 
   // Pharaoh Head with Royal Nemes Headdress
-  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, 2.0), khufuMat);
-  sphHead.position.set(0, 4.4, 1.0);
+  const sphHead = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.4, 2.8), khufuMat);
+  sphHead.position.set(0, 6.2, 1.4);
   sphGroup.add(sphHead);
 
   // Nemes royal headcloth (blue lapis wings)
   const nemesMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
-  [-1.3, 1.3].forEach(nx => {
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.6, 1.8), nemesMat);
-    wing.position.set(nx, 3.9, 0.8);
+  [-1.8, 1.8].forEach(nx => {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.8, 2.5), nemesMat);
+    wing.position.set(nx, 5.5, 1.2);
     sphGroup.add(wing);
   });
 
   // Nemes crown top & beard
-  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.6, 2.2), nemesMat);
-  nemesCrown.position.set(0, 5.8, 1.0);
+  const nemesCrown = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.8, 3.2), nemesMat);
+  nemesCrown.position.set(0, 8.2, 1.4);
   sphGroup.add(nemesCrown);
 
-  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.6, 0.5), nemesMat);
-  beard.position.set(0, 2.9, 1.8);
+  const beard = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.2, 0.7), nemesMat);
+  beard.position.set(0, 4.2, 2.5);
   sphGroup.add(beard);
 
   root.add(sphGroup);
 
   // -------------------------------------------------------------
-  // 4. DESERT SAND DUNES ACROSS THE HORIZON
+  // 5. DESERT SAND DUNES ACROSS THE HORIZON
   // Rolling desert dunes anchoring the pyramids into the backdrop
-  // All dunes kept strictly on the desert side (x <= +4)
   // -------------------------------------------------------------
   const duneMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.95 });
   [
-    { x: -14, z: 18, w: 22, h: 2.0, d: 14 },
-    { x: -8,  z: -18, w: 24, h: 2.0, d: 16 },
-    { x: -32, z: 4,  w: 22, h: 1.8, d: 14 }
+    { x: -18, z: 24, w: 32, h: 2.8, d: 20 },
+    { x: -12, z: -24, w: 34, h: 2.8, d: 22 },
+    { x: -45, z: 8,  w: 30, h: 2.5, d: 20 },
+    { x: -75, z: -35, w: 40, h: 3.2, d: 26 }
   ].forEach(d => {
     const dune = new THREE.Mesh(new THREE.BoxGeometry(d.w, d.h, d.d), duneMat);
     dune.position.set(d.x, d.h / 2, d.z);
@@ -2195,7 +2312,7 @@ function updateCityLeftLandmark(cityTheme) {
   // Position on the left side of the street (well clear of the road)
   // Starts far on the horizon at Z = -220, moving closer as the player drives!
   const isCairo = (cityTheme.id === 'cairo');
-  const targetX = isCairo ? -34.0 : -28.0;
+  const targetX = isCairo ? -36.0 : -28.0;
   window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
   window.cityLeftLandmarkGroup.visible = true;
 }

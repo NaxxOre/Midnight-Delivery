@@ -915,7 +915,7 @@
         envGroup.visible = true;
         if (window.cityLeftLandmarkGroup) {
           const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-          const targetX = isCairo ? -34.0 : -28.0;
+          const targetX = isCairo ? -36.0 : -28.0;
           window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
           window.cityLeftLandmarkGroup.visible = true;
         }
@@ -2857,7 +2857,7 @@
       else if (theme.id === 'cairo') applyWeatherMode(1);
       if (window.cityLeftLandmarkGroup) {
         const isCairo = (theme.id === 'cairo');
-        const targetX = isCairo ? -34.0 : -28.0;
+        const targetX = isCairo ? -36.0 : -28.0;
         window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
         window.cityLeftLandmarkGroup.visible = true;
       }
@@ -2999,7 +2999,7 @@
       applyWeatherMode(0);
       if (window.cityLeftLandmarkGroup) {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -34.0 : -28.0;
+        const targetX = isCairo ? -36.0 : -28.0;
         window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
         window.cityLeftLandmarkGroup.visible = true;
       }
@@ -3316,7 +3316,7 @@
       // Grand Distant Left Landmark approaches smoothly in 3D perspective
       if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -34.0 : -28.0;
+        const targetX = isCairo ? -36.0 : -28.0;
         window.cityLeftLandmarkGroup.position.x = targetX;
 
         if (window.cityLeftLandmarkGroup.visible) {
@@ -3362,7 +3362,7 @@
       // naturally growing larger in 3D perspective until passing beside player!
       if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
-        const targetX = isCairo ? -34.0 : -28.0;
+        const targetX = isCairo ? -36.0 : -28.0;
         window.cityLeftLandmarkGroup.position.x = targetX;
 
         if (window.cityLeftLandmarkGroup.visible) {
@@ -3419,17 +3419,37 @@
       // Update Celestial Night Stars & Moon Shimmer
       const sfPoints = (typeof starFieldPoints !== 'undefined' ? starFieldPoints : (typeof window !== 'undefined' ? window.starFieldPoints : null));
       const sfMat = (typeof starFieldMaterial !== 'undefined' ? starFieldMaterial : (typeof window !== 'undefined' ? window.starFieldMaterial : null));
+      const sfGems = (typeof starFieldGems !== 'undefined' ? starFieldGems : (typeof window !== 'undefined' ? window.starFieldGems : null));
+      const sfGemMat = (typeof starFieldGemMaterial !== 'undefined' ? starFieldGemMaterial : (typeof window !== 'undefined' ? window.starFieldGemMaterial : null));
+      const cVoxelStars = (typeof celestialVoxelStarsGroup !== 'undefined' ? celestialVoxelStarsGroup : (typeof window !== 'undefined' ? window.celestialVoxelStarsGroup : null));
       const cMoon = (typeof celestialMoonGroup !== 'undefined' ? celestialMoonGroup : (typeof window !== 'undefined' ? window.celestialMoonGroup : null));
 
       if (sfPoints && sfMat) {
         const isNightTime = (gameState.timeIndex === 0 || gameState.timeIndex === 3 || (typeof nightState !== 'undefined' && nightState.blend > 0.05));
-        const targetStarOpacity = isNightTime ? 0.95 : (gameState.timeIndex === 1 ? 0.40 : 0.0);
+        const targetStarOpacity = isNightTime ? 0.96 : (gameState.timeIndex === 1 ? 0.40 : 0.0);
         sfMat.opacity = THREE.MathUtils.lerp(sfMat.opacity, targetStarOpacity, rawDt * 1.5);
-        sfPoints.visible = sfMat.opacity > 0.02;
+        sfPoints.visible = sfMat.opacity > 0.02 && gameState.mode !== 'home';
 
         if (sfPoints.visible) {
-          sfPoints.rotation.y = now * 0.00004;
-          sfMat.size = 3.0 + Math.sin(now * 0.003) * 0.45;
+          // Dynamic sparkling twinkle without rotating out of camera view
+          sfMat.size = 4.2 + Math.sin(now * 0.0035) * 0.7;
+        }
+
+        if (sfGems && sfGemMat) {
+          sfGemMat.opacity = sfMat.opacity;
+          sfGems.visible = sfPoints.visible;
+          if (sfGems.visible) {
+            sfGemMat.size = 7.0 + Math.cos(now * 0.0042) * 1.2;
+          }
+        }
+
+        if (cVoxelStars) {
+          cVoxelStars.visible = isNightTime && gameState.mode !== 'home';
+          if (cVoxelStars.visible) {
+            cVoxelStars.children.forEach((vs, idx) => {
+              vs.rotation.z = Math.sin(now * 0.0018 + idx) * 0.25;
+            });
+          }
         }
 
         if (cMoon) {
@@ -3611,7 +3631,7 @@
             showCityToast(newTheme);
             if (window.cityLeftLandmarkGroup) {
               const isCairo = (newTheme.id === 'cairo');
-              const targetX = isCairo ? -34.0 : -28.0;
+              const targetX = isCairo ? -36.0 : -28.0;
               window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
               window.cityLeftLandmarkGroup.visible = true;
             }
