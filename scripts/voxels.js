@@ -1249,13 +1249,17 @@
     envGroup.add(sideRight);
 
     // Dedicated Green Bicycle Lanes on Both Sidewalks
-    addVoxelBox(envGroup, 1.35, 0.06, 340, -9.3, 0.24, -95, 0x10b981);
-    addVoxelBox(envGroup, 1.35, 0.06, 340,  9.3, 0.24, -95, 0x10b981);
+    addVoxelBox(envGroup, 1.35, 0.06, 340, -9.3, 0.24, -95, 0x10b981, { emissive: 0x10b981, emissiveIntensity: 0.40 });
+    addVoxelBox(envGroup, 1.35, 0.06, 340,  9.3, 0.24, -95, 0x10b981, { emissive: 0x10b981, emissiveIntensity: 0.40 });
 
     const roadLines = [];
     for (let z = 35; z > -245; z -= 8) {
       [-3.6, 0, 3.6].forEach((lx, idx) => {
-        const dash = addVoxelBox(envGroup, 0.25, 0.06, 3.6, lx, 0.03, z, idx === 1 ? 0xfacc15 : 0xf8fafc);
+        const col = idx === 1 ? 0xfacc15 : 0xf8fafc;
+        const dash = addVoxelBox(envGroup, 0.28, 0.06, 3.8, lx, 0.03, z, col, {
+          emissive: col,
+          emissiveIntensity: 0.65
+        });
         roadLines.push(dash);
       });
     }
@@ -1266,8 +1270,8 @@
     const windowMeshes = [];
     const sidewalkActors = [];
 
-    const streetLampPoolGeometry = new THREE.CircleGeometry(2.6, 16);
-    const streetLampPoolMaterial = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false });
+    const streetLampPoolGeometry = new THREE.CircleGeometry(3.2, 16);
+    const streetLampPoolMaterial = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.40, depthWrite: false });
     function initSidewalkPromenadeActors() {
       // Cozy Warm Gooseneck Streetlamps on the outer road curb edge (x = ±7.95)
       for (let z = 25; z > -235; z -= 26) {

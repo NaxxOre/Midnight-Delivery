@@ -2158,7 +2158,7 @@
     }
 
     function updateSmoothAtmosphereTransition(rawDt) {
-      const blendRate = Math.min(1, rawDt * 0.45);
+      const blendRate = Math.min(1, rawDt * 1.2);
       scene.background.lerp(targetSkyColor, blendRate);
       scene.fog.color.lerp(targetFogColor, blendRate);
       roadMat.color.lerp(targetRoadColor, blendRate);
@@ -3569,7 +3569,7 @@
         }
 
         atmosphereCycleTimer += rawDt;
-        if (atmosphereCycleTimer > 38) {
+        if (atmosphereCycleTimer > 70) {
           atmosphereCycleTimer = 0;
           applyTimeOfDay(gameState.timeIndex + 1);
           if (Math.random() < 0.65) applyWeatherMode(gameState.weatherIndex + 1);
