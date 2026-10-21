@@ -98,7 +98,7 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x6bf2c6);
-    scene.fog = new THREE.FogExp2(0x6bf2c6, 0.0040);
+    scene.fog = new THREE.FogExp2(0x162447, 0.0016);
 
     const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.5, 310);
     // Horizon Chase-Cam Perspective matching Reference Images 1 & 2 (Sky visible at top, buildings framing street, full van above bar)
@@ -180,8 +180,100 @@
     const moteGeo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
     const moteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0 });
     function initCozyMotes() {
-      // Disabled: removed floating cubes from the air per user request
+      // Legacy stub preserved for compatibility
     }
+
+    // ============================================================================
+    // 3B. VIBRANT CELESTIAL NIGHT STARFIELD & GLOWING VOXEL MOON
+    // ============================================================================
+    const STAR_COUNT = 450;
+    const starPositions = new Float32Array(STAR_COUNT * 3);
+    const starColors = new Float32Array(STAR_COUNT * 3);
+    let starFieldPoints = null;
+    let starFieldMaterial = null;
+    let celestialMoonGroup = null;
+
+    function initCelestialStars() {
+      if (starFieldPoints) return;
+
+      const palette = [
+        new THREE.Color(0xffffff), // Diamond white
+        new THREE.Color(0xdbeafe), // Icy starlight
+        new THREE.Color(0x93c5fd), // Soft cyan blue
+        new THREE.Color(0xfef08a), // Warm golden twinkle
+        new THREE.Color(0xe0e7ff), // Pale violet
+        new THREE.Color(0x67e8f9)  // Cyber cyan
+      ];
+
+      for (let i = 0; i < STAR_COUNT; i++) {
+        const radius = 130 + Math.random() * 190;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = 0.20 + Math.random() * 0.95;
+
+        const x = radius * Math.sin(phi) * Math.cos(theta);
+        const y = 32 + radius * Math.cos(phi);
+        const z = -65 + radius * Math.sin(phi) * Math.sin(theta);
+
+        starPositions[i * 3] = x;
+        starPositions[i * 3 + 1] = y;
+        starPositions[i * 3 + 2] = z;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        starColors[i * 3] = color.r;
+        starColors[i * 3 + 1] = color.g;
+        starColors[i * 3 + 2] = color.b;
+      }
+
+      const starGeometry = new THREE.BufferGeometry();
+      starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+      // Circular soft starlight sprite
+      const starCanvas = document.createElement('canvas');
+      starCanvas.width = 32;
+      starCanvas.height = 32;
+      const sCtx = starCanvas.getContext('2d');
+      const grad = sCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
+      grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.85)');
+      grad.addColorStop(0.7, 'rgba(200, 230, 255, 0.35)');
+      grad.addColorStop(1.0, 'rgba(150, 200, 255, 0.0)');
+      sCtx.fillStyle = grad;
+      sCtx.fillRect(0, 0, 32, 32);
+
+      const starTexture = new THREE.CanvasTexture(starCanvas);
+
+      starFieldMaterial = new THREE.PointsMaterial({
+        size: 3.4,
+        map: starTexture,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false // Crucial: Stars shine through the night sky unhindered by fog!
+      });
+
+      starFieldPoints = new THREE.Points(starGeometry, starFieldMaterial);
+      starFieldPoints.frustumCulled = false;
+      scene.add(starFieldPoints);
+      window.starFieldPoints = starFieldPoints;
+      window.starFieldMaterial = starFieldMaterial;
+
+      // Glowing Stylized Voxel Crescent Moon high in the upper right sky
+      celestialMoonGroup = new THREE.Group();
+      celestialMoonGroup.position.set(48, 56, -170);
+
+      const moonGlow = { emissive: 0xfef08a, emissiveIntensity: 1.4 };
+      addVoxelBox(celestialMoonGroup, 6.2, 7.8, 1.2, 0, 0, 0, 0xfef08a, moonGlow);
+      addVoxelBox(celestialMoonGroup, 5.0, 9.4, 1.2, 0.6, 0, 0, 0xfef08a, moonGlow);
+      addVoxelBox(celestialMoonGroup, 3.4, 10.6, 1.2, 1.2, 0, 0, 0xfffbeb, { emissive: 0xfffbeb, emissiveIntensity: 1.6 });
+      addVoxelBox(celestialMoonGroup, 4.4, 8.2, 1.3, -1.8, 0, 0.05, 0x121d3b, { opacity: 0.95 });
+
+      scene.add(celestialMoonGroup);
+      window.celestialMoonGroup = celestialMoonGroup;
+    }
+    window.initCelestialStars = initCelestialStars;
 
     // ============================================================================
     // 4. 8 JAW-DROPPING MEME & SURPRISE VOXEL ITEMS

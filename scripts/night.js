@@ -120,6 +120,7 @@ function updateNightSystems(rawDt, roadDt, speed) {
 
     scene.background.lerp(nightSky, nightState.blend);
     scene.fog.color.lerp(nightSky, nightState.blend);
+    if (scene.fog) scene.fog.density = 0.0016;
     hemiLight.color.lerp(nightSky, nightState.blend);
     hemiLight.groundColor.lerp(nightGround, nightState.blend);
     for (const apartment of apartments) for (const windowMesh of apartment.windowMeshes || []) {

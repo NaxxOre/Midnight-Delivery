@@ -894,7 +894,7 @@
         // Moody Deep Midnight Asphalt Garage (#070913) Sky & Lighting
         scene.background.setHex(0x070913);
         scene.fog.color.setHex(0x070913);
-        scene.fog.density = 0.012;
+        scene.fog.density = 0.007;
         hemiLight.color.setHex(0x1e293b);
         hemiLight.groundColor.setHex(0x070913);
         hemiLight.intensity = 0.38;
@@ -919,6 +919,7 @@
           window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
           window.cityLeftLandmarkGroup.visible = true;
         }
+        if (scene.fog) scene.fog.density = 0.0016;
         replaceActivePlayerVan(gameState.equippedVanId);
         playerVan.visible = true;
         updateCameraForViewport();
@@ -2132,6 +2133,7 @@
         p.visible = t.lightsOn;
       });
 
+      if (scene.fog && gameState.mode !== 'home') scene.fog.density = 0.0016;
       if (instant) {
         scene.background.copy(targetSkyColor);
         scene.fog.color.copy(targetFogColor);
@@ -3414,6 +3416,27 @@
         }
       });
 
+      // Update Celestial Night Stars & Moon Shimmer
+      const sfPoints = (typeof starFieldPoints !== 'undefined' ? starFieldPoints : (typeof window !== 'undefined' ? window.starFieldPoints : null));
+      const sfMat = (typeof starFieldMaterial !== 'undefined' ? starFieldMaterial : (typeof window !== 'undefined' ? window.starFieldMaterial : null));
+      const cMoon = (typeof celestialMoonGroup !== 'undefined' ? celestialMoonGroup : (typeof window !== 'undefined' ? window.celestialMoonGroup : null));
+
+      if (sfPoints && sfMat) {
+        const isNightTime = (gameState.timeIndex === 0 || gameState.timeIndex === 3 || (typeof nightState !== 'undefined' && nightState.blend > 0.05));
+        const targetStarOpacity = isNightTime ? 0.95 : (gameState.timeIndex === 1 ? 0.40 : 0.0);
+        sfMat.opacity = THREE.MathUtils.lerp(sfMat.opacity, targetStarOpacity, rawDt * 1.5);
+        sfPoints.visible = sfMat.opacity > 0.02;
+
+        if (sfPoints.visible) {
+          sfPoints.rotation.y = now * 0.00004;
+          sfMat.size = 3.0 + Math.sin(now * 0.003) * 0.45;
+        }
+
+        if (cMoon) {
+          cMoon.visible = isNightTime && gameState.mode !== 'home';
+        }
+      }
+
       updateOrderAlertsAndBubbles();
 
       if (gameState.mode === 'playing') {
@@ -4396,11 +4419,13 @@
           window.midnightStartup.optional('parcel icons', generate3DIcons);
           window.midnightStartup.optional('weather particles', initWeatherParticles);
           window.midnightStartup.optional('ambient motes', initCozyMotes);
+          window.midnightStartup.optional('celestial stars', initCelestialStars);
           window.midnightStartup.optional('sidewalk actors', initSidewalkPromenadeActors);
         } else {
           generate3DIcons();
           initWeatherParticles();
           initCozyMotes();
+          initCelestialStars();
           initSidewalkPromenadeActors();
         }
         for (let pairIndex = 0; pairIndex < NUM_PAIRS; pairIndex++) {
