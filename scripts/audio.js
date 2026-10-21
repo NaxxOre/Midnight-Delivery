@@ -448,6 +448,24 @@
         osc.stop(now + 0.055);
       }
 
+      playTurnSignalClick(isHigh = false) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const voice = this.createVoice();
+        if (!voice) return;
+        const { oscillator: osc, gain: gain } = voice;
+        osc.type = 'triangle';
+        const startFreq = isHigh ? 960 : 720;
+        osc.frequency.setValueAtTime(startFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(startFreq * 0.55, now + 0.032);
+        gain.gain.setValueAtTime(0.045, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.start(now);
+        osc.stop(now + 0.038);
+      }
+
       playVehiclePassBy(type) {
         if (!this.enabled) return;
         this.init();

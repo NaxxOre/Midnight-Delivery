@@ -16,7 +16,12 @@
     }
 
     const unitBoxGeo = new THREE.BoxGeometry(1, 1, 1);
-    const trafficBlinkerMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+    const trafficBlinkerMat = new THREE.MeshStandardMaterial({
+      color: 0xffb703,
+      emissive: 0xff9100,
+      emissiveIntensity: 2.8,
+      roughness: 0.15
+    });
     function addVoxelBox(parent, sx, sy, sz, px, py, pz, colorHex, opts = {}) {
       const mesh = new THREE.Mesh(unitBoxGeo, getMat(colorHex, opts));
       mesh.scale.set(sx, sy, sz);

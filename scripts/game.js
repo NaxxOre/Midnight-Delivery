@@ -2242,14 +2242,12 @@
           forwardDriveSpeed = nearest.forwardDriveSpeed;
         }
 
-        // 25% chance of Lane-Switch AI with turn signal indicators
-        const canSwitchLane = Math.random() < 0.25;
+        // 45% chance of Lane-Switch AI with turn signal indicators
+        const canSwitchLane = Math.random() < 0.45;
         let leftBlinker = mesh.userData.leftBlinker || null;
         let rightBlinker = mesh.userData.rightBlinker || null;
-        if (canSwitchLane) {
-          if (leftBlinker) leftBlinker.visible = false;
-          if (rightBlinker) rightBlinker.visible = false;
-        }
+        if (leftBlinker) leftBlinker.visible = false;
+        if (rightBlinker) rightBlinker.visible = false;
 
         trafficVehicles.push({
           mesh,
@@ -3102,12 +3100,26 @@
         const mesh = acquireTrafficVehicle(type);
         mesh.position.set(LANES[laneIdx], 0, z);
         scene.add(mesh);
+        const canSwitchLane = Math.random() < 0.45;
+        let leftBlinker = mesh.userData.leftBlinker || null;
+        let rightBlinker = mesh.userData.rightBlinker || null;
+        if (leftBlinker) leftBlinker.visible = false;
+        if (rightBlinker) rightBlinker.visible = false;
         trafficVehicles.push({
           mesh,
           type,
           laneIdx,
           forwardDriveSpeed: 12 + Math.random() * 3,
-          passedPlayer: false
+          passedPlayer: false,
+          canSwitchLane,
+          laneSwitchState: 'idle',
+          signalTimer: 0,
+          targetLaneIdx: null,
+          signalSide: null,
+          startLaneX: LANES[laneIdx],
+          switchProgress: 0,
+          leftBlinker,
+          rightBlinker
         });
       }
 
@@ -3872,26 +3884,41 @@
         for (let i = trafficVehicles.length - 1; i >= 0; i--) {
           const tv = trafficVehicles[i];
 
-          // Intelligent Lane-Switch AI (25% of vehicles telegraph with turn-signals for 1.2s before changing lanes)
+          // Intelligent Lane-Switch AI: vehicles telegraph with turn-signals for 1.4s before changing lanes,
+          // and keep signaling throughout the lane change!
           if (tv.canSwitchLane && tv.leftBlinker && tv.rightBlinker) {
             const dzToPlayer = playerVan.position.z - tv.mesh.position.z;
-            // When vehicle is within 45 units ahead of player
-            if (tv.laneSwitchState === 'idle' && dzToPlayer > 12 && dzToPlayer <= 45) {
+            // When vehicle is within 10 to 55 units ahead of player
+            if (tv.laneSwitchState === 'idle' && dzToPlayer > 10 && dzToPlayer <= 55) {
               const currentLane = tv.laneIdx;
               const options = [];
               if (currentLane > 0) options.push(currentLane - 1);
               if (currentLane < 3) options.push(currentLane + 1);
-              if (options.length > 0) {
-                tv.targetLaneIdx = options[Math.floor(Math.random() * options.length)];
+              // Filter to adjacent lanes where no other vehicle is blocking
+              const safeOptions = options.filter(targetL => {
+                return !trafficVehicles.some(other => other !== tv && other.laneIdx === targetL && Math.abs(other.mesh.position.z - tv.mesh.position.z) < 14);
+              });
+              const chosenOptions = safeOptions.length > 0 ? safeOptions : options;
+              if (chosenOptions.length > 0) {
+                tv.targetLaneIdx = chosenOptions[Math.floor(Math.random() * chosenOptions.length)];
                 tv.signalSide = tv.targetLaneIdx < currentLane ? 'left' : 'right';
                 tv.laneSwitchState = 'signaling';
-                tv.signalTimer = 1.2;
+                tv.signalTimer = 1.4; // 1.4s of clear advance signaling warning
               }
             }
 
-            if (tv.laneSwitchState === 'signaling') {
-              tv.signalTimer -= dt;
-              const isBlinking = Math.floor(now / 110) % 2 === 0;
+            if (tv.laneSwitchState === 'signaling' || tv.laneSwitchState === 'switching') {
+              // Standard turn-signal blink rate (200ms ON / 200ms OFF = 2.5 Hz)
+              const isBlinking = Math.floor(now / 200) % 2 === 0;
+
+              // Audible relay click tick-tock when nearby
+              if (tv.lastBlinkState !== isBlinking) {
+                tv.lastBlinkState = isBlinking;
+                if (dzToPlayer > 0 && dzToPlayer <= 35 && typeof soundFX !== 'undefined' && soundFX && soundFX.playTurnSignalClick) {
+                  soundFX.playTurnSignalClick(isBlinking);
+                }
+              }
+
               if (tv.signalSide === 'left') {
                 tv.leftBlinker.visible = isBlinking;
                 tv.rightBlinker.visible = false;
@@ -3900,24 +3927,31 @@
                 tv.leftBlinker.visible = false;
               }
 
-              if (tv.signalTimer <= 0) {
-                tv.laneSwitchState = 'switching';
-                tv.leftBlinker.visible = false;
-                tv.rightBlinker.visible = false;
-                tv.startLaneX = tv.mesh.position.x;
-                tv.switchProgress = 0;
-              }
-            } else if (tv.laneSwitchState === 'switching') {
-              tv.switchProgress += dt / 0.85; // smooth lane transition over 0.85s
-              const targetX = LANES[tv.targetLaneIdx];
-              const smoothT = THREE.MathUtils.smoothstep(tv.switchProgress, 0, 1);
-              tv.mesh.position.x = THREE.MathUtils.lerp(tv.startLaneX, targetX, smoothT);
-              tv.mesh.rotation.y = (tv.targetLaneIdx > tv.laneIdx ? -1 : 1) * Math.sin(smoothT * Math.PI) * 0.16;
-              if (tv.switchProgress >= 1) {
-                tv.mesh.position.x = targetX;
-                tv.mesh.rotation.y = 0;
-                tv.laneIdx = tv.targetLaneIdx;
-                tv.laneSwitchState = 'done';
+              if (tv.laneSwitchState === 'signaling') {
+                tv.signalTimer -= dt;
+                if (tv.signalTimer <= 0) {
+                  tv.laneSwitchState = 'switching';
+                  tv.startLaneX = tv.mesh.position.x;
+                  tv.switchProgress = 0;
+                }
+              } else if (tv.laneSwitchState === 'switching') {
+                tv.switchProgress += dt / 0.95; // smooth lane transition over 0.95s
+                const targetX = LANES[tv.targetLaneIdx];
+                const smoothT = THREE.MathUtils.smoothstep(tv.switchProgress, 0, 1);
+                tv.mesh.position.x = THREE.MathUtils.lerp(tv.startLaneX, targetX, smoothT);
+                const steerDir = tv.targetLaneIdx > tv.laneIdx ? -1 : 1;
+                tv.mesh.rotation.y = steerDir * Math.sin(smoothT * Math.PI) * 0.16;
+                tv.mesh.rotation.z = steerDir * Math.sin(smoothT * Math.PI) * 0.05; // Chassis lean roll
+
+                if (tv.switchProgress >= 1) {
+                  tv.mesh.position.x = targetX;
+                  tv.mesh.rotation.y = 0;
+                  tv.mesh.rotation.z = 0;
+                  tv.laneIdx = tv.targetLaneIdx;
+                  tv.laneSwitchState = 'done';
+                  if (tv.leftBlinker) tv.leftBlinker.visible = false;
+                  if (tv.rightBlinker) tv.rightBlinker.visible = false;
+                }
               }
             }
           }
