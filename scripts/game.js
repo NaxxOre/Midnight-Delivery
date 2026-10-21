@@ -3419,37 +3419,17 @@
       // Update Celestial Night Stars & Moon Shimmer
       const sfPoints = (typeof starFieldPoints !== 'undefined' ? starFieldPoints : (typeof window !== 'undefined' ? window.starFieldPoints : null));
       const sfMat = (typeof starFieldMaterial !== 'undefined' ? starFieldMaterial : (typeof window !== 'undefined' ? window.starFieldMaterial : null));
-      const sfGems = (typeof starFieldGems !== 'undefined' ? starFieldGems : (typeof window !== 'undefined' ? window.starFieldGems : null));
-      const sfGemMat = (typeof starFieldGemMaterial !== 'undefined' ? starFieldGemMaterial : (typeof window !== 'undefined' ? window.starFieldGemMaterial : null));
-      const cVoxelStars = (typeof celestialVoxelStarsGroup !== 'undefined' ? celestialVoxelStarsGroup : (typeof window !== 'undefined' ? window.celestialVoxelStarsGroup : null));
       const cMoon = (typeof celestialMoonGroup !== 'undefined' ? celestialMoonGroup : (typeof window !== 'undefined' ? window.celestialMoonGroup : null));
 
       if (sfPoints && sfMat) {
         const isNightTime = (gameState.timeIndex === 0 || gameState.timeIndex === 3 || (typeof nightState !== 'undefined' && nightState.blend > 0.05));
-        const targetStarOpacity = isNightTime ? 0.96 : (gameState.timeIndex === 1 ? 0.40 : 0.0);
+        const targetStarOpacity = isNightTime ? 0.45 : (gameState.timeIndex === 1 ? 0.18 : 0.0);
         sfMat.opacity = THREE.MathUtils.lerp(sfMat.opacity, targetStarOpacity, rawDt * 1.5);
         sfPoints.visible = sfMat.opacity > 0.02 && gameState.mode !== 'home';
 
         if (sfPoints.visible) {
-          // Dynamic sparkling twinkle without rotating out of camera view
-          sfMat.size = 4.2 + Math.sin(now * 0.0035) * 0.7;
-        }
-
-        if (sfGems && sfGemMat) {
-          sfGemMat.opacity = sfMat.opacity;
-          sfGems.visible = sfPoints.visible;
-          if (sfGems.visible) {
-            sfGemMat.size = 7.0 + Math.cos(now * 0.0042) * 1.2;
-          }
-        }
-
-        if (cVoxelStars) {
-          cVoxelStars.visible = isNightTime && gameState.mode !== 'home';
-          if (cVoxelStars.visible) {
-            cVoxelStars.children.forEach((vs, idx) => {
-              vs.rotation.z = Math.sin(now * 0.0018 + idx) * 0.25;
-            });
-          }
+          // Delicate, dim, subtle twinkling for cozy ambient starlight
+          sfMat.size = 2.0 + Math.sin(now * 0.0016) * 0.2;
         }
 
         if (cMoon) {

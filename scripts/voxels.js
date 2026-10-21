@@ -184,34 +184,27 @@
     }
 
     // ============================================================================
-    // 3B. VIBRANT CELESTIAL NIGHT STARFIELD, GEM SPARKLES & GLOWING VOXEL MOON
+    // 3B. DELICATE DIM CELESTIAL NIGHT STARFIELD & GLOWING VOXEL MOON
     // ============================================================================
-    const STAR_COUNT = 420;
+    const STAR_COUNT = 320;
     const starPositions = new Float32Array(STAR_COUNT * 3);
     const starColors = new Float32Array(STAR_COUNT * 3);
     let starFieldPoints = null;
     let starFieldMaterial = null;
-    let starFieldGems = null;
-    let starFieldGemMaterial = null;
-    let celestialVoxelStarsGroup = null;
     let celestialMoonGroup = null;
 
     function initCelestialStars() {
       if (starFieldPoints) return;
 
       const palette = [
-        new THREE.Color(0xffffff), // Brilliant diamond white
-        new THREE.Color(0xe0f2fe), // Icy celestial blue
+        new THREE.Color(0xcbd5e1), // Soft moonlight silver
+        new THREE.Color(0xa5b4fc), // Faint violet starlight
         new THREE.Color(0x93c5fd), // Soft cyan blue
-        new THREE.Color(0xfef08a), // Warm golden starlight
-        new THREE.Color(0xe0e7ff), // Lilac crystal
-        new THREE.Color(0x67e8f9), // Cyber cyan
-        new THREE.Color(0xfbcfe8)  // Rose quartz star
+        new THREE.Color(0xfde68a), // Dim warm golden starlight
+        new THREE.Color(0x94a3b8)  // Atmospheric starlight
       ];
 
-      // Distribute primary starfield across the camera's visible night sky dome
-      // Camera is at (0, 9, 12), looks at (0, -0.2, -42) with FOV 44-58 deg.
-      // Visible sky dome is in Z: -85 to -230, Y: 12 to 58, X: -135 to +135
+      // Distribute delicate starfield across the camera's visible night sky dome
       for (let i = 0; i < STAR_COUNT; i++) {
         const x = (Math.random() - 0.5) * 270;
         const y = 12.0 + Math.random() * 46.0;
@@ -231,31 +224,31 @@
       starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
       starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
 
-      // Circular high-contrast starlight sprite with solid bright core
+      // Delicate soft starlight sprite (subtle, dim, non-glaring)
       const starCanvas = document.createElement('canvas');
-      starCanvas.width = 32;
-      starCanvas.height = 32;
+      starCanvas.width = 16;
+      starCanvas.height = 16;
       const sCtx = starCanvas.getContext('2d');
-      const grad = sCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.25, 'rgba(255, 255, 255, 0.95)');
-      grad.addColorStop(0.65, 'rgba(220, 240, 255, 0.5)');
+      const grad = sCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+      grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.70)');
+      grad.addColorStop(0.35, 'rgba(210, 230, 255, 0.40)');
+      grad.addColorStop(0.70, 'rgba(180, 210, 255, 0.12)');
       grad.addColorStop(1.0, 'rgba(150, 200, 255, 0.0)');
       sCtx.fillStyle = grad;
-      sCtx.fillRect(0, 0, 32, 32);
+      sCtx.fillRect(0, 0, 16, 16);
 
       const starTexture = new THREE.CanvasTexture(starCanvas);
 
       starFieldMaterial = new THREE.PointsMaterial({
-        size: 4.2,
-        sizeAttenuation: false, // Guarantees crisp screen-pixel visibility without distance culling!
+        size: 2.0,
+        sizeAttenuation: false,
         map: starTexture,
         vertexColors: true,
         transparent: true,
-        opacity: 0.96,
+        opacity: 0.45,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        fog: false // Crucial: Stars shine through the night sky unhindered by fog!
+        fog: false
       });
 
       starFieldPoints = new THREE.Points(starGeometry, starFieldMaterial);
@@ -263,96 +256,6 @@
       scene.add(starFieldPoints);
       window.starFieldPoints = starFieldPoints;
       window.starFieldMaterial = starFieldMaterial;
-
-      // -------------------------------------------------------------
-      // 3B-2. RADIANT 4-POINT CROSS GEM SPARKLE STARS
-      // -------------------------------------------------------------
-      const GEM_COUNT = 70;
-      const gemPositions = new Float32Array(GEM_COUNT * 3);
-      const gemColors = new Float32Array(GEM_COUNT * 3);
-
-      for (let i = 0; i < GEM_COUNT; i++) {
-        gemPositions[i * 3] = (Math.random() - 0.5) * 250;
-        gemPositions[i * 3 + 1] = 16.0 + Math.random() * 42.0;
-        gemPositions[i * 3 + 2] = -95.0 - Math.random() * 125.0;
-
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        gemColors[i * 3] = color.r;
-        gemColors[i * 3 + 1] = color.g;
-        gemColors[i * 3 + 2] = color.b;
-      }
-
-      const gemGeometry = new THREE.BufferGeometry();
-      gemGeometry.setAttribute('position', new THREE.BufferAttribute(gemPositions, 3));
-      gemGeometry.setAttribute('color', new THREE.BufferAttribute(gemColors, 3));
-
-      // 4-Point Starburst Lens Flare Canvas
-      const gemCanvas = document.createElement('canvas');
-      gemCanvas.width = 64;
-      gemCanvas.height = 64;
-      const gCtx = gemCanvas.getContext('2d');
-      // Horizontal flare beam
-      const hGrad = gCtx.createLinearGradient(0, 32, 64, 32);
-      hGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0)');
-      hGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)');
-      hGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
-      gCtx.fillStyle = hGrad;
-      gCtx.fillRect(0, 29, 64, 6);
-      // Vertical flare beam
-      const vGrad = gCtx.createLinearGradient(32, 0, 32, 64);
-      vGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0)');
-      vGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)');
-      vGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
-      gCtx.fillStyle = vGrad;
-      gCtx.fillRect(29, 0, 6, 64);
-      // Central brilliant diamond core
-      const cGrad = gCtx.createRadialGradient(32, 32, 0, 32, 32, 12);
-      cGrad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
-      cGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.9)');
-      cGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
-      gCtx.fillStyle = cGrad;
-      gCtx.fillRect(20, 20, 24, 24);
-
-      const gemTexture = new THREE.CanvasTexture(gemCanvas);
-
-      starFieldGemMaterial = new THREE.PointsMaterial({
-        size: 7.2,
-        sizeAttenuation: false,
-        map: gemTexture,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.96,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        fog: false
-      });
-
-      starFieldGems = new THREE.Points(gemGeometry, starFieldGemMaterial);
-      starFieldGems.frustumCulled = false;
-      scene.add(starFieldGems);
-      window.starFieldGems = starFieldGems;
-      window.starFieldGemMaterial = starFieldGemMaterial;
-
-      // -------------------------------------------------------------
-      // 3B-3. STYLIZED 3D VOXEL TWINKLING STARS
-      // -------------------------------------------------------------
-      celestialVoxelStarsGroup = new THREE.Group();
-      const voxelStarCoords = [
-        [-52, 36, -155], [-28, 46, -175], [-12, 32, -135], [16, 42, -145],
-        [34, 34, -165],  [58, 48, -185],  [-72, 40, -200], [-38, 26, -125],
-        [6,  50, -180],  [24, 28, -130],  [48, 40, -150],  [68, 32, -160]
-      ];
-      const voxelStarGlow = { emissive: 0xffffff, emissiveIntensity: 2.6 };
-      voxelStarCoords.forEach(([vx, vy, vz]) => {
-        const starCross = new THREE.Group();
-        starCross.position.set(vx, vy, vz);
-        addVoxelBox(starCross, 1.4, 1.4, 0.8, 0, 0, 0, 0xffffff, voxelStarGlow);
-        addVoxelBox(starCross, 3.2, 0.7, 0.7, 0, 0, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
-        addVoxelBox(starCross, 0.7, 3.2, 0.7, 0, 0, 0, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 2.2 });
-        celestialVoxelStarsGroup.add(starCross);
-      });
-      scene.add(celestialVoxelStarsGroup);
-      window.celestialVoxelStarsGroup = celestialVoxelStarsGroup;
 
       // Glowing Stylized Voxel Crescent Moon high in the upper right sky
       celestialMoonGroup = new THREE.Group();
