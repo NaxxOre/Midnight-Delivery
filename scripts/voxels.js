@@ -17,9 +17,9 @@
 
     const unitBoxGeo = new THREE.BoxGeometry(1, 1, 1);
     const trafficBlinkerMat = new THREE.MeshStandardMaterial({
-      color: 0xffb703,
-      emissive: 0xff9100,
-      emissiveIntensity: 2.8,
+      color: 0xff1e27,
+      emissive: 0xff0000,
+      emissiveIntensity: 3.6,
       roughness: 0.15
     });
     function addVoxelBox(parent, sx, sy, sz, px, py, pz, colorHex, opts = {}) {
@@ -770,13 +770,98 @@
       const group = new THREE.Group();
       group.position.set(0, 0, zPos);
 
+      // 1. Luminous Zebra Stripes (Visible white stripes with emissive glow)
       for (let i = -4; i <= 4; i++) {
-        addVoxelBox(group, 0.96, 0.09, 3.4, i * 1.8, 0.05, 0, 0xffffff);
+        addVoxelBox(group, 0.96, 0.09, 3.6, i * 1.8, 0.05, 0, 0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.45 });
       }
 
+      // 2. Full-Width Crossroad Ground Floodlight Pool
+      // Bathes the entire crossroad in warm amber/white illumination
+      addVoxelBox(group, 16.2, 0.03, 4.4, 0, 0.03, 0, 0xfef3c7, {
+        opacity: 0.28,
+        emissive: 0xfef08a,
+        emissiveIntensity: 0.65,
+        transparent: true
+      });
+
+      // 3. Embedded Inset Road Surface LED Warning Studs
+      [-2.2, 2.2].forEach((zEdge) => {
+        [-6.3, -4.2, -2.1, 0, 2.1, 4.2, 6.3].forEach((xStud) => {
+          addVoxelBox(group, 0.35, 0.08, 0.35, xStud, 0.07, zEdge, 0xfacc15, {
+            emissive: 0xfacc15,
+            emissiveIntensity: 2.2
+          });
+        });
+      });
+
+      // 4. Twin Overhead Crossroad Floodlight Pylons with Downward Beams & Warning Beacons
+      const beacons = [];
+      [-1, 1].forEach((sign) => {
+        const pylonX = sign * 8.35;
+        const armX = sign * 5.8;
+
+        // Heavy-duty vertical streetlight pylon pole
+        addVoxelBox(group, 0.32, 5.8, 0.32, pylonX, 2.9, 0, 0x1e293b);
+
+        // Safety hazard chevron base markings
+        addVoxelBox(group, 0.52, 0.45, 0.52, pylonX, 0.24, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
+        addVoxelBox(group, 0.54, 0.40, 0.54, pylonX, 0.68, 0, 0x0f172a);
+        addVoxelBox(group, 0.52, 0.40, 0.52, pylonX, 1.08, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
+
+        // Diamond-shaped Pedestrian Crossing Warning Sign
+        const signDiamond = addVoxelBox(group, 0.08, 0.95, 0.95, sign * 8.15, 3.4, 0, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 1.4 });
+        signDiamond.rotation.x = Math.PI / 4;
+        addVoxelBox(group, 0.10, 0.48, 0.48, sign * 8.13, 3.4, 0, 0x0f172a); // Crossing walker icon
+
+        // Overhanging cantilever floodlight arm reaching out over the road
+        addVoxelBox(group, 2.6, 0.24, 0.26, sign * 7.1, 5.8, 0, 0x1e293b);
+
+        // High-Output LED Floodlight Luminaire Head
+        addVoxelBox(group, 1.35, 0.28, 0.95, armX, 5.85, 0, 0x0f172a);
+        // Glowing luminous floodlight diffuser panel
+        addVoxelBox(group, 1.20, 0.08, 0.82, armX, 5.72, 0, 0xfffbeb, { emissive: 0xfffbeb, emissiveIntensity: 3.2 });
+
+        // Angled downward volumetric floodlight cone illuminating the crossing
+        const beamGeo = new THREE.ConeGeometry(2.5, 5.7, 12, 1, true);
+        const beamMat = new THREE.MeshBasicMaterial({
+          color: 0xfef3c7,
+          transparent: true,
+          opacity: 0.24,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        beam.position.set(armX, 2.85, 0);
+        beam.rotation.z = sign * 0.15; // Angled inward toward road center
+        group.add(beam);
+
+        // Top flashing amber safety warning beacon
+        const beacon = new THREE.Mesh(unitBoxGeo, new THREE.MeshStandardMaterial({
+          color: 0xf59e0b,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 3.5
+        }));
+        beacon.scale.set(0.46, 0.46, 0.46);
+        beacon.position.set(pylonX, 6.05, 0);
+        group.add(beacon);
+        beacons.push(beacon);
+      });
+
+      // 5. Crossing Members (Geese / Ducks or Person) with Dedicated Moving Spotlight
       const walkerGroup = new THREE.Group();
       walkerGroup.position.set(-6.2, 0.15, 0);
       group.add(walkerGroup);
+
+      // Moving ground spotlight pool beneath the crossing actors
+      const walkerGlow = new THREE.Mesh(unitBoxGeo, new THREE.MeshBasicMaterial({
+        color: 0xfef08a,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      }));
+      walkerGlow.scale.set(5.2, 0.04, 3.2);
+      walkerGlow.position.set(-1.4, 0.04, 0);
+      walkerGroup.add(walkerGlow);
 
       const isDuckCrossing = Math.random() < 0.65;
       const members = [];
@@ -785,9 +870,16 @@
         for (let d = 0; d < 4; d++) {
           const duck = new THREE.Group();
           const s = d === 0 ? 1.0 : 0.62;
-          addVoxelBox(duck, 0.75 * s, 0.55 * s, 0.55 * s, 0, 0.35 * s, 0, d === 0 ? 0xffffff : 0xfacc15);
-          addVoxelBox(duck, 0.45 * s, 0.48 * s, 0.45 * s, 0.32 * s, 0.72 * s, 0, d === 0 ? 0x16a34a : 0xfde047);
-          addVoxelBox(duck, 0.32 * s, 0.16 * s, 0.28 * s, 0.58 * s, 0.68 * s, 0, 0xf97316);
+          // Mother goose: luminous white plumage with neon safety ribbon; Goslings: bright glowing yellow
+          const bodyColor = d === 0 ? 0xffffff : 0xfacc15;
+          const bodyGlow = d === 0 ? { emissive: 0xffffff, emissiveIntensity: 0.65 } : { emissive: 0xfde047, emissiveIntensity: 0.70 };
+          addVoxelBox(duck, 0.75 * s, 0.55 * s, 0.55 * s, 0, 0.35 * s, 0, bodyColor, bodyGlow);
+          addVoxelBox(duck, 0.45 * s, 0.48 * s, 0.45 * s, 0.32 * s, 0.72 * s, 0, d === 0 ? 0x16a34a : 0xfde047, { emissive: 0xfacc15, emissiveIntensity: 0.5 });
+          addVoxelBox(duck, 0.32 * s, 0.16 * s, 0.28 * s, 0.58 * s, 0.68 * s, 0, 0xf97316, { emissive: 0xf97316, emissiveIntensity: 0.9 });
+          if (d === 0) {
+            // Reflective neon safety collar on Mother Goose
+            addVoxelBox(duck, 0.48 * s, 0.12 * s, 0.48 * s, 0.32 * s, 0.58 * s, 0, 0xef4444, { emissive: 0xff0000, emissiveIntensity: 1.5 });
+          }
           duck.position.set(-d * 1.05, 0, 0);
           walkerGroup.add(duck);
           members.push(duck);
@@ -795,6 +887,10 @@
       } else {
         const walker = createVoxelCharacter('inlechef', 0.78);
         walker.rotation.y = Math.PI / 2;
+        // High-visibility reflective neon crossing vest on the pedestrian
+        addVoxelBox(walker, 1.4, 1.25, 0.88, 0, 1.45, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.3 });
+        // Silver reflective stripes across chest
+        addVoxelBox(walker, 1.44, 0.20, 0.92, 0, 1.55, 0, 0xf8fafc, { emissive: 0xffffff, emissiveIntensity: 1.8 });
         walkerGroup.add(walker);
         members.push(walker);
       }
@@ -804,6 +900,7 @@
         group,
         walkerGroup,
         members,
+        beacons,
         isDuckCrossing,
         dir: 1,
         speed: 4.2,

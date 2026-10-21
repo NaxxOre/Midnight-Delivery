@@ -3714,6 +3714,12 @@
           const cw = activeCrosswalks[i];
           cw.group.position.z += playerSpeed * dt;
 
+          // Animate flashing overhead warning beacons on the crossroad floodlight pylons
+          if (cw.beacons) {
+            const beaconBlink = Math.floor(now / 200) % 2 === 0;
+            cw.beacons.forEach(b => { b.visible = beaconBlink; });
+          }
+
           cw.walkerGroup.position.x += cw.dir * cw.speed * dt;
           if (cw.walkerGroup.position.x > 6.6) {
             cw.dir = -1;
