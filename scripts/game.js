@@ -5,49 +5,97 @@
     window.playerVan = playerVan;
     playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
     scene.add(playerVan);
+    attachRoofCargoToVan(playerVan);
+
+    // Neon Overdrive Aura Shell
+    const overdriveAuraMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 2.8, 5.8),
+      new THREE.MeshBasicMaterial({ color: 0x00f5d4, wireframe: true, transparent: true, opacity: 0.85 })
+    );
+    overdriveAuraMesh.position.y = 1.35;
+    overdriveAuraMesh.visible = false;
+    playerVan.add(overdriveAuraMesh);
+
+    // Shield Bumper Forcefield Guard
+    const shieldBumperMesh = new THREE.Group();
+    const shieldRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.75, 0.15, 8, 24, Math.PI),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 })
+    );
+    shieldRing.rotation.y = Math.PI;
+    shieldRing.position.set(0, 0.75, -2.6);
+    shieldBumperMesh.add(shieldRing);
+    shieldBumperMesh.visible = false;
+    playerVan.add(shieldBumperMesh);
+
+    // Collectible Drone Assist Quadcopter
+    const droneGroup = new THREE.Group();
+    const dOpt = { emissive: 0x00f5d4, emissiveIntensity: 0.95 };
+    addVoxelBox(droneGroup, 0.75, 0.28, 0.75, 0, 0, 0, 0x0f172a, dOpt);
+    addVoxelBox(droneGroup, 1.5, 0.08, 0.16, 0, 0.12, 0, 0x38bdf8);
+    addVoxelBox(droneGroup, 0.16, 0.08, 1.5, 0, 0.12, 0, 0x38bdf8);
+    const droneRotors = [];
+    [[-0.75, 0, -0.75], [0.75, 0, -0.75], [-0.75, 0, 0.75], [0.75, 0, 0.75]].forEach(pos => {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.12), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+      r.position.set(pos[0], 0.2, pos[2]);
+      droneGroup.add(r);
+      droneRotors.push(r);
+    });
+    droneGroup.visible = false;
+    scene.add(droneGroup);
+    let droneThrowCooldown = 0;
 
     // 3D Architectural Blueprint Showroom Stage (Visible when gameState.mode === 'home')
     const blueprintGarageGroup = new THREE.Group();
     scene.add(blueprintGarageGroup);
 
-    // Rich Blueprint Studio Floor Plane with Subtle Reflection
+    // Deep Midnight Wet-Look Asphalt Floor
     const studioFloor = new THREE.Mesh(
-      new THREE.PlaneGeometry(220, 220),
-      new THREE.MeshStandardMaterial({ color: 0x0b2559, roughness: 0.65, metalness: 0.15 })
+      new THREE.PlaneGeometry(240, 240),
+      new THREE.MeshStandardMaterial({ color: 0x090b12, roughness: 0.18, metalness: 0.55 })
     );
     studioFloor.rotation.x = -Math.PI / 2;
     studioFloor.position.y = -0.36;
     studioFloor.receiveShadow = true;
     blueprintGarageGroup.add(studioFloor);
 
-    // Crisp Dual-Layer Technical CAD Blueprint Grids
-    const blueprintGridMajor = new THREE.GridHelper(90, 30, 0x38bdf8, 0x1e40af);
-    blueprintGridMajor.position.y = -0.34;
-    blueprintGarageGroup.add(blueprintGridMajor);
+    // Subtle Industrial Asphalt Seams
+    const asphaltSeams = new THREE.GridHelper(48, 12, 0x181c28, 0x0e111a);
+    asphaltSeams.position.y = -0.34;
+    blueprintGarageGroup.add(asphaltSeams);
 
-    const blueprintGridMinor = new THREE.GridHelper(36, 36, 0x7dd3fc, 0x1d4ed8);
-    blueprintGridMinor.position.y = -0.33;
-    blueprintGarageGroup.add(blueprintGridMinor);
+    // High-Contrast Cyan & Magenta Neon Reflections
+    const garageNeonCyan = new THREE.PointLight(0x06b6d4, 2.4, 24, 1.8);
+    garageNeonCyan.position.set(5.5, 1.6, -4.5);
+    blueprintGarageGroup.add(garageNeonCyan);
 
-    // Surrounding Voxel Showroom Skyline Pillars pushed far back (dist = 38+) so they NEVER block the 360° camera!
+    const garageNeonMagenta = new THREE.PointLight(0xd946ef, 1.9, 24, 1.8);
+    garageNeonMagenta.position.set(-5.5, 2.2, -2.0);
+    blueprintGarageGroup.add(garageNeonMagenta);
+
+    // Warm Sodium Streetlamp Rim Light above-rear
+    const garageStreetlampRim = new THREE.DirectionalLight(0xf59e0b, 1.85);
+    garageStreetlampRim.position.set(-6, 15, 6);
+    blueprintGarageGroup.add(garageStreetlampRim);
+
+    // Surrounding Voxel Showroom Skyline Pillars pushed far back
     for (let i = 0; i < 16; i++) {
       const angle = (i / 16) * Math.PI * 2;
       const dist = 38 + (i % 3) * 5;
-      const h = 6 + (i % 4) * 3.5;
+      const h = 7 + (i % 4) * 4;
       const w = 3.2 + (i % 2) * 1.5;
       const bx = Math.cos(angle) * dist;
       const bz = Math.sin(angle) * dist;
-      const block = addVoxelBox(blueprintGarageGroup, w, h, w, bx, h / 2 - 0.35, bz, 0x102e6b);
-      decorateGroupWithCADEdges(block, false);
+      addVoxelBox(blueprintGarageGroup, w, h, w, bx, h / 2 - 0.35, bz, 0x0b0d14);
     }
 
-    // Multi-Tiered Mechanical Turntable Podium
+    // Multi-Tiered Tactical Mechanical Turntable Podium
     const turntableGroup = new THREE.Group();
     blueprintGarageGroup.add(turntableGroup);
 
     const outerPodium = new THREE.Mesh(
       new THREE.CylinderGeometry(4.85, 5.25, 0.32, 32),
-      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.45 })
+      new THREE.MeshStandardMaterial({ color: 0x0d0f17, roughness: 0.4, metalness: 0.6 })
     );
     outerPodium.position.y = -0.20;
     outerPodium.receiveShadow = true;
@@ -55,13 +103,13 @@
 
     const innerPodium = new THREE.Mesh(
       new THREE.CylinderGeometry(4.15, 4.35, 0.18, 32),
-      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.35, metalness: 0.3 })
+      new THREE.MeshStandardMaterial({ color: 0x131722, roughness: 0.35, metalness: 0.5 })
     );
     innerPodium.position.y = -0.05;
     innerPodium.receiveShadow = true;
     turntableGroup.add(innerPodium);
 
-    // 16 Mechanical Voxel Gear Teeth around Turntable Rim
+    // Hazard Yellow & Dark Steel Rim Markings around Turntable
     for (let g = 0; g < 16; g++) {
       const a = (g / 16) * Math.PI * 2;
       const tooth = addVoxelBox(
@@ -72,39 +120,50 @@
         Math.cos(a) * 4.55,
         -0.08,
         Math.sin(a) * 4.55,
-        g % 2 === 0 ? 0xfacc15 : 0x38bdf8,
-        { emissive: g % 2 === 0 ? 0xf59e0b : 0x0284c7, emissiveIntensity: 0.55 }
+        g % 2 === 0 ? 0xfacc15 : 0x1e2433,
+        { emissive: g % 2 === 0 ? 0xd97706 : 0x000000, emissiveIntensity: g % 2 === 0 ? 0.35 : 0 }
       );
       tooth.rotation.y = -a;
     }
 
     const outerGlowRing = new THREE.Mesh(
-      new THREE.RingGeometry(4.02, 4.22, 48),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+      new THREE.RingGeometry(4.02, 4.18, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
     );
     outerGlowRing.rotation.x = -Math.PI / 2;
     outerGlowRing.position.y = 0.05;
     turntableGroup.add(outerGlowRing);
 
     const innerGlowRing = new THREE.Mesh(
-      new THREE.RingGeometry(2.75, 2.90, 48),
-      new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+      new THREE.RingGeometry(2.75, 2.85, 48),
+      new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide })
     );
     innerGlowRing.rotation.x = -Math.PI / 2;
     innerGlowRing.position.y = 0.05;
     turntableGroup.add(innerGlowRing);
 
+    // Twin Glowing Headlight Ground Reflection Discs on the wet asphalt
+    const garageHeadlightSpotL = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.32, depthWrite: false })
+    );
+    garageHeadlightSpotL.rotation.x = -Math.PI / 2;
+    garageHeadlightSpotL.position.set(-0.75, 0.02, -5.2);
+    turntableGroup.add(garageHeadlightSpotL);
+
+    const garageHeadlightSpotR = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.32, depthWrite: false })
+    );
+    garageHeadlightSpotR.rotation.x = -Math.PI / 2;
+    garageHeadlightSpotR.position.set(0.75, 0.02, -5.2);
+    turntableGroup.add(garageHeadlightSpotR);
+
     // Display Van Container on the Turntable
     const garageVanHolder = new THREE.Group();
     turntableGroup.add(garageVanHolder);
 
-    // Always-On Glowing Blue Holographic Scan Ring that sweeps up & down in the Showroom!
-    const holoScanRing = new THREE.Mesh(
-      new THREE.RingGeometry(2.45, 4.05, 48),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.72 })
-    );
-    holoScanRing.rotation.x = -Math.PI / 2;
-    turntableGroup.add(holoScanRing);
+    const holoScanRing = { position: { y: 0 } };
 
     function rebuildGarageTurntableVan() {
       while (garageVanHolder.children.length > 0) {
@@ -113,29 +172,35 @@
       const vanSpec = PLAYABLE_VANS[gameState.selectedVanIndex];
       const mesh = createPlayableVanMesh(vanSpec.id, true);
       mesh.position.set(0, 0.04, 0);
-      if (mesh.userData.beamLeft) mesh.userData.beamLeft.visible = true;
-      if (mesh.userData.beamRight) mesh.userData.beamRight.visible = true;
+      if (mesh.userData.beamLeft) {
+        mesh.userData.beamLeft.visible = true;
+        mesh.userData.beamLeft.material.opacity = 0.45;
+      }
+      if (mesh.userData.beamRight) {
+        mesh.userData.beamRight.visible = true;
+        mesh.userData.beamRight.material.opacity = 0.45;
+      }
 
       garageVanHolder.add(mesh);
       updateHomeGarageUI();
     }
-    function updateGachaPityUI() {
-      const pityEpicEl = document.getElementById('gacha-pity-epic');
-      const pityLegEl = document.getElementById('gacha-pity-legendary');
+    function updateCapsulePityUI() {
+      const pityEpicEl = document.getElementById('capsule-pity-epic');
+      const pityLegEl = document.getElementById('capsule-pity-legendary');
       const coinsReadout = document.getElementById('draw-coins-Readout');
 
-      const pityEpic = gameState.gachaPityEpic || 0;
-      const pityLeg = gameState.gachaPityLegendary || 0;
+      const pityEpic = gameState.capsulePityEpic || 0;
+      const pityLeg = gameState.capsulePityLegendary || 0;
 
       if (pityEpicEl) pityEpicEl.textContent = `${Math.max(1, 10 - (pityEpic % 10))}`;
       if (pityLegEl) pityLegEl.textContent = `${Math.max(1, 30 - Math.min(29, pityLeg))}`;
       if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
     }
 
-    function resetGachaModalStage() {
-      const singleView = document.getElementById('gacha-single-view');
-      const multiView = document.getElementById('gacha-multi-view');
-      const singleActions = document.getElementById('gacha-single-actions');
+    function resetCapsuleModalStage() {
+      const singleView = document.getElementById('capsule-single-view');
+      const multiView = document.getElementById('capsule-multi-view');
+      const singleActions = document.getElementById('capsule-single-actions');
       const mysteryCrate = document.getElementById('draw-mystery-crate');
       const vehicleImg = document.getElementById('draw-vehicle-img');
       const tierPill = document.getElementById('draw-tier-pill');
@@ -143,7 +208,7 @@
       const subEl = document.getElementById('draw-result-sub');
       const stageBox = document.getElementById('draw-stage-box');
       const sunburst = document.getElementById('draw-sunburst');
-      const actionButtons = document.getElementById('gacha-action-buttons');
+      const actionButtons = document.getElementById('capsule-action-buttons');
 
       if (singleView) singleView.classList.remove('hidden');
       if (multiView) {
@@ -158,7 +223,7 @@
         tierPill.textContent = 'FLEET CAPSULE';
         tierPill.className = 'px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[9px] uppercase tracking-wider -mt-1';
       }
-      if (titleEl) titleEl.textContent = 'FLEET GACHA MACHINE';
+      if (titleEl) titleEl.textContent = 'FLEET CAPSULE MACHINE';
       if (subEl) subEl.textContent = 'Spin for Common, Rare, Epic, & Legendary Delivery Rigs';
       if (sunburst) sunburst.style.opacity = '0.35';
       if (stageBox) {
@@ -167,12 +232,12 @@
         stageBox.style.borderColor = '#facc15';
         stageBox.style.boxShadow = '0 0 30px rgba(250,204,21,0.45)';
       }
-      updateGachaPityUI();
+      updateCapsulePityUI();
     }
 
     function rollGachaRarity(guaranteeEpicOrHigher = false) {
-      const pityLeg = gameState.gachaPityLegendary || 0;
-      const pityEpic = gameState.gachaPityEpic || 0;
+      const pityLeg = gameState.capsulePityLegendary || 0;
+      const pityEpic = gameState.capsulePityEpic || 0;
 
       if (pityLeg >= 29) return 'LEGENDARY';
       if (guaranteeEpicOrHigher || pityEpic >= 9) {
@@ -186,7 +251,7 @@
       return 'COMMON';
     }
 
-    function executeSingleGachaPull(guaranteeEpicOrHigher = false) {
+    function executeSingleCapsulePull(guaranteeEpicOrHigher = false) {
       const rarity = rollGachaRarity(guaranteeEpicOrHigher);
       const tierInfo = RARITY_TIERS[rarity] || RARITY_TIERS.COMMON;
       const matchingVans = PLAYABLE_VANS.filter(v => v.rarity === rarity);
@@ -203,16 +268,16 @@
 
       // Update Pity counters
       if (rarity === 'LEGENDARY') {
-        gameState.gachaPityLegendary = 0;
-        gameState.gachaPityEpic = 0;
+        gameState.capsulePityLegendary = 0;
+        gameState.capsulePityEpic = 0;
       } else if (rarity === 'EPIC') {
-        gameState.gachaPityEpic = 0;
-        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+        gameState.capsulePityEpic = 0;
+        gameState.capsulePityLegendary = (gameState.capsulePityLegendary || 0) + 1;
       } else {
-        gameState.gachaPityEpic = (gameState.gachaPityEpic || 0) + 1;
-        gameState.gachaPityLegendary = (gameState.gachaPityLegendary || 0) + 1;
+        gameState.capsulePityEpic = (gameState.capsulePityEpic || 0) + 1;
+        gameState.capsulePityLegendary = (gameState.capsulePityLegendary || 0) + 1;
       }
-      gameState.gachaTotalPulls = (gameState.gachaTotalPulls || 0) + 1;
+      gameState.capsuleTotalPulls = (gameState.capsuleTotalPulls || 0) + 1;
 
       const wasNew = !gameState.ownedVans.includes(wonVan.id);
       let scrapCoins = 0;
@@ -226,11 +291,11 @@
       return { van: wonVan, rarity, tierInfo, wasNew, scrapCoins };
     }
 
-    let isSpinningGacha = false;
+    let isSpinningCapsule = false;
     let lastWonVanId = null;
 
-    function spinGacha(pullCount = 1) {
-      if (isSpinningGacha) return;
+    function spinCapsuleDraw(pullCount = 1) {
+      if (isSpinningCapsule) return;
       const cost = pullCount === 10 ? 900 : 100;
 
       const titleEl = document.getElementById('draw-result-title');
@@ -244,10 +309,10 @@
       }
 
       soundFX.init();
-      isSpinningGacha = true;
+      isSpinningCapsule = true;
       gameState.coins -= cost;
       updateHomeGarageUI();
-      updateGachaPityUI();
+      updateCapsulePityUI();
       saveProgression();
 
       const stageBox = document.getElementById('draw-stage-box');
@@ -255,9 +320,9 @@
       const vehicleImg = document.getElementById('draw-vehicle-img');
       const tierPill = document.getElementById('draw-tier-pill');
       const sunburst = document.getElementById('draw-sunburst');
-      const singleView = document.getElementById('gacha-single-view');
-      const multiView = document.getElementById('gacha-multi-view');
-      const singleActions = document.getElementById('gacha-single-actions');
+      const singleView = document.getElementById('capsule-single-view');
+      const multiView = document.getElementById('capsule-multi-view');
+      const singleActions = document.getElementById('capsule-single-actions');
 
       if (singleView) singleView.classList.remove('hidden');
       if (multiView) {
@@ -273,7 +338,7 @@
         stageBox.classList.add('capsule-tumbling');
       }
       if (sunburst) sunburst.style.opacity = '0.9';
-      if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING GACHA CAPSULE...';
+      if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING CAPSULE CAPSULE...';
       if (subEl) subEl.textContent = 'Querying global courier requisition database...';
 
       // Execute pull logic
@@ -281,14 +346,14 @@
       if (pullCount === 10) {
         let gotEpicOrHigher = false;
         for (let i = 0; i < 9; i++) {
-          const res = executeSingleGachaPull(false);
+          const res = executeSingleCapsulePull(false);
           if (res.rarity === 'EPIC' || res.rarity === 'LEGENDARY') gotEpicOrHigher = true;
           results.push(res);
         }
         // 10th pull is guaranteed Epic+ if none hit yet
-        results.push(executeSingleGachaPull(!gotEpicOrHigher));
+        results.push(executeSingleCapsulePull(!gotEpicOrHigher));
       } else {
-        results.push(executeSingleGachaPull(false));
+        results.push(executeSingleCapsulePull(false));
       }
 
       // Mystery badges animation
@@ -311,10 +376,10 @@
           } else {
             renderGachaSingleResult(results[0]);
           }
-          isSpinningGacha = false;
+          isSpinningCapsule = false;
           saveProgression();
           updateHomeGarageUI();
-          updateGachaPityUI();
+          updateCapsulePityUI();
         }
       }
       nextTick();
@@ -327,7 +392,7 @@
       const tierPill = document.getElementById('draw-tier-pill');
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
-      const singleActions = document.getElementById('gacha-single-actions');
+      const singleActions = document.getElementById('capsule-single-actions');
 
       if (mysteryCrate) mysteryCrate.classList.add('hidden');
       if (vehicleImg) {
@@ -350,7 +415,7 @@
       }
 
       if (res.wasNew) {
-        soundFX.playGachaFanfare(res.van.rarity);
+        soundFX.playCapsuleFanfare(res.van.rarity);
         triggerPrizeConfetti();
         if (titleEl) titleEl.textContent = `✨ UNLOCKED: ${res.van.name.toUpperCase()}!`;
         if (subEl) subEl.textContent = `${res.tierInfo.stars} ${res.van.rarity} • Added to your Garage Fleet!`;
@@ -365,10 +430,10 @@
     }
 
     function renderGachaMultiResult(results) {
-      const singleView = document.getElementById('gacha-single-view');
-      const multiView = document.getElementById('gacha-multi-view');
-      const grid = document.getElementById('gacha-multi-grid');
-      const summaryEl = document.getElementById('gacha-multi-summary');
+      const singleView = document.getElementById('capsule-single-view');
+      const multiView = document.getElementById('capsule-multi-view');
+      const grid = document.getElementById('capsule-multi-grid');
+      const summaryEl = document.getElementById('capsule-multi-summary');
 
       if (singleView) singleView.classList.add('hidden');
       if (multiView) {
@@ -392,7 +457,7 @@
       });
       lastWonVanId = bestVanId;
 
-      soundFX.playGachaFanfare(highestRarity);
+      soundFX.playCapsuleFanfare(highestRarity);
       triggerPrizeConfetti();
 
       if (summaryEl) {
@@ -402,7 +467,7 @@
       if (grid) {
         grid.innerHTML = results.map((r) => {
           const t = r.tierInfo;
-          const cardClass = `gacha-card-${t.id || 'common'}`;
+          const cardClass = `capsule-card-${t.id || 'common'}`;
           return `
             <div class="${cardClass} rounded-2xl p-2 flex flex-col items-center justify-between text-center relative overflow-hidden transition-transform hover:scale-105">
               <div class="flex items-center justify-between w-full text-[8px] font-extrabold">
@@ -427,14 +492,18 @@
     function initSavedProgression() {
       const saved = loadSavedProgression();
       if (saved) {
+        gameState.callsign = saved.callsign;
+        gameState.highScore = saved.highScore;
+        gameState.lifetimeDeliveries = saved.lifetimeDeliveries;
+        gameState.tutorialCompletedOnce = saved.tutorialCompletedOnce;
         if (typeof saved.coins === 'number') gameState.coins = saved.coins;
         if (typeof saved.bestDistance === 'number') gameState.bestDistance = saved.bestDistance;
         if (typeof saved.bestDeliveries === 'number') gameState.bestDeliveries = saved.bestDeliveries;
         if (Array.isArray(saved.ownedVans) && saved.ownedVans.length > 0) gameState.ownedVans = saved.ownedVans;
         if (saved.equippedVanId) gameState.equippedVanId = saved.equippedVanId;
-        if (typeof saved.gachaPityEpic === 'number') gameState.gachaPityEpic = saved.gachaPityEpic;
-        if (typeof saved.gachaPityLegendary === 'number') gameState.gachaPityLegendary = saved.gachaPityLegendary;
-        if (typeof saved.gachaTotalPulls === 'number') gameState.gachaTotalPulls = saved.gachaTotalPulls;
+        if (typeof saved.capsulePityEpic === 'number') gameState.capsulePityEpic = saved.capsulePityEpic;
+        if (typeof saved.capsulePityLegendary === 'number') gameState.capsulePityLegendary = saved.capsulePityLegendary;
+        if (typeof saved.capsuleTotalPulls === 'number') gameState.capsuleTotalPulls = saved.capsuleTotalPulls;
         if (Array.isArray(saved.unlockedItems)) gameState.unlockedItems = saved.unlockedItems;
         if (Array.isArray(saved.unlockedChars)) gameState.unlockedChars = saved.unlockedChars;
         if (typeof saved.courierXP === 'number') gameState.courierXP = saved.courierXP;
@@ -503,12 +572,7 @@
         const newRank = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel);
         gameState.coins += 200;
         triggerDiscoveryToast(`PROMOTED: ${newRank.title}! (+200 COINS)`, vanIconDataURLs[gameState.equippedVanId]);
-        const rankBadge = document.getElementById('home-rank-badge');
-        if (rankBadge) {
-          rankBadge.classList.remove('level-up-anim');
-          void rankBadge.offsetWidth;
-          rankBadge.classList.add('level-up-anim');
-        }
+        // Rank level up
       }
       updateRankUI();
       saveProgression();
@@ -519,11 +583,13 @@
       let updated = false;
       gameState.shiftContracts.forEach((c) => {
         if (c.type === type && !c.completed) {
+          const previousProgress = c.current;
           if (isMaxCheck) {
-            c.current = Math.max(c.current, amount);
+            c.current = Math.min(c.target, Math.max(c.current, amount));
           } else {
             c.current = Math.min(c.target, c.current + amount);
           }
+          if (c.current === previousProgress) return;
           if (c.current >= c.target) {
             c.completed = true;
             c.claimed = true;
@@ -531,7 +597,6 @@
             gameState.runCoinsEarned += c.rewardCoins;
             soundFX.playCityGateChime();
             showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), `MISSION COMPLETE! +${c.rewardCoins}`, 'combat-text-gold');
-            showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 4.4, 0)), `+${c.rewardXP} COURIER XP`, 'text-cyan-300 font-extrabold');
             addCourierXP(c.rewardXP);
           }
           updated = true;
@@ -547,23 +612,11 @@
       const rankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel) || COURIER_RANKS[0];
       const nextRankSpec = COURIER_RANKS.find(r => r.level === gameState.courierRankLevel + 1);
 
-      const homeBadge = document.getElementById('home-rank-badge');
-      const homeTitle = document.getElementById('home-rank-title');
-      const homeBar = document.getElementById('home-rank-bar');
-
-      if (homeBadge) {
-        homeBadge.textContent = `R${rankSpec.level}`;
-        homeBadge.className = `w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${rankSpec.badgeBg} border-2 border-white flex items-center justify-center font-extrabold text-xs arcade-font shadow flex-shrink-0`;
-      }
-      if (homeTitle) homeTitle.textContent = rankSpec.title;
-
       const prevXpNeeded = rankSpec.level === 1 ? 0 : (COURIER_RANKS[rankSpec.level - 2]?.xpNeeded || 0);
       const targetXp = rankSpec.xpNeeded;
       const progressPercent = nextRankSpec
         ? Math.min(100, Math.max(0, ((gameState.courierXP - prevXpNeeded) / (targetXp - prevXpNeeded)) * 100))
         : 100;
-
-      if (homeBar) homeBar.style.width = `${progressPercent}%`;
 
       const modalBadge = document.getElementById('modal-rank-badge');
       const modalTag = document.getElementById('modal-rank-level-tag');
@@ -586,32 +639,9 @@
     }
 
     function renderHomeContractsUI() {
-      const container = document.getElementById('home-contracts-list');
-      if (!container) return;
       if (!gameState.shiftContracts || gameState.shiftContracts.length === 0) {
         ensureActiveContracts();
       }
-      container.innerHTML = gameState.shiftContracts.map((c) => {
-        const pct = Math.min(100, Math.round((c.current / c.target) * 100));
-        const isDone = c.completed;
-        return `
-          <div class="contract-card ${isDone ? 'contract-card-completed' : ''}">
-            <div class="flex items-center justify-between text-[9px] mb-1">
-              <span class="font-extrabold text-white truncate max-w-[145px]">${c.title}</span>
-              <span class="${isDone ? 'text-emerald-300 font-extrabold' : 'text-amber-300 font-bold'} flex-shrink-0">
-                ${isDone ? '✓ DONE' : `${c.current}/${c.target}`}
-              </span>
-            </div>
-            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/20">
-              <div class="h-full ${isDone ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-cyan-300'} transition-all duration-200" style="width: ${pct}%"></div>
-            </div>
-            <div class="flex items-center justify-between text-[8px] text-sky-200 font-semibold mt-1">
-              <span>Reward: +${c.rewardCoins} 🪙</span>
-              <span class="text-cyan-300 font-bold">+${c.rewardXP} XP</span>
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
     function renderContractsModal() {
@@ -778,8 +808,17 @@
       document.getElementById('home-best-dist').textContent = `${Math.round(gameState.bestDistance)}m`;
       const totalUnlocked = gameState.unlockedItems.length + gameState.unlockedChars.length;
       const totalPossible = PARCEL_TYPES.length + CHARACTER_TYPES.length;
-      document.getElementById('home-unlocked-count').textContent = `${totalUnlocked} / ${totalPossible}`;
-      document.getElementById('hall-subtitle').textContent = `${totalUnlocked}/${totalPossible} Discovered`;
+      const unlockedEl = document.getElementById('home-unlocked-count');
+      if (unlockedEl) unlockedEl.textContent = `${totalUnlocked} / ${totalPossible}`;
+      const hallSub = document.getElementById('hall-subtitle');
+      if (hallSub) hallSub.textContent = `${totalUnlocked}/${totalPossible} Discovered`;
+
+      const cityTag = document.getElementById('home-city-tag');
+      if (cityTag) {
+        const currentCity = CITY_THEMES[gameState.cityIndex] || CITY_THEMES[0];
+        const num = String(gameState.cityIndex + 1).padStart(2, '0');
+        cityTag.textContent = `SHIFT ${num} — ${currentCity.name.toUpperCase()}`;
+      }
 
       document.getElementById('home-van-name').textContent = spec.name;
       const rarityBadge = document.getElementById('home-van-rarity');
@@ -796,8 +835,8 @@
         dotsEl.innerHTML = PLAYABLE_VANS.map((v, idx) => {
           const owned = gameState.ownedVans.includes(v.id);
           const active = idx === gameState.selectedVanIndex;
-          return `<button data-van-idx="${idx}" class="h-2.5 rounded-full transition-all ${
-            active ? 'w-7 bg-amber-400' : (owned ? 'w-2.5 bg-emerald-400/80' : 'w-2.5 bg-slate-600')
+          return `<button data-van-idx="${idx}" class="h-2 rounded transition-all ${
+            active ? 'w-6 bg-amber-400' : (owned ? 'w-2 bg-emerald-400' : 'w-2 bg-slate-700')
           }"></button>`;
         }).join('');
         dotsEl.querySelectorAll('button').forEach((btn) => {
@@ -811,20 +850,18 @@
       }
 
       const statusBadge = document.getElementById('home-van-status');
-      const quickDrawBtn = document.getElementById('btn-home-quick-draw');
-
       if (isOwned) {
         gameState.equippedVanId = spec.id;
         statusBadge.textContent = 'EQUIPPED';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-extrabold text-[10px] uppercase';
-        quickDrawBtn.classList.add('hidden');
-        quickDrawBtn.classList.remove('flex');
+        statusBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase';
       } else {
         statusBadge.textContent = 'LOCKED';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-md bg-rose-500 text-white font-extrabold text-[10px] uppercase';
-        quickDrawBtn.innerHTML = `<span>🎰</span><span>FLEET GACHA (100)</span>`;
-        quickDrawBtn.classList.remove('hidden');
-        quickDrawBtn.classList.add('flex');
+        statusBadge.className = 'px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase';
+        if (quickDrawBtn) {
+          quickDrawBtn.innerHTML = `<span>🎰</span><span>FLEET CAPSULE (100)</span>`;
+          quickDrawBtn.classList.remove('hidden');
+          quickDrawBtn.classList.add('flex');
+        }
       }
 
       updateRankUI();
@@ -838,6 +875,7 @@
       if (enable) {
         gameState.mode = 'home';
         endParcelDrag();
+        clearHudFeedback();
         homeScreen.classList.remove('hidden');
         homeScreen.classList.add('flex');
         uiLayer.classList.add('hidden');
@@ -851,16 +889,18 @@
         activeGates.forEach(g => (g.mesh.visible = false));
         activeCrosswalks.forEach(cw => (cw.group.visible = false));
         apartments.forEach(apt => apt.cloudEl.classList.add('hidden'));
+        if (window.cityLeftLandmarkGroup) window.cityLeftLandmarkGroup.visible = false;
 
-        // Vibrant Blueprint Showroom Cobalt Sky & Lighting
-        scene.background.setHex(0x0d2b6b);
-        scene.fog.color.setHex(0x0d2b6b);
-        hemiLight.color.setHex(0xe0f2fe);
-        hemiLight.groundColor.setHex(0x1e3a8a);
-        hemiLight.intensity = 1.05;
-        dirLight.color.setHex(0xffffff);
+        // Moody Deep Midnight Asphalt Garage (#070913) Sky & Lighting
+        scene.background.setHex(0x070913);
+        scene.fog.color.setHex(0x070913);
+        scene.fog.density = 0.012;
+        hemiLight.color.setHex(0x1e293b);
+        hemiLight.groundColor.setHex(0x070913);
+        hemiLight.intensity = 0.38;
+        dirLight.color.setHex(0xf59e0b);
         dirLight.intensity = 1.35;
-        dirLight.position.set(14, 24, 16);
+        dirLight.position.set(-6, 16, 6);
 
         rebuildGarageTurntableVan();
         updateCameraForViewport();
@@ -925,14 +965,8 @@
     });
 
     function triggerDiscoveryToast(title, iconSrc) {
-      const toast = document.getElementById('unlock-toast');
-      document.getElementById('unlock-toast-name').textContent = title;
-      document.getElementById('unlock-toast-img').src = iconSrc || '';
       document.getElementById('hall-new-dot').classList.remove('hidden');
-      toast.classList.remove('hidden', 'city-toast-anim');
-      void toast.offsetWidth;
-      toast.classList.add('city-toast-anim');
-      setTimeout(() => toast.classList.add('hidden'), 3100);
+      showActionToast(`Unlocked: ${title}`, 'info');
     }
 
     function tryRandomDiscoveryOnDelivery(deliveredParcelId, customerCharId) {
@@ -965,58 +999,8 @@
       }
     }
 
-    function renderLeaderboardModal(sortBy = 'delivered') {
-      const listEl = document.getElementById('leaderboard-list');
-      const playerVanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
-      const playerEntry = {
-        name: 'YOU (Active Courier)',
-        vanId: playerVanSpec.id,
-        van: playerVanSpec.name,
-        delivered: Math.max(gameState.deliveries, gameState.bestDeliveries),
-        distance: Math.round(Math.max(gameState.distanceMeters, gameState.bestDistance)),
-        isPlayer: true
-      };
-
-      const rows = [...STATIC_LEADERBOARD, playerEntry].sort((a, b) =>
-        sortBy === 'delivered' ? b.delivered - a.delivered : b.distance - a.distance
-      );
-
-      listEl.innerHTML = rows.map((r, idx) => {
-        const rankColors = [
-          'bg-amber-400 text-slate-950 border-white',
-          'bg-slate-300 text-slate-950 border-white',
-          'bg-amber-600 text-white border-amber-200'
-        ];
-        const rankClass = rankColors[idx] || 'bg-slate-800 text-sky-200 border-slate-600';
-        const thumbSrc = vanIconDataURLs[r.vanId] || vanIconDataURLs['classic'] || '';
-
-        return `
-          <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border-2 ${
-            r.isPlayer ? 'bg-sky-500/25 border-emerald-400 shadow-lg' : 'bg-slate-950/85 border-sky-500/25'
-          }">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-8 h-8 rounded-xl border-2 flex items-center justify-center font-extrabold text-xs arcade-font flex-shrink-0 ${rankClass}">
-                #${idx + 1}
-              </span>
-              <div class="w-11 h-11 rounded-xl bg-slate-900 border border-sky-400/40 p-0.5 flex items-center justify-center flex-shrink-0">
-                <img src="${thumbSrc}" alt="${r.van}" class="w-full h-full object-contain" />
-              </div>
-              <div class="min-w-0">
-                <div class="arcade-font text-sm ${r.isPlayer ? 'text-emerald-300' : 'text-white'} truncate">${r.name}</div>
-                <div class="text-[10px] text-sky-300 font-bold truncate">${r.van}</div>
-              </div>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <div class="arcade-font text-base text-amber-300">
-                ${sortBy === 'delivered' ? `${r.delivered} PARCELS` : `${r.distance.toLocaleString()}M`}
-              </div>
-              <div class="text-[9px] text-slate-400 font-bold">
-                ${sortBy === 'delivered' ? `${r.distance}m Best Run` : `${r.delivered} Delivered`}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+    function renderLeaderboardModal(sortBy = 'score') {
+      renderRunHistory(sortBy);
     }
 
     function renderHallOfFameModal(tab = 'items') {
@@ -1117,7 +1101,7 @@
 
     function pickSmartParcelType() {
       const upcomingOrders = apartments
-        .filter(a => a.hasOrder && !a.delivered && (gameState.vanZ - a.group.position.z) >= -4)
+        .filter(a => a.hasOrder && !a.delivered && getResidentRelativeZ(a) <= THROW_RANGE_MAX)
         .sort((a, b) => (gameState.vanZ - a.group.position.z) - (gameState.vanZ - b.group.position.z));
 
       for (const apt of upcomingOrders) {
@@ -1130,54 +1114,144 @@
       return Math.floor(Math.random() * PARCEL_TYPES.length);
     }
 
-    function ensureParcelAvailableInHand(wantedType) {
-      if (!gameState.handSlots.includes(wantedType)) {
-        const replaceIdx = Math.floor(Math.random() * 3);
-        gameState.handSlots[replaceIdx] = wantedType;
-        renderBottomParcelHandUI(replaceIdx);
+    function rollParcelModifier() {
+      const roll = Math.random();
+      if (roll < 0.30) {
+        return { type: 'hot', timer: 8.0, maxTime: 8.0 };
+      } else if (roll < 0.55) {
+        return { type: 'fragile', cracked: false };
       }
+      return null;
+    }
+
+    const SLOT_KEYS = ['Q', 'W', 'E'];
+    const THROW_RANGE_MIN = -55;
+    const THROW_RANGE_MAX = 18;
+    const orderBadgePosition = new THREE.Vector3();
+    const aimStartPosition = new THREE.Vector3();
+    const aimEndPosition = new THREE.Vector3();
+
+    function getResidentRelativeZ(apt) {
+      return apt.group.position.z + apt.customerSlot.position.z - playerVan.position.z;
+    }
+
+    function isResidentInThrowRange(apt) {
+      if (!apt || !apt.hasOrder || apt.delivered || !apt.charMesh) return false;
+      const relativeZ = getResidentRelativeZ(apt);
+      return Number.isFinite(relativeZ) && relativeZ >= THROW_RANGE_MIN && relativeZ <= THROW_RANGE_MAX;
+    }
+
+    function getResidentHandPosition(apt, position) {
+      position.set(0, 1.2 + (apt.charMesh ? apt.charMesh.position.y : 0), 0);
+      return apt.customerSlot.localToWorld(position);
+    }
+
+    function ensureParcelAvailableInHand(wantedType) {
+      if (gameState.handSlots.includes(wantedType)) return;
+      const protectedTypes = new Set();
+      apartments.forEach(apt => {
+        const relativeZ = getResidentRelativeZ(apt);
+        if (apt.hasOrder && !apt.delivered && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) {
+          protectedTypes.add(apt.wantedType);
+        }
+      });
+      const candidates = Array.from(gameState.handSlots.keys()).filter(index =>
+        !protectedTypes.has(gameState.handSlots[index]) &&
+        !(gameState.dragging && gameState.dragSlotIndex === index)
+      );
+      const replaceIdx = candidates.find(index => index !== gameState.selectedSlotIndex) ?? candidates[0];
+      if (replaceIdx === undefined) return;
+      gameState.handSlots[replaceIdx] = wantedType;
+      if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
+      gameState.handModifiers[replaceIdx] = rollParcelModifier();
+      renderBottomParcelHandUI(replaceIdx);
     }
 
     function refillHandSlot(slotIndex) {
       gameState.handSlots[slotIndex] = pickSmartParcelType();
+      if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
+      gameState.handModifiers[slotIndex] = rollParcelModifier();
+      apartments.forEach(apt => {
+        if (apt.hasOrder && !apt.delivered && getResidentRelativeZ(apt) >= -95 &&
+            getResidentRelativeZ(apt) <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
+      });
       renderBottomParcelHandUI(slotIndex);
-      selectHandSlot(gameState.selectedSlotIndex);
     }
 
     function renderBottomParcelHandUI(animatedSlotIdx = -1) {
       const container = document.getElementById('parcel-hand-horizontal');
       if (!container) return;
-      container.innerHTML = '';
 
       gameState.handSlots.forEach((parcelTypeId, slotIdx) => {
-        const p = PARCEL_TYPES[parcelTypeId];
-        const card = document.createElement('div');
-        card.dataset.slot = slotIdx;
-        card.className = `parcel-card-slot ${p.tierClass} w-[56px] sm:w-[74px] select-none ${
-          slotIdx === animatedSlotIdx ? 'deal-anim' : ''
-        }`;
+        const parcel = PARCEL_TYPES[parcelTypeId];
+        let card = container.children[slotIdx];
+        if (!card) {
+          card = document.createElement('div');
+          card.dataset.slot = slotIdx;
+          card.setAttribute('role', 'button');
+          card.tabIndex = 0;
+          let pointerId = null;
+          let pointerDownX = 0;
+          let pointerDownY = 0;
 
+          card.addEventListener('pointerdown', event => {
+            if (gameState.mode !== 'playing' || !event.isPrimary || event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            soundFX.init();
+            pointerId = event.pointerId;
+            pointerDownX = event.clientX;
+            pointerDownY = event.clientY;
+            card.setPointerCapture(pointerId);
+            selectHandSlot(slotIdx);
+          });
+          card.addEventListener('pointermove', event => {
+            if (event.pointerId !== pointerId || gameState.dragging) return;
+            if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 14) {
+              startParcelDrag(slotIdx, event.clientX, event.clientY, pointerId);
+            }
+          });
+          card.addEventListener('pointerup', event => {
+            if (event.pointerId !== pointerId) return;
+            pointerId = null;
+            if (!gameState.dragging) {
+              event.stopPropagation();
+              throwFromSlot(slotIdx);
+            }
+          });
+          card.addEventListener('pointercancel', () => {
+            pointerId = null;
+            if (gameState.dragging) gameState.dragCancel = true;
+          });
+          card.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.detail === 0) throwFromSlot(slotIdx);
+          });
+          card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!event.repeat) throwFromSlot(slotIdx);
+            }
+          });
+          container.appendChild(card);
+        }
+
+        const modifier = gameState.handModifiers ? gameState.handModifiers[slotIdx] : null;
+        const renderKey = `${parcelTypeId}:${modifier ? modifier.type : ''}:${!!(modifier && modifier.cracked)}`;
+        card.setAttribute('aria-label', `Throw ${parcel.name}, ${SLOT_KEYS[slotIdx]} or ${slotIdx + 1}`);
+        card.setAttribute('aria-keyshortcuts', `${SLOT_KEYS[slotIdx]} ${slotIdx + 1}`);
+        card.setAttribute('aria-disabled', 'false');
+        if (card.dataset.renderKey === renderKey) return;
+        card.dataset.renderKey = renderKey;
+        const modifierClass = modifier ? `is-${modifier.type}${modifier.cracked ? ' is-cracked' : ''}` : '';
+        card.className = `parcel-card-slot ${parcel.tierClass} ${modifierClass}`;
         card.innerHTML = `
-          <div class="parcel-card-inner py-1 px-1 sm:px-1.5 flex flex-col items-center justify-center">
-            <div class="flex items-center justify-center w-full mb-0.5">
-              <span class="px-1 py-0.2 rounded-full ${p.badgeBg} font-extrabold text-[6px] sm:text-[7px] shadow">+${p.pts}</span>
-            </div>
-            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-950/90 border border-slate-700/80 flex items-center justify-center p-0.5 my-0.5 shadow-inner">
-              <img src="${parcelIconDataURLs[p.id]}" alt="${p.name}" class="w-full h-full object-contain pointer-events-none" />
-            </div>
-            <span class="text-[6px] sm:text-[7.5px] font-extrabold text-white uppercase tracking-tight leading-none pointer-events-none truncate max-w-full mt-0.5">${p.short}</span>
-          </div>
-        `;
-
-        card.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          soundFX.init();
-          selectHandSlot(slotIdx);
-          startParcelDrag(slotIdx, e.clientX, e.clientY, e.pointerId);
-        });
-
-        container.appendChild(card);
+          <div class="parcel-card-inner">
+            <span class="parcel-key-badge parcel-dock-key">${SLOT_KEYS[slotIdx]}</span>
+            <img class="parcel-dock-icon" src="${parcelIconDataURLs[parcel.id]}" alt="${parcel.name}" />
+          </div>`;
       });
     }
 
@@ -1223,74 +1297,58 @@
     }
 
     function findBestTargetApartmentOnSide(side) {
-      let bestApt = null;
-      let bestScore = Infinity;
-      apartments.forEach((apt) => {
-        if (apt.side === side && apt.hasOrder && !apt.delivered) {
-          const dz = apt.group.position.z - gameState.vanZ;
-          if (dz < 14 && dz > -135) {
-            const dist = Math.abs(dz + 18);
-            if (dist < bestScore) {
-              bestScore = dist;
-              bestApt = apt;
-            }
-          }
-        }
-      });
-      if (!bestApt) {
-        apartments.forEach((apt) => {
-          if (apt.side === side) {
-            const dz = apt.group.position.z - gameState.vanZ;
-            if (dz < 10 && dz > -60) {
-              const dist = Math.abs(dz + 16);
-              if (dist < bestScore) {
-                bestScore = dist;
-                bestApt = apt;
-              }
-            }
-          }
-        });
-      }
-      return bestApt;
+      return findTargetApartment(side);
     }
 
     function updateProjectileArcVisuals(now = performance.now()) {
-      if (!gameState.dragging || !gameState.dragSide || gameState.dragCancel) {
+      let targetApt = null;
+      let parcelId = null;
+      let isAutoLock = false;
+
+      if (gameState.dragging && gameState.dragSide && !gameState.dragCancel) {
+        targetApt = findBestTargetApartmentOnSide(gameState.dragSide);
+        parcelId = gameState.handSlots[gameState.dragSlotIndex];
+      } else if (gameState.mode === 'playing' && gameState.lockedTargetApt) {
+        targetApt = gameState.lockedTargetApt;
+        isAutoLock = true;
+        const matchIdx = gameState.handSlots.indexOf(targetApt.wantedType);
+        const slotIdx = matchIdx !== -1 ? matchIdx : (gameState.selectedSlotIndex || 0);
+        parcelId = gameState.handSlots[slotIdx];
+      }
+
+      if (!targetApt) {
         projectileArcLine.visible = false;
         aimNodes.forEach(n => (n.visible = false));
         aimLandingRing.visible = false;
         return;
       }
 
-      const targetApt = findBestTargetApartmentOnSide(gameState.dragSide);
       gameState.targetAptLock = targetApt;
+      const startPos = aimStartPosition.set(playerVan.position.x, 2.9, playerVan.position.z);
+      const endPos = getResidentHandPosition(targetApt, aimEndPosition);
 
-      const startPos = new THREE.Vector3(playerVan.position.x, 2.9, playerVan.position.z);
-      const endPos = targetApt
-        ? new THREE.Vector3(targetApt.group.position.x + targetApt.porchX, 0.9, targetApt.group.position.z + 1.2)
-        : new THREE.Vector3(gameState.dragSide === 'left' ? -11.5 : 11.5, 0.9, gameState.vanZ - 16);
-
-      const parcelId = gameState.handSlots[gameState.dragSlotIndex];
       const isMatch = targetApt && targetApt.hasOrder && targetApt.wantedType === parcelId;
-      const arcColor = isMatch ? 0x00f5d4 : 0xf43f5e;
+      const arcColor = isMatch ? 0x00f5d4 : (isAutoLock ? 0xfacc15 : 0xf43f5e);
 
       const posAttr = projectileArcLine.geometry.attributes.position;
       for (let i = 0; i < ARC_POINTS; i++) {
         const t = i / (ARC_POINTS - 1);
         const px = THREE.MathUtils.lerp(startPos.x, endPos.x, t);
-        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 6.8;
+        const py = THREE.MathUtils.lerp(startPos.y, endPos.y, t) + Math.sin(t * Math.PI) * 6.2;
         const pz = THREE.MathUtils.lerp(startPos.z, endPos.z, t);
         posAttr.setXYZ(i, px, py, pz);
       }
       posAttr.needsUpdate = true;
       arcLineMat.color.setHex(arcColor);
+      arcLineMat.transparent = true;
+      arcLineMat.opacity = isAutoLock ? 0.85 : 1.0;
       projectileArcLine.visible = true;
 
       const animOffset = ((now * 0.003) % 1) / aimNodes.length;
       aimNodes.forEach((node, idx) => {
         const t = Math.min(0.98, (idx + 0.5) / aimNodes.length + animOffset);
         node.position.lerpVectors(startPos, endPos, t);
-        node.position.y += Math.sin(t * Math.PI) * 6.8;
+        node.position.y += Math.sin(t * Math.PI) * 5.8;
         node.rotation.x += 0.08;
         node.rotation.y += 0.1;
         node.material.color.setHex(arcColor);
@@ -1298,7 +1356,7 @@
       });
 
       aimLandingRing.position.set(endPos.x, 0.42, endPos.z);
-      aimLandingRing.scale.setScalar(1 + Math.sin(now * 0.012) * 0.12);
+      aimLandingRing.scale.setScalar(1 + Math.sin(now * 0.012) * 0.14);
       aimLandingRing.material.color.setHex(arcColor);
       aimLandingRing.visible = true;
     }
@@ -1457,15 +1515,23 @@
       return trailDotMatCache[colorHex];
     }
 
-    // 3 Sculpted 3D Voxel Road Power-Ups: Extra Heart, Chrono Slow-Mo Clock, Rainbow Immortal Star
+    // Sculpted 3D Voxel Road Power-Ups: Drone Assist, Coin Magnet, Shield Bumper, Extra Heart, Chrono Clock, Immortal Star
+    const powerUpRingGeo = new THREE.RingGeometry(0.95, 1.35, 24);
+    const powerUpRingMats = {
+      heart: new THREE.MeshBasicMaterial({ color: 0xf43f5e, side: THREE.DoubleSide }),
+      slowmo: new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide }),
+      drone: new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide }),
+      magnet: new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide }),
+      shield: new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide }),
+      immortal: new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+    };
+
     function createRoadPowerUpMesh(powerType) {
       const group = new THREE.Group();
 
-      // Glowing pedestal ring on road
-      const ringCol = powerType === 'heart' ? 0xf43f5e : (powerType === 'slowmo' ? 0x00f5d4 : 0xfacc15);
       const baseRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.95, 1.35, 24),
-        new THREE.MeshBasicMaterial({ color: ringCol, side: THREE.DoubleSide })
+        powerUpRingGeo,
+        powerUpRingMats[powerType] || powerUpRingMats.immortal
       );
       baseRing.rotation.x = -Math.PI / 2;
       baseRing.position.y = 0.12;
@@ -1475,7 +1541,31 @@
       core.position.y = 1.45;
       group.add(core);
 
-      if (powerType === 'heart') {
+      if (powerType === 'drone') {
+        // Collectible Drone Assist Quadcopter Model
+        const dOpt = { emissive: 0x00f5d4, emissiveIntensity: 0.95 };
+        addVoxelBox(core, 0.72, 0.28, 0.72, 0, 0, 0, 0x0f172a, dOpt);
+        addVoxelBox(core, 1.45, 0.08, 0.16, 0, 0.12, 0, 0x38bdf8);
+        addVoxelBox(core, 0.16, 0.08, 1.45, 0, 0.12, 0, 0x38bdf8);
+        addVoxelBox(core, 0.42, 0.04, 0.12, -0.7, 0.2, -0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12,  0.7, 0.2, -0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12, -0.7, 0.2,  0.7, 0x00f5d4);
+        addVoxelBox(core, 0.42, 0.04, 0.12,  0.7, 0.2,  0.7, 0x00f5d4);
+      } else if (powerType === 'magnet') {
+        // Collectible Coin Magnet Model
+        const mOpt = { emissive: 0xef4444, emissiveIntensity: 0.85 };
+        addVoxelBox(core, 0.38, 1.15, 0.38, -0.45, 0.1, 0, 0xef4444, mOpt);
+        addVoxelBox(core, 0.42, 0.35, 0.42, -0.45, 0.7, 0, 0xe2e8f0, { metalness: 0.8 });
+        addVoxelBox(core, 0.38, 1.15, 0.38,  0.45, 0.1, 0, 0xef4444, mOpt);
+        addVoxelBox(core, 0.42, 0.35, 0.42,  0.45, 0.7, 0, 0xe2e8f0, { metalness: 0.8 });
+        addVoxelBox(core, 1.25, 0.38, 0.38, 0, -0.45, 0, 0xef4444, mOpt);
+      } else if (powerType === 'shield') {
+        // Collectible Shield Bumper Forcefield Model
+        const sOpt = { emissive: 0x38bdf8, emissiveIntensity: 0.95 };
+        addVoxelBox(core, 1.35, 1.35, 0.28, 0, 0.1, 0, 0x0284c7, sOpt);
+        addVoxelBox(core, 0.45, 1.65, 0.34, 0, 0.1, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.85 });
+        addVoxelBox(core, 1.65, 0.45, 0.34, 0, 0.1, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.85 });
+      } else if (powerType === 'heart') {
         // Sculpted 3D Ruby Voxel Heart
         const hOpt = { emissive: 0xe11d48, emissiveIntensity: 0.75, roughness: 0.2 };
         addVoxelBox(core, 0.42, 0.36, 0.42, 0, -0.42, 0, 0xf43f5e, hOpt);
@@ -1506,11 +1596,8 @@
 
     function spawnRareRoadPowerUp() {
       const laneIdx = Math.floor(Math.random() * 4);
-      const types = ['heart', 'slowmo', 'immortal'];
-      // Weight slightly toward slowmo/immortal if player already has full hearts
-      const chosenType = (gameState.hearts >= gameState.maxHearts && Math.random() < 0.7)
-        ? (Math.random() < 0.5 ? 'slowmo' : 'immortal')
-        : types[Math.floor(Math.random() * types.length)];
+      const types = ['drone', 'magnet', 'shield', 'heart', 'slowmo', 'immortal'];
+      const chosenType = types[Math.floor(Math.random() * types.length)];
 
       const mesh = createRoadPowerUpMesh(chosenType);
       mesh.position.set(LANES[laneIdx], 0, -165);
@@ -1539,13 +1626,44 @@
       p.maxLife = 0.55;
     }
 
-    function throwParcelFromHandSlot(slotIndex, apt) {
-      if (gameState.mode !== 'playing' || !apt) return;
+    // 3D Collectible Road Coins for Coin Magnet & Progression
+    let lastCoinSpawnDist = 0;
+    const activeRoadCoins = [];
+    const coinGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.12, 12);
+    const coinMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0xfacc15,
+      emissiveIntensity: 0.65,
+      metalness: 0.85,
+      roughness: 0.2
+    });
+
+    function spawnRoadCoinCluster(startZ = -165) {
+      if (activeRoadCoins.length > 20) return;
+      const laneIdx = Math.floor(Math.random() * 4);
+      const laneX = LANES[laneIdx];
+      const count = 3 + Math.floor(Math.random() * 3);
+      for (let c = 0; c < count; c++) {
+        const mesh = new THREE.Mesh(coinGeo, coinMat);
+        mesh.rotation.z = Math.PI / 2;
+        mesh.position.set(laneX, 0.75, startZ - c * 3.8);
+        scene.add(mesh);
+        activeRoadCoins.push(mesh);
+      }
+    }
+
+    function throwParcelFromHandSlot(slotIndex, apt, isMagneticHoming = true) {
+      if (gameState.mode !== 'playing' || !isResidentInThrowRange(apt) ||
+          !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
+      const pendingCount = flyingParcels.filter(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId).length;
+      const remainingDrops = apt.isVip ? 2 - (apt.vipDelivered || 0) : 1;
+      if (pendingCount >= remainingDrops) return false;
       const parcelTypeId = gameState.handSlots[slotIndex];
+      if (!PARCEL_TYPES[parcelTypeId]) return false;
       soundFX.playThrow();
 
       const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
-      const startPos = new THREE.Vector3(playerVan.position.x, 2.8, playerVan.position.z);
+      const startPos = getRoofThrowPosition(new THREE.Vector3());
       mesh.position.copy(startPos);
       scene.add(mesh);
 
@@ -1561,191 +1679,301 @@
       // Check Sweet-Spot alignment between player van and target resident (center ~18 units ahead)
       const targetZ = apt.group.position.z + 1.2;
       const dz = targetZ - playerVan.position.z;
-      const isSweetSpot = Math.abs(dz + 18.0) <= 6.5;
+      const isSweetSpot = Math.abs(dz + 18.0) <= 7.5;
+
+      const slotModifier = (gameState.handModifiers && gameState.handModifiers[slotIndex])
+        ? { ...gameState.handModifiers[slotIndex] }
+        : null;
 
       flyingParcels.push({
         mesh,
         trailDots,
         startPos,
         targetApt: apt,
+        targetOrderId: apt.orderId,
+        cargoMultiplier: getRoofScoreMultiplier(),
+        nightMultiplier: nightState.remaining > 0 ? 1.5 : 1,
+        routeCoinMultiplier: getRouteCoinMultiplier(),
+        endPos: new THREE.Vector3(),
         parcelType: parcelTypeId,
+        modifier: slotModifier,
         progress: 0,
-        duration: 0.45,
-        isSweetSpot
+        duration: 0.42,
+        isSweetSpot,
+        magneticHoming: isMagneticHoming
       });
 
       playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      if (gameState.roofCrates > 0) gameState.roofCrates--;
+      claimRivalDelivery(apt, parcelTypeId);
+      syncRoofCargo();
       refillHandSlot(slotIndex);
+      updateOrderAlertsAndBubbles();
+      return true;
+    }
+
+    function throwWildParcel(slotIndex) {
+      if (gameState.mode !== 'playing' ||
+          !Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 3 || flyingParcels.length >= 8) return false;
+      const parcelTypeId = gameState.handSlots[slotIndex];
+      if (!PARCEL_TYPES[parcelTypeId]) return false;
+      soundFX.playThrow();
+
+      const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
+      const startPos = getRoofThrowPosition(new THREE.Vector3());
+      mesh.position.copy(startPos);
+      scene.add(mesh);
+
+      const trailDots = [];
+      const trailMat = getTrailDotMat(PARCEL_TYPES[parcelTypeId].color);
+      for (let i = 0; i < 6; i++) {
+        const td = new THREE.Mesh(trailDotGeo, trailMat);
+        td.position.copy(startPos);
+        scene.add(td);
+        trailDots.push(td);
+      }
+
+      const sideX = slotIndex === 0 ? -12 : (slotIndex === 2 ? 12 : (playerVan.position.x < 0 ? -12 : 12));
+      const endPos = new THREE.Vector3(sideX, 0.35, playerVan.position.z - 18);
+
+      const slotModifier = (gameState.handModifiers && gameState.handModifiers[slotIndex])
+        ? { ...gameState.handModifiers[slotIndex] }
+        : null;
+
+      flyingParcels.push({
+        mesh,
+        trailDots,
+        startPos,
+        targetApt: null,
+        targetOrderId: null,
+        cargoMultiplier: getRoofScoreMultiplier(),
+        nightMultiplier: nightState.remaining > 0 ? 1.5 : 1,
+        routeCoinMultiplier: getRouteCoinMultiplier(),
+        endPos,
+        parcelType: parcelTypeId,
+        modifier: slotModifier,
+        progress: 0,
+        duration: 0.38,
+        isSweetSpot: false,
+        magneticHoming: false
+      });
+
+      playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      if (gameState.roofCrates > 0) gameState.roofCrates--;
+      syncRoofCargo();
+      refillHandSlot(slotIndex);
+      updateOrderAlertsAndBubbles();
+      return true;
+    }
+
+    function removeFlyingParcel(index) {
+      const parcel = flyingParcels[index];
+      scene.remove(parcel.mesh);
+      parcel.trailDots.forEach(dot => scene.remove(dot));
+      flyingParcels.splice(index, 1);
+    }
+
+    function findTargetApartment(targetSide = 'auto') {
+      const locked = gameState.lockedTargetApt;
+      if (isResidentInThrowRange(locked) && (targetSide === 'auto' || locked.side === targetSide)) return locked;
+      let target = null;
+      let closestDistance = Infinity;
+      apartments.forEach(apt => {
+        if (!isResidentInThrowRange(apt) || (targetSide !== 'auto' && apt.side !== targetSide)) return;
+        const distance = Math.abs(getResidentRelativeZ(apt) + 18);
+        if (distance < closestDistance) {
+          target = apt;
+          closestDistance = distance;
+        }
+      });
+      return target;
+    }
+
+    const slotCooldowns = [0, 0, 0];
+    function throwFromSlot(slotIndex, ignoreCooldown = false) {
+      if (gameState.mode !== 'playing' || !Number.isInteger(slotIndex) ||
+          slotIndex < 0 || slotIndex >= gameState.handSlots.length) return false;
+      const now = performance.now() / 1000;
+      if (!ignoreCooldown && now < slotCooldowns[slotIndex]) return false;
+      slotCooldowns[slotIndex] = now + 0.25;
+
+      const container = document.getElementById('parcel-hand-horizontal');
+      if (container && container.children[slotIndex]) {
+        const card = container.children[slotIndex];
+        card.classList.remove('slot-cooldown');
+        void card.offsetWidth;
+        card.classList.add('slot-cooldown');
+      }
+
+      selectHandSlot(slotIndex);
+      const target = findTargetApartment();
+      let launched = false;
+      if (target) {
+        launched = throwParcelFromHandSlot(slotIndex, target);
+      } else {
+        launched = throwWildParcel(slotIndex);
+      }
+      if (launched && gameState.tutorialActive && gameState.tutorialStep === 2) completeInteractiveTutorial();
+      return launched;
+    }
+
+    function autoThrowMatchingSlot() {
+      if (gameState.mode !== 'playing') return;
+      const target = findTargetApartment();
+      if (!target) {
+        throwFromSlot(1);
+        return;
+      }
+      ensureParcelAvailableInHand(target.wantedType);
+      const matchingSlot = gameState.handSlots.indexOf(target.wantedType);
+      if (matchingSlot !== -1) throwFromSlot(matchingSlot);
+      else throwFromSlot(1);
+    }
+
+    function quickThrowParcel(side = 'auto') {
+      if (side === 'left' || side === 'slot0') throwFromSlot(0);
+      else if (side === 'right' || side === 'slot2') throwFromSlot(2);
+      else if (side === 'slot1') throwFromSlot(1);
+      else autoThrowMatchingSlot();
     }
 
     function updateOrderAlertsAndBubbles() {
-      let activeOrderApt = null;
-      let closestMeters = Infinity;
       const now = performance.now();
-
-      apartments.forEach((apt) => {
+      const playing = gameState.mode === 'playing';
+      apartments.forEach(apt => {
         if (!apt.hasOrder || apt.delivered) {
           apt.cloudEl.classList.add('hidden');
-          if (apt.ringGroup) apt.ringGroup.visible = false;
-          return;
-        }
-        const dz = gameState.vanZ - apt.group.position.z;
-        const meters = Math.round(dz * 1.45);
-
-        // If the player drove past the customer without delivering, expire the order and refresh its slot in the 3-slot bar!
-        if (meters < -6) {
-          const missedType = apt.wantedType;
-          apt.hasOrder = false;
           apt.ringGroup.visible = false;
+          return;
+        }
+        const relativeZ = getResidentRelativeZ(apt);
+        const pendingDelivery = flyingParcels.some(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId);
+        if (relativeZ > THROW_RANGE_MAX && !pendingDelivery) {
+          apt.hasOrder = false;
           apt.cloudEl.classList.add('hidden');
-          const missedSlotIdx = gameState.handSlots.indexOf(missedType);
-          if (missedSlotIdx !== -1) {
-            refillHandSlot(missedSlotIdx);
-          }
+          apt.ringGroup.visible = false;
+          return;
+        }
+        if (playing && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
+        const inRange = playing && isResidentInThrowRange(apt);
+        apt.ringGroup.visible = inRange;
+        if (!inRange) {
+          apt.cloudEl.classList.add('hidden');
           return;
         }
 
-        // Dynamic Sweet-Spot Shrinking 3D Ring & Target Indicator as Player Van approaches
-        if (dz >= -6 && dz <= 75) {
-          apt.ringGroup.visible = true;
-          const sweetDist = Math.abs(dz - 18.0);
-          const isSweet = sweetDist <= 6.5;
+        const sweet = Math.abs(relativeZ + 18) <= 6.5;
+        const scale = sweet ? 1 + Math.sin(now * 0.02) * 0.16 : 1 + Math.max(0, (-relativeZ - 18) / 28);
+        apt.shrinkRing.scale.set(scale, 1, scale);
+        const ringColor = sweet ? 0xfacc15 : 0x00f5d4;
+        apt.centerMarker.material.color.setHex(ringColor);
+        apt.centerMarker.material.emissive.setHex(ringColor);
+        apt.ringBars.forEach(bar => {
+          bar.material.color.setHex(ringColor);
+          bar.material.emissive.setHex(ringColor);
+        });
 
-          if (isSweet) {
-            // Sweet-spot pulsing gold aura & target bullseye
-            const pulse = 1.0 + Math.sin(now * 0.02) * 0.16;
-            if (apt.shrinkRing) {
-              apt.shrinkRing.scale.set(pulse, 1, pulse);
-              apt.shrinkRing.visible = true;
-            }
-            if (apt.centerMarker) {
-              apt.centerMarker.material.color.setHex(0xfacc15);
-              apt.centerMarker.material.emissive.setHex(0xfacc15);
-              apt.centerMarker.material.emissiveIntensity = 1.9;
-            }
-            apt.ringBars.forEach(b => {
-              b.material.color.setHex(0xfacc15);
-              b.material.emissive.setHex(0xfacc15);
-              b.material.emissiveIntensity = 1.6;
-            });
-          } else {
-            // Approaching: dynamic shrinking ring scales down towards target pad
-            const scale = 1.0 + Math.max(0, Math.min(1.8, (dz - 18.0) / 28.0));
-            if (apt.shrinkRing) {
-              apt.shrinkRing.scale.set(scale, 1, scale);
-              apt.shrinkRing.visible = true;
-            }
-            if (apt.centerMarker) {
-              apt.centerMarker.material.color.setHex(0x00f5d4);
-              apt.centerMarker.material.emissive.setHex(0x00f5d4);
-              apt.centerMarker.material.emissiveIntensity = 0.8;
-            }
-            apt.ringBars.forEach(b => {
-              b.material.color.setHex(0x00f5d4);
-              b.material.emissive.setHex(0x00f5d4);
-              b.material.emissiveIntensity = 0.85;
-            });
-          }
+        const matchingSlot = gameState.handSlots.indexOf(apt.wantedType);
+        const parcelInfo = PARCEL_TYPES[apt.wantedType];
+        const vipStep = apt.vipDelivered || 0;
+        const renderKey = `${apt.orderId}:${apt.wantedType}:${vipStep}`;
+        if (apt.cloudEl.dataset.renderKey !== renderKey) {
+          apt.cloudEl.dataset.renderKey = renderKey;
+          apt.cloudEl.innerHTML = `
+            <div class="thought-cloud-pill resident-order-badge">
+              <img class="resident-request-icon" src="${parcelIconDataURLs[apt.wantedType]}" alt="${parcelInfo.name}" />
+              <div class="resident-order-copy">
+                <strong>${parcelInfo.short}</strong>
+                <span class="cloud-distance-badge"></span>
+                ${apt.isVip ? `<span class="vip-crown-badge">👑 VIP ${vipStep}/2</span>` : ''}
+              </div>
+              <button type="button" class="quick-throw-cloud-btn parcel-key-badge" title="Throw the requested parcel"></button>
+            </div>`;
+          apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
+          apt.cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');
         }
+        const slotKey = matchingSlot === -1 ? '' : `[${SLOT_KEYS[matchingSlot]}]`;
+        if (apt.cloudBtn.textContent !== slotKey) apt.cloudBtn.textContent = slotKey;
+        apt.cloudBtn.disabled = matchingSlot === -1;
+        apt.cloudDistBadge.textContent = `${Math.max(0, Math.round(-relativeZ * 1.45))}m • ${apt.side.toUpperCase()}`;
 
-        if (meters >= -6 && meters <= 185 && meters < closestMeters) {
-          closestMeters = meters;
-          activeOrderApt = apt;
-        } else {
-          apt.cloudEl.classList.add('hidden');
-        }
+        getResidentHandPosition(apt, orderBadgePosition);
+        orderBadgePosition.y += 2.2;
+        orderBadgePosition.project(camera);
+        const padX = Math.min(110, window.innerWidth / 2 - 8);
+        const screenX = (orderBadgePosition.x * 0.5 + 0.5) * window.innerWidth;
+        const screenY = (-orderBadgePosition.y * 0.5 + 0.5) * window.innerHeight;
+        apt.cloudEl.style.left = `${Math.max(padX, Math.min(window.innerWidth - padX, screenX))}px`;
+        apt.cloudEl.style.top = `${Math.max(110, Math.min(window.innerHeight - 180, screenY))}px`;
+        apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
       });
 
-      // Guarantee that the active approaching order's wanted item is always in one of the 3 hand slots!
-      if (activeOrderApt && !gameState.handSlots.includes(activeOrderApt.wantedType)) {
-        ensureParcelAvailableInHand(activeOrderApt.wantedType);
+      if (!isResidentInThrowRange(gameState.lockedTargetApt)) gameState.lockedTargetApt = null;
+      gameState.lockedTargetApt = playing ? findTargetApartment() : null;
+      const matchingSlot = gameState.lockedTargetApt ? gameState.handSlots.indexOf(gameState.lockedTargetApt.wantedType) : -1;
+      const cards = document.getElementById('parcel-hand-horizontal').children;
+      for (let index = 0; index < cards.length; index++) {
+        cards[index].classList.toggle('slot-matched-pulse', index === matchingSlot);
       }
-
-      // If in Tutorial Step 2 and an order is approaching, update the instruction text with the side
-      if (gameState.tutorialActive && gameState.tutorialStep === 2 && activeOrderApt && closestMeters <= 150) {
-        updateTutorialStep2Prompt(activeOrderApt);
+      if (gameState.tutorialActive && gameState.tutorialStep === 2 && gameState.lockedTargetApt) {
+        updateTutorialStep2Prompt(gameState.lockedTargetApt);
       }
+      updateProjectileArcVisuals();
+    }
 
-      if (!activeOrderApt || gameState.mode !== 'playing') return;
-
-      const apt = activeOrderApt;
-      const pInfo = PARCEL_TYPES[apt.wantedType];
-      const charImg = charIconDataURLs[apt.character.id] || '';
-      const parcelImg = parcelIconDataURLs[apt.wantedType] || '';
-      const sideLabel = apt.side === 'left' ? 'LEFT' : 'RIGHT';
-
-      if (apt.renderedOrderId !== apt.orderId) {
-        apt.renderedOrderId = apt.orderId;
-        apt.cloudEl.innerHTML = `
-          <div class="thought-cloud-pill">
-            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 border-2 border-slate-950 overflow-hidden flex-shrink-0 p-0.5">
-              <img src="${charImg}" class="w-full h-full object-contain" alt="char" />
-            </div>
-            <div class="flex flex-col text-left min-w-0 flex-1">
-              <div class="pixel-font text-[8px] sm:text-[9px] text-slate-900 truncate">${apt.character.phrase}</div>
-              <div class="text-[10px] sm:text-xs font-extrabold text-slate-800 truncate">${pInfo.name}</div>
-              <span class="cloud-distance-badge mt-0.5 inline-block self-start px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[8px] sm:text-[9px] tracking-wider">
-                ${Math.max(0, closestMeters)}m &bull; ${sideLabel}
-              </span>
-            </div>
-            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${pInfo.boxTierClass} flex flex-col items-center justify-center p-1 flex-shrink-0">
-              <img src="${parcelImg}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" alt="item" />
-              <span class="text-[6px] font-extrabold text-slate-900 uppercase leading-none mt-0.5">${pInfo.tier.split(' ')[0]}</span>
-            </div>
-          </div>
-        `;
-        apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
-      } else if (apt.cloudDistBadge) {
-        apt.cloudDistBadge.innerHTML = `${Math.max(0, closestMeters)}m &bull; ${sideLabel}`;
+    function increaseOverdrive(amount) {
+      if (gameState.overdriveActive) return;
+      gameState.overdriveMeter = Math.min(100, (gameState.overdriveMeter || 0) + amount);
+      updateHUD();
+      if (gameState.overdriveMeter >= 100) {
+        triggerOverdrive();
       }
+    }
 
-      const worldPos = new THREE.Vector3(
-        apt.group.position.x + apt.porchX,
-        4.6,
-        apt.group.position.z + 1.2
-      );
-      worldPos.project(camera);
-
-      if (worldPos.z < 1.0) {
-        const rawX = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
-        const rawY = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
-        const padX = Math.min(155, window.innerWidth * 0.36);
-        const clampedX = Math.max(padX, Math.min(window.innerWidth - padX, rawX));
-        const clampedY = Math.max(92, Math.min(window.innerHeight - 165, rawY));
-        apt.cloudEl.style.left = `${clampedX}px`;
-        apt.cloudEl.style.top = `${clampedY}px`;
-        apt.cloudEl.classList.remove('hidden');
-      } else {
-        apt.cloudEl.classList.add('hidden');
+    function triggerOverdrive() {
+      gameState.overdriveActive = true;
+      gameState.overdriveTimer = 7.0;
+      gameState.overdriveMeter = 100;
+      soundFX.playCityGateChime();
+      soundFX.playBoost();
+      if (typeof soundFX.playOverdriveBurst === 'function') soundFX.playOverdriveBurst();
+      triggerScreenShake(0.35, 1.4);
+      triggerSpeedLines();
+      if (playerVan) {
+        showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.4, 0)), '⚡ MIDNIGHT OVERDRIVE!', 'combat-text-gold');
+        spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 32);
       }
+      updateHUD();
     }
 
     // ============================================================================
     // 13. HUD WITH VOXEL HEART SVGS, VIRTUAL JOYSTICK, KEYBOARD & SHOWCASE CONTROLS
     // ============================================================================
     function updateHUD() {
-      document.getElementById('score-val').textContent = gameState.score.toLocaleString();
-      document.getElementById('delivered-val').textContent = gameState.deliveries;
-      document.getElementById('hud-coins-val').textContent = gameState.coins.toLocaleString();
+      document.getElementById('score-val').textContent = formatHudNumber(gameState.score);
+      document.getElementById('hud-coins-val').textContent = formatHudNumber(gameState.coins);
       document.getElementById('combo-val').textContent = `x${gameState.combo}`;
+      const overdrive = Math.round(gameState.overdriveMeter || 0);
+      document.getElementById('overdrive-bar-fill').style.width = `${overdrive}%`;
+      const overdrivePill = document.getElementById('overdrive-hud-pill');
+      overdrivePill.setAttribute('aria-valuenow', overdrive);
+      overdrivePill.classList.toggle('is-active', !!gameState.overdriveActive);
+      document.getElementById('overdrive-title-text').textContent = gameState.overdriveActive ? '⚡ OVERDRIVE ×2' : '⚡ OVERDRIVE';
 
       const armorContainer = document.getElementById('armor-boxes');
-      const totalSlots = Math.max(3, gameState.hearts);
-      armorContainer.innerHTML = Array.from({ length: totalSlots }, (_, i) => {
-        const active = i < gameState.hearts;
-        const isBonusHeart = i >= 3;
-        const fillCol = active ? (isBonusHeart ? '#facc15' : '#f43f5e') : '#1e293b';
-        const strokeCol = active ? '#ffffff' : '#475569';
-        return `
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 ${active ? 'voxel-heart-icon' : 'opacity-40'}" viewBox="0 0 24 24" fill="${fillCol}" stroke="${strokeCol}" stroke-width="2">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        `;
+      if (armorContainer.dataset.hearts === String(gameState.hearts)) return;
+      armorContainer.dataset.hearts = String(gameState.hearts);
+      armorContainer.setAttribute('aria-label', `${gameState.hearts} hearts`);
+      armorContainer.innerHTML = Array.from({ length: 3 }, (unused, index) => {
+        const fill = index < gameState.hearts ? '#fb7185' : '#334155';
+        return `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
       }).join('');
     }
 
+    const MAX_ACTIVE_BURST_PARTICLES = 60;
     function spawnVoxelBurst(pos, colorHex, count = 18) {
-      for (let i = 0; i < count; i++) {
+      const availableCount = Math.min(count, Math.max(0, MAX_ACTIVE_BURST_PARTICLES - particles.length));
+      for (let i = 0; i < availableCount; i++) {
         const s = 0.22 + Math.random() * 0.26;
         const p = new THREE.Mesh(unitBoxGeo, getMat(colorHex, { emissive: colorHex, emissiveIntensity: 0.45 }));
         p.scale.setScalar(s);
@@ -1771,32 +1999,31 @@
       // Disabled: screen light-up and overlay effects removed per user request
     }
 
-    function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
-      const v = worldPos.clone().project(camera);
-      const x = (v.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+    let actionToastTimer = null;
+    let crosswalkWarningActive = false;
 
-      const el = document.createElement('div');
-      el.className = `floating-combat-banner arcade-font ${extraClass}`;
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.textContent = text;
-      document.getElementById('popups-layer').appendChild(el);
-      setTimeout(() => el.remove(), 1200);
+    function clearHudFeedback() {
+      clearTimeout(actionToastTimer);
+      document.getElementById('action-toast').classList.remove('is-visible');
+      document.getElementById('action-toast').textContent = '';
+      crosswalkWarningActive = false;
+    }
+
+    function showActionToast(text, tone = 'bonus') {
+      const toast = document.getElementById('action-toast');
+      clearTimeout(actionToastTimer);
+      toast.textContent = text;
+      toast.dataset.tone = tone;
+      toast.classList.add('is-visible');
+      actionToastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1200);
+    }
+
+    function showFloatingCombatText(worldPos, text, extraClass = 'combat-text-gold') {
+      showActionToast(text, extraClass.includes('rose') ? 'danger' : 'bonus');
     }
 
     function showFloatingPopup(worldPos, text, colorClass = 'text-amber-300') {
-      const v = worldPos.clone().project(camera);
-      const x = (v.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-
-      const el = document.createElement('div');
-      el.className = `floating-pop arcade-font font-extrabold text-base sm:text-xl drop-shadow-[0_3px_0_#000] ${colorClass}`;
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.textContent = text;
-      document.getElementById('popups-layer').appendChild(el);
-      setTimeout(() => el.remove(), 1250);
+      showActionToast(text, colorClass.includes('rose') ? 'danger' : 'info');
     }
 
     function initWeatherParticles() {
@@ -1982,18 +2209,13 @@
     }
 
     function showCityToast(cityTheme) {
-      const toast = document.getElementById('city-toast');
-      document.getElementById('city-toast-title').textContent = cityTheme.banner;
-      toast.classList.remove('hidden', 'city-toast-anim');
-      void toast.offsetWidth;
-      toast.classList.add('city-toast-anim');
-      setTimeout(() => toast.classList.add('hidden'), 3200);
+      showActionToast(`🏙️ ${cityTheme.name.toUpperCase()}`, 'info');
     }
 
     function spawnTrafficWave() {
-      if (trafficVehicles.length >= 8) return;
+      if (trafficVehicles.length >= getRouteTrafficCap()) return;
       const laneIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
-      const count = Math.random() < 0.30 ? 2 : 1;
+      const count = routeState.kind === 'safe' ? 1 : Math.random() < (routeState.kind === 'express' ? 0.75 : 0.30) ? 2 : 1;
       const vehiclePool = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck', 'ambulance', 'firetruck', 'police', 'ufo', 'car'];
 
       for (let i = 0; i < count; i++) {
@@ -2007,7 +2229,7 @@
         if (tooClose) continue;
 
         const type = vehiclePool[Math.floor(Math.random() * vehiclePool.length)];
-        const mesh = createTrafficVehicle(type);
+        const mesh = acquireTrafficVehicle(type);
         mesh.position.set(laneX, 0, spawnZ);
         scene.add(mesh);
 
@@ -2018,12 +2240,30 @@
           forwardDriveSpeed = nearest.forwardDriveSpeed;
         }
 
+        // 25% chance of Lane-Switch AI with turn signal indicators
+        const canSwitchLane = Math.random() < 0.25;
+        let leftBlinker = mesh.userData.leftBlinker || null;
+        let rightBlinker = mesh.userData.rightBlinker || null;
+        if (canSwitchLane) {
+          if (leftBlinker) leftBlinker.visible = false;
+          if (rightBlinker) rightBlinker.visible = false;
+        }
+
         trafficVehicles.push({
           mesh,
           type,
           laneIdx,
           forwardDriveSpeed,
-          passedPlayer: false
+          passedPlayer: false,
+          canSwitchLane,
+          laneSwitchState: 'idle',
+          signalTimer: 0,
+          targetLaneIdx: null,
+          signalSide: null,
+          startLaneX: laneX,
+          switchProgress: 0,
+          leftBlinker,
+          rightBlinker
         });
       }
     }
@@ -2033,6 +2273,8 @@
       const prevLane = gameState.laneIndex;
       gameState.laneIndex = Math.max(0, Math.min(3, gameState.laneIndex + dir));
       if (gameState.laneIndex !== prevLane) {
+        registerCargoSteer(dir);
+        queueRivalRam(prevLane, gameState.laneIndex);
         soundFX.playReelTick(440);
         if (gameState.tutorialActive && gameState.tutorialStep === 1) {
           gameState.tutorialSteerCount = (gameState.tutorialSteerCount || 0) + 1;
@@ -2099,15 +2341,19 @@
       }
 
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
-      document.getElementById('tutorial-title').textContent = 'CHECK THOUGHT CLOUD & DRAG PARCEL!';
-      document.getElementById('tutorial-desc').textContent = 'Look at the customer\'s Thought Cloud ahead, grab the matching item from your 3-slot bar below, and drag it LEFT or RIGHT to throw (or DOWN to cancel)!';
+      document.getElementById('tutorial-title').textContent = 'MATCH THE PARCEL & PRESS Q, W OR E!';
+      document.getElementById('tutorial-desc').textContent = 'Wait for the resident\'s target ring, then press the key on their parcel badge or tap the matching dock card once. Keys 1, 2 and 3 also throw!';
     }
 
     function updateTutorialStep2Prompt(apt) {
       const sideText = apt.side === 'left' ? 'LEFT' : 'RIGHT';
+      const matchingSlot = gameState.handSlots.indexOf(apt.wantedType);
+      if (matchingSlot === -1) return;
+      const title = `PRESS [${SLOT_KEYS[matchingSlot]}] FOR THE ${sideText} RESIDENT!`;
+      if (document.getElementById('tutorial-title').textContent === title) return;
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
-      document.getElementById('tutorial-title').textContent = `MATCH & DRAG PARCEL ${sideText}!`;
-      document.getElementById('tutorial-desc').textContent = `Find the item shown in the customer's Thought Cloud, drag it from the bottom bar toward the ${sideText} sidewalk, and release (or drag DOWN to cancel)!`;
+      document.getElementById('tutorial-title').textContent = title;
+      document.getElementById('tutorial-desc').textContent = `Press ${SLOT_KEYS[matchingSlot]} or ${matchingSlot + 1}, or tap the matching parcel card, to deliver the requested item to the ${sideText} resident.`;
     }
 
     function completeInteractiveTutorial() {
@@ -2145,6 +2391,7 @@
     let garageDragging = false;
     let garageLastX = 0;
     let garageSpinVel = 0;
+    let garageDragOffset = 0;
 
     canvas.addEventListener('pointerdown', (e) => {
       soundFX.init();
@@ -2163,8 +2410,9 @@
       if (gameState.mode === 'home' && garageDragging) {
         const deltaX = e.clientX - garageLastX;
         garageLastX = e.clientX;
-        turntableGroup.rotation.y += deltaX * 0.011;
+        garageDragOffset += deltaX * 0.011;
         garageSpinVel = deltaX * 0.004;
+        turntableGroup.rotation.y = (Math.sin(performance.now() * 0.0006) * 0.2618) + garageDragOffset;
         return;
       }
       if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing' && !gameState.dragging) {
@@ -2181,6 +2429,20 @@
     function endRoadTouch(e) {
       garageDragging = false;
       if (roadTouchId !== null && (!e || e.pointerId === roadTouchId)) {
+        if (e && gameState.mode === 'playing' && !gameState.dragging) {
+          const dx = e.clientX - roadTouchStartX;
+          const dy = e.clientY - roadTouchStartY;
+          // Tap detection without dragging swerves: tap roadside to quick-throw!
+          if (Math.hypot(dx, dy) < 18) {
+            if (e.clientX < window.innerWidth * 0.38) {
+              quickThrowParcel('left');
+            } else if (e.clientX > window.innerWidth * 0.62) {
+              quickThrowParcel('right');
+            } else {
+              quickThrowParcel('auto');
+            }
+          }
+        }
         roadTouchId = null;
       }
     }
@@ -2210,7 +2472,21 @@
       }
     }, { passive: false });
 
-    canvas.addEventListener('touchend', () => {
+    canvas.addEventListener('touchend', (e) => {
+      if (touchSteerStartX !== null && gameState.mode === 'playing' && !gameState.dragging && e.changedTouches && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - touchSteerStartX;
+        const dy = touch.clientY - touchSteerStartY;
+        if (Math.hypot(dx, dy) < 18) {
+          if (touch.clientX < window.innerWidth * 0.38) {
+            quickThrowParcel('left');
+          } else if (touch.clientX > window.innerWidth * 0.62) {
+            quickThrowParcel('right');
+          } else {
+            quickThrowParcel('auto');
+          }
+        }
+      }
       touchSteerStartX = null;
       touchSteerStartY = null;
     }, { passive: true });
@@ -2222,13 +2498,71 @@
       }, { once: true, passive: true });
     });
 
+
+
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') moveLane(-1);
-      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') moveLane(1);
-      if (e.key >= '1' && e.key <= '3') selectHandSlot(parseInt(e.key, 10) - 1);
-      if (e.key === 'Escape' && (gameState.mode === 'playing' || gameState.mode === 'paused')) {
+      if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      // Escape for Pause / Resume
+      if (e.key === 'Escape') {
         if (gameState.mode === 'playing') pauseShift();
-        else resumeShiftWithCountdown();
+        else if (gameState.mode === 'paused') resumeShiftWithCountdown();
+        return;
+      }
+
+      // Space / Enter on Home or Game Over Screen starts / restarts shift
+      if (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+        if (gameState.mode === 'home') {
+          e.preventDefault();
+          const startBtn = document.getElementById('btn-start-play');
+          if (startBtn) startBtn.click();
+          return;
+        } else if (gameState.mode === 'gameover') {
+          e.preventDefault();
+          const playAgainBtn = document.getElementById('btn-play-again');
+          if (playAgainBtn) playAgainBtn.click();
+          return;
+        }
+      }
+
+      if (gameState.mode !== 'playing') return;
+
+      const key = e.key ? e.key.toLowerCase() : '';
+      const code = e.code || '';
+
+      // Lane steering: A / D / Arrow Keys (Strictly reserved for steering)
+      if (key === 'a' || code === 'KeyA' || key === 'arrowleft') {
+        e.preventDefault();
+        moveLane(-1);
+      }
+      if (key === 'd' || code === 'KeyD' || key === 'arrowright') {
+        e.preventDefault();
+        moveLane(1);
+      }
+
+      if (e.repeat) return;
+
+      // Slot 0 throw: Q or 1
+      if (key === 'q' || code === 'KeyQ' || key === '1' || code === 'Digit1') {
+        e.preventDefault();
+        throwFromSlot(0);
+      }
+
+      // Slot 1 throw: W or 2
+      if (key === 'w' || code === 'KeyW' || key === '2' || code === 'Digit2') {
+        e.preventDefault();
+        throwFromSlot(1);
+      }
+
+      // Slot 2 throw: E or 3
+      if (key === 'e' || code === 'KeyE' || key === '3' || code === 'Digit3') {
+        e.preventDefault();
+        throwFromSlot(2);
+      }
+
+      // Auto-throw matching parcel to in-range resident: Space / ArrowUp
+      if (key === ' ' || code === 'Space' || key === 'spacebar' || key === 'arrowup') {
+        e.preventDefault();
+        autoThrowMatchingSlot();
       }
     });
 
@@ -2313,6 +2647,7 @@
     // Pause & 3-Second Countdown Resume Logic
     let activeCountdownTimer = null;
     function pauseShift() {
+      saveActiveShift();
       if (gameState.mode !== 'playing') return;
       endParcelDrag();
       gameState.mode = 'paused';
@@ -2367,6 +2702,7 @@
       resetGame(false);
     });
     document.getElementById('btn-pause-garage').addEventListener('click', () => {
+      completePersistentShift();
       closeModal('modal-pause');
       gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
       gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
@@ -2438,21 +2774,36 @@
       renderHallOfFameModal('chars');
     });
 
-    document.getElementById('menu-btn-draw').addEventListener('click', () => {
-      updateHomeGarageUI();
-      resetGachaModalStage();
-      openModal('modal-draw');
-    });
-    document.getElementById('btn-home-quick-draw').addEventListener('click', () => {
-      updateHomeGarageUI();
-      resetGachaModalStage();
-      openModal('modal-draw');
-    });
-    document.getElementById('btn-spin-draw').addEventListener('click', () => spinGacha(1));
-    const btnGacha10x = document.getElementById('btn-gacha-10x');
-    if (btnGacha10x) btnGacha10x.addEventListener('click', () => spinGacha(10));
+    const menuBtnTuning = document.getElementById('menu-btn-tuning');
+    if (menuBtnTuning) {
+      menuBtnTuning.addEventListener('click', () => {
+        renderTuningModal();
+        openModal('modal-tuning');
+      });
+    }
+    const spinDrawBtn = document.getElementById('btn-spin-draw');
+    if (spinDrawBtn) spinDrawBtn.addEventListener('click', () => spinCapsuleDraw(1));
 
-    const btnEquipWon = document.getElementById('btn-gacha-equip-won');
+    const menuBtnDraw = document.getElementById('menu-btn-draw');
+    if (menuBtnDraw) {
+      menuBtnDraw.addEventListener('click', () => {
+        updateHomeGarageUI();
+        resetCapsuleModalStage();
+        openModal('modal-draw');
+      });
+    }
+    const btnHomeQuickDraw = document.getElementById('btn-home-quick-draw');
+    if (btnHomeQuickDraw) {
+      btnHomeQuickDraw.addEventListener('click', () => {
+        updateHomeGarageUI();
+        resetCapsuleModalStage();
+        openModal('modal-draw');
+      });
+    }
+    const btnGacha10x = document.getElementById('btn-capsule-10x');
+    if (btnGacha10x) btnGacha10x.addEventListener('click', () => spinCapsuleDraw(10));
+
+    const btnEquipWon = document.getElementById('btn-capsule-equip-won');
     if (btnEquipWon) {
       btnEquipWon.addEventListener('click', () => {
         if (lastWonVanId) {
@@ -2466,7 +2817,7 @@
       });
     }
 
-    const btnEquipHighest = document.getElementById('btn-gacha-equip-highest');
+    const btnEquipHighest = document.getElementById('btn-capsule-equip-highest');
     if (btnEquipHighest) {
       btnEquipHighest.addEventListener('click', () => {
         if (lastWonVanId) {
@@ -2480,21 +2831,76 @@
       });
     }
 
-    const btnSpinAnother = document.getElementById('btn-gacha-spin-another');
-    if (btnSpinAnother) btnSpinAnother.addEventListener('click', () => spinGacha(1));
+    const btnSpinAnother = document.getElementById('btn-capsule-spin-another');
+    if (btnSpinAnother) btnSpinAnother.addEventListener('click', () => spinCapsuleDraw(1));
 
-    const btnSpin10xAgain = document.getElementById('btn-gacha-spin-10x-again');
-    if (btnSpin10xAgain) btnSpin10xAgain.addEventListener('click', () => spinGacha(10));
+    const btnSpin10xAgain = document.getElementById('btn-capsule-spin-10x-again');
+    if (btnSpin10xAgain) btnSpin10xAgain.addEventListener('click', () => spinCapsuleDraw(10));
 
-    document.getElementById('menu-btn-tutorial').addEventListener('click', () => {
-      const spec = PLAYABLE_VANS[gameState.selectedVanIndex];
-      if (gameState.ownedVans.includes(spec.id)) {
-        gameState.equippedVanId = spec.id;
+    function switchCityByIndex(targetIdx) {
+      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
+      const theme = CITY_THEMES[gameState.cityIndex];
+      transformAllApartmentsToCity(theme);
+      soundFX.playCityGateChime();
+      showCityToast(theme);
+      if (theme.id === 'tokyo') applyWeatherMode(4);
+      else if (theme.id === 'chinatown') applyWeatherMode(1);
+      else if (theme.id === 'yangon') applyWeatherMode(1);
+      else if (theme.id === 'littleindia') applyWeatherMode(1);
+      else if (theme.id === 'pastel') applyWeatherMode(4);
+      else if (theme.id === 'paris') applyWeatherMode(4);
+      else if (theme.id === 'rio') applyWeatherMode(1);
+      else if (theme.id === 'washington') applyWeatherMode(4);
+      else if (theme.id === 'dubai') applyWeatherMode(1);
+      else if (theme.id === 'cairo') applyWeatherMode(1);
+      if (window.cityLeftLandmarkGroup) {
+        const isCairo = (theme.id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+        window.cityLeftLandmarkGroup.visible = true;
       }
-      resetGame(true);
-    });
+      renderCitySelectorUI();
+    }
+
+    function renderCitySelectorUI() {
+      const container = document.getElementById('setting-city-buttons');
+      const label = document.getElementById('setting-current-city');
+      if (label && CITY_THEMES[gameState.cityIndex]) {
+        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
+      }
+      if (!container) return;
+      container.innerHTML = '';
+      const cityIcons = {
+        tokyo: '🗼',
+        chinatown: '🏮',
+        littleindia: '🛕',
+        yangon: '🇲🇲',
+        pastel: '🌆',
+        paris: '🥐',
+        rio: '🌴',
+        washington: '🏛️',
+        dubai: '🏙️',
+        cairo: '🐪'
+      };
+      CITY_THEMES.forEach((ct, idx) => {
+        const isCur = idx === gameState.cityIndex;
+        const btn = document.createElement('button');
+        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
+          isCur
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
+            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
+        );
+        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
+        btn.addEventListener('click', () => {
+          soundFX.init();
+          switchCityByIndex(idx);
+        });
+        container.appendChild(btn);
+      });
+    }
 
     document.getElementById('menu-btn-settings').addEventListener('click', () => {
+      renderCitySelectorUI();
       openModal('modal-settings');
     });
     document.getElementById('setting-toggle-audio').addEventListener('click', () => {
@@ -2526,23 +2932,9 @@
       });
     }
 
-    const topbarRankBtn = document.getElementById('topbar-rank-btn');
-    if (topbarRankBtn) {
-      topbarRankBtn.addEventListener('click', () => {
-        renderContractsModal();
-        openModal('modal-contracts');
-      });
-    }
-
-    const btnContractsExpand = document.getElementById('btn-contracts-expand');
-    if (btnContractsExpand) {
-      btnContractsExpand.addEventListener('click', () => {
-        renderContractsModal();
-        openModal('modal-contracts');
-      });
-    }
-
     function resetGame(forceTutorial = false) {
+      completePersistentShift();
+      clearHudFeedback();
       soundFX.init();
       soundFX.startCozyMusic('drive');
 
@@ -2561,6 +2953,10 @@
       gameState.hearts = 3;
       gameState.laneIndex = 2;
       gameState.currentX = LANES[2];
+      gameState.lateralVelocity = 0;
+      resetCargoRun();
+      resetNightRun();
+      resetRivalRun();
       gameState.throttle = 0.72;
       gameState.boostTimer = 0;
 
@@ -2592,18 +2988,21 @@
       gameState.nextGateDistance = 210;
       gameState.invulnerableTimer = 1.5;
       gameState.cityIndex = 0;
-      document.getElementById('immortal-hud-pill').classList.add('hidden');
-      document.getElementById('slowmo-hud-pill').classList.remove('hidden');
-      document.getElementById('slowmo-bar-fill').style.width = `${(gameState.slowMoEnergy / gameState.maxSlowMoEnergy) * 100}%`;
+
+
+
       slowmoVignette.style.opacity = '0';
 
       applyTimeOfDay(0, true);
-      applyWeatherMode(4);
+      applyWeatherMode(0);
       if (window.cityLeftLandmarkGroup) {
         const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
         const targetX = isCairo ? -34.0 : -28.0;
         window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
         window.cityLeftLandmarkGroup.visible = true;
+      }
+      if (typeof updateCityLeftLandmark === 'function' && CITY_THEMES[gameState.cityIndex]) {
+        updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
       }
       updateHUD();
 
@@ -2615,7 +3014,7 @@
         gameState.tutorialActive = false;
       }
 
-      trafficVehicles.forEach(v => scene.remove(v.mesh));
+      trafficVehicles.forEach(v => releaseTrafficVehicle(v.mesh));
       trafficVehicles.length = 0;
 
       flyingParcels.forEach(fp => {
@@ -2646,6 +3045,30 @@
       activePowerUps.length = 0;
       nextPowerUpTimer = 18 + Math.random() * 14;
 
+      activeRoadCoins.forEach(c => scene.remove(c.mesh || c));
+      activeRoadCoins.length = 0;
+
+      gameState.overdriveMeter = 0;
+      gameState.overdriveActive = false;
+      gameState.overdriveTimer = 0;
+      gameState.droneAssistTimer = 0;
+      gameState.coinMagnetTimer = 0;
+      gameState.shieldBumperActive = false;
+      gameState.survivalTimer = 0;
+      gameState.rushHourActive = false;
+      gameState.rushHourTimer = 0;
+      gameState.nextRushHourAt = 60;
+      gameState.handModifiers = [
+        rollParcelModifier(),
+        rollParcelModifier(),
+        rollParcelModifier()
+      ];
+      if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+      if (shieldBumperMesh) shieldBumperMesh.visible = false;
+      if (droneGroup) droneGroup.visible = false;
+
+
+
       activeGates.forEach(g => scene.remove(g.mesh));
       activeGates.length = 0;
 
@@ -2653,6 +3076,8 @@
       activeCrosswalks.length = 0;
 
       globalOrderCounter = 0;
+      gameState.lockedTargetApt = null;
+      gameState.handSlots = [0, 2, 6];
       apartments.forEach((apt) => {
         apt.hasOrder = false;
         apt.delivered = false;
@@ -2666,14 +3091,13 @@
         configureApartmentCustomer(apt, gameState.tutorialActive && pairIdx >= 4);
       });
 
-      gameState.handSlots = [0, 2, 6];
       renderBottomParcelHandUI();
 
       const startVehicleTypes = ['cattruck', 'tuktuk', 'bankvan', 'dumptruck'];
       for (let z = -65; z >= -165; z -= 48) {
         const laneIdx = Math.floor(Math.random() * 4);
         const type = startVehicleTypes[Math.floor(Math.random() * startVehicleTypes.length)];
-        const mesh = createTrafficVehicle(type);
+        const mesh = acquireTrafficVehicle(type);
         mesh.position.set(LANES[laneIdx], 0, z);
         scene.add(mesh);
         trafficVehicles.push({
@@ -2689,6 +3113,9 @@
 
       document.getElementById('gameover-modal').classList.add('hidden');
       document.getElementById('gameover-modal').classList.remove('flex');
+      beginPersistentShift();
+      camera.fov = camera.userData.gameplayFov || 55;
+      camera.updateProjectionMatrix();
     }
 
     document.getElementById('btn-start-play').addEventListener('click', () => {
@@ -2708,25 +3135,15 @@
     // ============================================================================
     // 14. INITIALIZE SCENE & MAIN GAME LOOP
     // ============================================================================
-    initSavedProgression();
-    generate3DIcons();
-    initWeatherParticles();
-    initCozyMotes();
-    initSidewalkPromenadeActors();
-
-    for (let i = 0; i < NUM_PAIRS; i++) {
-      const zPos = 12 - i * BLOCK_SPACING;
-      apartments.push(createApartmentBuilding('left', zPos, i * 2));
-      apartments.push(createApartmentBuilding('right', zPos, i * 2 + 1));
-    }
-    if (typeof updateCityLeftLandmark === 'function' && CITY_THEMES[gameState.cityIndex]) {
-      updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
-    }
-    renderBottomParcelHandUI();
-    setHomePageMode(true);
-    updateHomeGarageUI();
 
     let lastTime = performance.now();
+    const gameplayCameraLook = new THREE.Vector3();
+
+    function aimGameplayCamera() {
+      gameplayCameraLook.copy(PLAY_CAM_LOOK);
+      gameplayCameraLook.y -= 2.5;
+      camera.lookAt(gameplayCameraLook);
+    }
     let trafficTimer = 0;
     let crosswalkTimer = 0;
     let atmosphereCycleTimer = 0;
@@ -2735,9 +3152,20 @@
 
     function animate(now) {
       requestAnimationFrame(animate);
-      if (!now) now = performance.now();
-      const rawDt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
+      try {
+        if (!Number.isFinite(now)) now = performance.now();
+        const elapsed = (now - lastTime) / 1000;
+        const rawDt = Number.isFinite(elapsed) ? Math.min(Math.max(elapsed, 0.001), 0.05) : 0.001;
+        lastTime = now;
+
+        if (playerVan) {
+          if (isNaN(playerVan.position.x) || isNaN(playerVan.position.y) || isNaN(playerVan.position.z)) {
+            console.warn('[Midnight Delivery] NaN detected on playerVan position, resetting to safe coordinates');
+            playerVan.position.set(0, 0, gameState.vanZ || -5.4);
+            gameState.currentX = 0;
+            gameState.lateralVelocity = 0;
+          }
+        }
 
       if (typeof cozyMotes !== 'undefined' && cozyMotes && cozyMotes.length > 0) {
         cozyMotes.forEach((cm) => {
@@ -2746,13 +3174,15 @@
         });
       }
 
-      // Home Page 3D Blueprint Turntable Rotation & Always-On Blue Holographic Scan Ring
+      // Home Page 3D Showroom Hero Angle with Slow Orbit (+/- 15 degrees)
       if (gameState.mode === 'home') {
+        const heroOrbit = Math.sin(now * 0.0006) * 0.2618;
         if (!garageDragging) {
-          turntableGroup.rotation.y += rawDt * 0.38 + garageSpinVel;
-          garageSpinVel *= 0.92;
+          garageDragOffset += garageSpinVel;
+          garageSpinVel *= 0.90;
+          garageDragOffset *= 0.95;
         }
-        holoScanRing.position.y = 0.18 + ((Math.sin(now * 0.0028) + 1) * 0.5) * 3.45;
+        turntableGroup.rotation.y = heroOrbit + garageDragOffset;
         camera.up.set(0, 1, 0);
         camera.position.copy(SHOWROOM_CAM_POS);
         camera.lookAt(SHOWROOM_CAM_LOOK);
@@ -2764,7 +3194,7 @@
       if (gameState.mode === 'paused' || gameState.mode === 'countdown' || gameState.mode === 'gameover') {
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
         renderer.render(scene, camera);
         return;
       }
@@ -2774,34 +3204,34 @@
 
       // Slow-Motion ONLY activates & drains Slow-Mo Energy while the player is actively dragging a parcel!
       let isDragSlowMoActive = false;
-      const slowmoDot = document.getElementById('slowmo-dot');
+
       if (gameState.dragging && gameState.slowMoEnergy > 0) {
         isDragSlowMoActive = true;
         const battLvl = getVanTuningLevel(gameState.equippedVanId, 'battery');
         const drainMult = battLvl === 5 ? 0.70 : 1.0;
         gameState.slowMoEnergy = Math.max(0, gameState.slowMoEnergy - rawDt * drainMult);
         slowmoVignette.style.opacity = '1';
-        if (slowmoDot) slowmoDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-300 animate-ping';
+
       } else {
         slowmoVignette.style.opacity = '0';
-        if (slowmoDot) slowmoDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-400';
+
       }
-      document.getElementById('slowmo-bar-fill').style.width = `${(gameState.slowMoEnergy / gameState.maxSlowMoEnergy) * 100}%`;
+
 
       const timeScale = isDragSlowMoActive ? 0.28 : (gameState.tutorialActive ? 0.68 : 1.0);
       const dt = rawDt * timeScale;
 
       if (gameState.immortalTimer > 0) {
         gameState.immortalTimer = Math.max(0, gameState.immortalTimer - rawDt);
-        document.getElementById('immortal-hud-pill').classList.remove('hidden');
-        document.getElementById('immortal-bar-fill').style.width = `${(gameState.immortalTimer / 10) * 100}%`;
+
+
         if (playerVan.userData.immortalAura) {
           playerVan.userData.immortalAura.visible = true;
           playerVan.userData.immortalAura.rotation.z = now * 0.008;
           playerVan.userData.immortalAura.material.color.setHSL((now * 0.0015) % 1, 1.0, 0.55);
         }
         if (gameState.immortalTimer <= 0) {
-          document.getElementById('immortal-hud-pill').classList.add('hidden');
+
           if (playerVan.userData.immortalAura) playerVan.userData.immortalAura.visible = false;
         }
       }
@@ -2820,13 +3250,13 @@
           THREE.MathUtils.lerp(PLAY_CAM_POS.y - 2.2, PLAY_CAM_POS.y, easeOut),
           THREE.MathUtils.lerp(PLAY_CAM_POS.z + 4.5, PLAY_CAM_POS.z, easeOut)
         );
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
       } else {
         gameState.vanZ = -5.4;
         playerVan.position.z = gameState.vanZ;
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
-        camera.lookAt(PLAY_CAM_LOOK);
+        aimGameplayCamera();
       }
 
       if (screenShakeTime > 0) {
@@ -2841,11 +3271,15 @@
       const engSpeedMult = 1 + (engLvl - 1) * 0.045;
       const speedProgression = Math.min(22, gameState.distanceMeters * 0.015 + gameState.deliveries * 0.65);
       const playerSpeed = gameState.mode === 'playing'
-        ? (gameState.baseSpeed + speedProgression) * engSpeedMult
+        ? (gameState.baseSpeed + speedProgression) * engSpeedMult * (gameState.overdriveActive ? 1.35 : 1)
         : 12;
 
-      if (gameState.dragging) {
+      if (gameState.dragging || (gameState.mode === 'playing' && gameState.lockedTargetApt)) {
         updateProjectileArcVisuals(now);
+      } else {
+        projectileArcLine.visible = false;
+        aimNodes.forEach(n => (n.visible = false));
+        aimLandingRing.visible = false;
       }
 
       // Continuous Voxel Exhaust Pipe Smoke Puffs
@@ -2876,6 +3310,22 @@
         dash.position.z += playerSpeed * dt;
         if (dash.position.z > 36) dash.position.z -= 280;
       });
+
+      // Grand Distant Left Landmark approaches smoothly in 3D perspective
+      if (window.cityLeftLandmarkGroup && gameState.mode === 'playing') {
+        const isCairo = (CITY_THEMES[gameState.cityIndex] && CITY_THEMES[gameState.cityIndex].id === 'cairo');
+        const targetX = isCairo ? -34.0 : -28.0;
+        window.cityLeftLandmarkGroup.position.x = targetX;
+
+        if (window.cityLeftLandmarkGroup.visible) {
+          window.cityLeftLandmarkGroup.position.z += playerSpeed * dt * 0.35;
+
+          // When landmark passes behind the camera, hide it so only ONE exists per city
+          if (window.cityLeftLandmarkGroup.position.z > 45.0) {
+            window.cityLeftLandmarkGroup.visible = false;
+          }
+        }
+      }
 
       // Scroll Streetlamps at the exact road speed so they never follow the car!
       streetLamps.forEach((lampGroup) => {
@@ -2936,10 +3386,12 @@
           }
         }
 
-        if (apt.group.position.z > 32) {
+        if (apt.group.position.z > 32 && !flyingParcels.some(parcel => parcel.targetApt === apt)) {
           apt.group.position.z -= NUM_PAIRS * BLOCK_SPACING;
-          apt.index += NUM_PAIRS;
-          rebuildApartmentVisuals(apt, CITY_THEMES[gameState.cityIndex], apt.index);
+          const currentTheme = CITY_THEMES[gameState.cityIndex];
+          if (apt.currentThemeId !== currentTheme.id) {
+            rebuildApartmentVisuals(apt, currentTheme, apt.index);
+          }
           // Spawn delivery orders after ~150m warm-up (or immediately if in tutorial mode)
           configureApartmentCustomer(apt, gameState.tutorialActive || gameState.distanceMeters >= 55);
         }
@@ -2968,6 +3420,149 @@
         gameState.distanceMeters += playerSpeed * dt * 0.42;
         updateContractProgress('distance_shift', Math.round(gameState.distanceMeters), true);
 
+        // 1. Hot Parcel Modifiers Live Countdown Update
+        if (gameState.handModifiers) {
+          gameState.handModifiers.forEach((m, slotIdx) => {
+            if (m && m.type === 'hot') {
+              m.timer -= dt;
+              if (m.timer <= 0) {
+                gameState.handModifiers[slotIdx] = null;
+                renderBottomParcelHandUI(slotIdx);
+                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 2.5, 0)), 'PARCEL COOLED DOWN', 'text-slate-400');
+              } else {
+                const card = document.querySelector(`.parcel-card-slot[data-slot="${slotIdx}"]`);
+                if (card) {
+                  const fill = card.querySelector('.hot-countdown-fill');
+
+                  if (fill) fill.style.width = `${Math.max(0, (m.timer / m.maxTime) * 100)}%`;
+
+                }
+              }
+            }
+          });
+        }
+
+        // 2. Overdrive (Fever Mode) Live Countdown, Speed Boost, Neon Aura & FOV
+        if (gameState.overdriveActive) {
+          gameState.overdriveTimer = Math.max(0, gameState.overdriveTimer - dt);
+          gameState.overdriveMeter = Math.max(0, (gameState.overdriveTimer / 7.0) * 100);
+          camera.fov = THREE.MathUtils.lerp(camera.fov, 68, dt * 4.0);
+          camera.updateProjectionMatrix();
+
+          if (overdriveAuraMesh) {
+            overdriveAuraMesh.visible = true;
+            overdriveAuraMesh.rotation.y += dt * 4.5;
+            overdriveAuraMesh.scale.setScalar(1 + Math.sin(now * 0.02) * 0.08);
+          }
+
+          if (gameState.overdriveTimer <= 0) {
+            gameState.overdriveActive = false;
+            gameState.overdriveMeter = 0;
+            if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+          }
+          updateHUD();
+        } else {
+          if (Math.abs(camera.fov - camera.userData.gameplayFov) > 0.1) {
+            camera.fov = THREE.MathUtils.lerp(camera.fov, camera.userData.gameplayFov, dt * 3.0);
+            camera.updateProjectionMatrix();
+          }
+          if (overdriveAuraMesh) overdriveAuraMesh.visible = false;
+        }
+
+        // 3. Dynamic Road Event: Rush Hour Blitz every 60s
+        gameState.survivalTimer = (gameState.survivalTimer || 0) + dt;
+        if (!gameState.rushHourActive && gameState.survivalTimer >= gameState.nextRushHourAt) {
+          gameState.rushHourActive = true;
+          gameState.rushHourTimer = 15.0;
+          gameState.nextRushHourAt = gameState.survivalTimer + 60.0 + 15.0;
+          soundFX.playCityGateChime();
+          triggerScreenShake(0.3, 1.2);
+          showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3.5, 0)), '🔥 RUSH HOUR BLITZ! 15s', 'combat-text-fire');
+
+        } else if (gameState.rushHourActive) {
+          gameState.rushHourTimer -= dt;
+          if (gameState.rushHourTimer <= 0) {
+            gameState.rushHourActive = false;
+
+          }
+        }
+
+        // 4. Drone Assist: Auto-throw parcels to active customers
+        if (gameState.droneAssistTimer > 0) {
+          gameState.droneAssistTimer = Math.max(0, gameState.droneAssistTimer - dt);
+          droneGroup.visible = true;
+          droneGroup.position.set(playerVan.position.x, playerVan.position.y + 3.2, playerVan.position.z - 0.4);
+          droneRotors.forEach(r => (r.rotation.y += dt * 35));
+
+          droneThrowCooldown -= dt;
+          if (droneThrowCooldown <= 0) {
+            const target = findTargetApartment();
+            if (target) {
+              droneThrowCooldown = 1.35;
+              autoThrowMatchingSlot();
+              showFloatingPopup(droneGroup.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '🚁 DRONE AUTO-DROP!', 'text-cyan-300 font-bold');
+            }
+          }
+          if (gameState.droneAssistTimer <= 0) {
+            droneGroup.visible = false;
+          }
+        } else {
+          droneGroup.visible = false;
+        }
+
+        // 5. Coin Magnet & Shield Bumper Timers
+        if (gameState.coinMagnetTimer > 0) {
+          gameState.coinMagnetTimer = Math.max(0, gameState.coinMagnetTimer - dt);
+        }
+        if (shieldBumperMesh) {
+          shieldBumperMesh.visible = !!gameState.shieldBumperActive;
+          if (gameState.shieldBumperActive) {
+            shieldRing.scale.setScalar(1 + Math.sin(now * 0.015) * 0.08);
+          }
+        }
+
+        // 6. Collectible Road Coins Spawning & Attraction
+        if (gameState.distanceMeters - lastCoinSpawnDist > 34) {
+          lastCoinSpawnDist = gameState.distanceMeters;
+          spawnRoadCoinCluster(-165);
+        }
+
+        for (let cIdx = activeRoadCoins.length - 1; cIdx >= 0; cIdx--) {
+          const cMesh = activeRoadCoins[cIdx];
+          cMesh.position.z += playerSpeed * dt;
+          cMesh.rotation.y += rawDt * 3.5;
+          cMesh.position.y = 0.75 + Math.sin(now * 0.008 + cIdx) * 0.14;
+
+          if (gameState.coinMagnetTimer > 0) {
+            const mDz = Math.abs(cMesh.position.z - playerVan.position.z);
+            if (mDz < 35) {
+              cMesh.position.x = THREE.MathUtils.lerp(cMesh.position.x, playerVan.position.x, rawDt * 9);
+              cMesh.position.z = THREE.MathUtils.lerp(cMesh.position.z, playerVan.position.z, rawDt * 11);
+            }
+          }
+
+          const distZ = Math.abs(cMesh.position.z - playerVan.position.z);
+          const distX = Math.abs(cMesh.position.x - playerVan.position.x);
+          if (distZ < 2.0 && distX < 1.6) {
+            soundFX.playDeliverSuccess();
+            gameState.coins += getRouteCoinMultiplier();
+            gameState.runCoinsEarned += getRouteCoinMultiplier();
+            gameState.score += 20 * (gameState.overdriveActive ? 2 : 1);
+            spawnVoxelBurst(cMesh.position, 0xfacc15, 10);
+            showFloatingPopup(cMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '+1 COIN', 'text-amber-300 font-extrabold');
+            scene.remove(cMesh);
+            activeRoadCoins.splice(cIdx, 1);
+            updateHUD();
+            updateContractProgress('yangon_coins', 1);
+            continue;
+          }
+
+          if (cMesh.position.z > 35) {
+            scene.remove(cMesh);
+            activeRoadCoins.splice(cIdx, 1);
+          }
+        }
+
         if (gameState.distanceMeters >= gameState.nextGateDistance && activeGates.length === 0) {
           gameState.nextGateDistance = gameState.distanceMeters + 165;
           triggerNextCityGate(-135);
@@ -2991,6 +3586,12 @@
             transformAllApartmentsToCity(newTheme);
             soundFX.playCityGateChime();
             showCityToast(newTheme);
+            if (window.cityLeftLandmarkGroup) {
+              const isCairo = (newTheme.id === 'cairo');
+              const targetX = isCairo ? -34.0 : -28.0;
+              window.cityLeftLandmarkGroup.position.set(targetX, 0, -220.0);
+              window.cityLeftLandmarkGroup.visible = true;
+            }
 
             if (newTheme.id === 'tokyo') applyWeatherMode(4);
             else if (newTheme.id === 'chinatown') applyWeatherMode(1);
@@ -3023,14 +3624,32 @@
           const distX = Math.abs(pu.mesh.position.x - playerVan.position.x);
           if (distZ < 2.3 && distX < 1.8) {
             soundFX.playCityGateChime();
-            if (pu.type === 'heart') {
+            if (pu.type === 'drone') {
+              gameState.droneAssistTimer = 6.0;
+              droneGroup.visible = true;
+              droneThrowCooldown = 0.4;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🚁 DRONE ASSIST ACTIVE (6S)!', 'text-cyan-300 font-extrabold');
+            } else if (pu.type === 'magnet') {
+              gameState.coinMagnetTimer = 8.0;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xf59e0b, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🧲 COIN MAGNET ACTIVE (8S)!', 'text-amber-300 font-extrabold');
+            } else if (pu.type === 'shield') {
+              gameState.shieldBumperActive = true;
+              if (shieldBumperMesh) shieldBumperMesh.visible = true;
+              updateHUD();
+              spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x38bdf8, 28);
+              showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '🛡️ SHIELD BUMPER READY!', 'text-sky-300 font-extrabold');
+            } else if (pu.type === 'heart') {
               gameState.hearts = Math.min(gameState.maxHearts, gameState.hearts + 1);
               updateHUD();
               spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xf43f5e, 24);
               showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), '+1 EXTRA LIFE HEART!', 'text-rose-400');
             } else if (pu.type === 'slowmo') {
               gameState.slowMoEnergy = gameState.maxSlowMoEnergy;
-              document.getElementById('slowmo-bar-fill').style.width = '100%';
+
               spawnVoxelBurst(pu.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0x00f5d4, 24);
               showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3.2, 0)), 'DRAG SLOW-MO RECHARGED!', 'text-cyan-300');
             } else {
@@ -3076,12 +3695,7 @@
           const distZ = cw.group.position.z - gameState.vanZ;
           if (distZ > -80 && distZ < 2 && cw.members.length > 0) {
             showCrosswalkWarning = true;
-            const alertTxt = document.getElementById('crosswalk-alert-text');
-            if (alertTxt) {
-              alertTxt.textContent = cw.isDuckCrossing
-                ? 'CAUTION: DUCK FAMILY CROSSING AHEAD'
-                : 'CAUTION: INLE CHEF CROSSING AHEAD';
-            }
+
           }
 
           if (Math.abs(distZ) < 1.8 && !cw.hitTriggered) {
@@ -3114,9 +3728,23 @@
               });
               cw.members.length = 0;
 
-              if (gameState.immortalTimer > 0) {
-                showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'IMMORTAL KNOCKBACK!', 'text-amber-300');
+              if (gameState.immortalTimer > 0 || gameState.overdriveActive) {
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '⚡ OVERDRIVE KNOCKBACK!', 'combat-text-gold');
+              } else if (gameState.shieldBumperActive) {
+                gameState.shieldBumperActive = false;
+                if (shieldBumperMesh) shieldBumperMesh.visible = false;
+                soundFX.playPerfectChime();
+                triggerScreenShake(0.25, 0.9);
+                spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 22);
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD SAVED IMPACT!', 'combat-text-blue');
+                updateHUD();
               } else if (gameState.invulnerableTimer <= 0) {
+                // Grazing obstacles or taking damage cracks fragile parcels in hand
+                gameState.handModifiers.forEach(m => {
+                  if (m && m.type === 'fragile' && !m.cracked) m.cracked = true;
+                });
+                renderBottomParcelHandUI();
+
                 gameState.hearts -= 1;
                 gameState.combo = 1;
                 gameState.invulnerableTimer = 1.6;
@@ -3124,6 +3752,7 @@
                 showFloatingPopup(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), 'CROSSWALK IMPACT!', 'text-rose-400');
                 if (gameState.hearts <= 0) {
                   gameState.mode = 'gameover';
+                  completePersistentShift();
                   gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
                   gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
                   endParcelDrag();
@@ -3150,24 +3779,58 @@
             activeCrosswalks.splice(i, 1);
           }
         }
-        document.getElementById('crosswalk-alert').classList.toggle('hidden', !showCrosswalkWarning);
+        if (showCrosswalkWarning && !crosswalkWarningActive) showActionToast('⚠️ PEDESTRIAN CROSSING', 'info');
+        crosswalkWarningActive = showCrosswalkWarning;
 
-        // Suspension / Handling Tune Upgrade (Higher snap speed between lanes)
+        // Snappy Arcade Spring-Damped Lane Switching & Body Physics
         const handLvl = getVanTuningLevel(gameState.equippedVanId, 'handling');
-        const snapLerp = 14 + (handLvl - 1) * 4.5;
         const targetX = LANES[gameState.laneIndex];
-        const dx = targetX - gameState.currentX;
-        gameState.currentX += dx * Math.min(1, rawDt * snapLerp);
-        playerVan.position.x = gameState.currentX;
+        const springK = 195 + (handLvl - 1) * 45;
+        const damping = 24 + (handLvl - 1) * 3.5;
 
+        if (!Number.isFinite(gameState.currentX)) gameState.currentX = targetX;
+        if (!Number.isFinite(gameState.lateralVelocity)) gameState.lateralVelocity = 0;
+        const physicsSteps = Math.ceil(rawDt / (1 / 120));
+        const physicsDt = rawDt / physicsSteps;
+        for (let step = 0; step < physicsSteps; step++) {
+          const springForce = -springK * (gameState.currentX - targetX) - damping * gameState.lateralVelocity;
+          gameState.lateralVelocity += springForce * physicsDt;
+          gameState.currentX += gameState.lateralVelocity * physicsDt;
+        }
+        const distToTarget = gameState.currentX - targetX;
+
+        if (Math.abs(distToTarget) < 0.012 && Math.abs(gameState.lateralVelocity) < 0.04) {
+          gameState.currentX = targetX;
+          gameState.lateralVelocity = 0;
+        }
+        playerVan.position.x = gameState.currentX;
+        updateRoofSway(rawDt);
+        updateCargoRoad(dt, playerSpeed);
+
+        // Dynamic Vehicle Body Physics during Lane Changes:
+        // 1. Yaw rotation (steering into the target lane and straightening out)
+        const targetYaw = -gameState.lateralVelocity * 0.028;
+        playerVan.rotation.y = THREE.MathUtils.lerp(playerVan.rotation.y, targetYaw, rawDt * 22);
+
+        // 2. Chassis body roll (tilting into the swerve)
         const chassis = playerVan.userData.chassis;
-        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, -dx * 0.14, rawDt * snapLerp);
-        chassis.rotation.y = THREE.MathUtils.lerp(chassis.rotation.y, -dx * 0.07, rawDt * snapLerp);
-        chassis.position.y = Math.sin(now * 0.024) * 0.05;
+        const targetRoll = gameState.lateralVelocity * 0.032;
+        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, targetRoll, rawDt * 18);
+
+        // 3. Pitch dip (pitch forward slightly during braking/slow-mo, back when boosting)
+        const isBraking = gameState.dragging || (gameState.slowMoEnergy > 0 && gameState.mode === 'playing' && gameState.dragging);
+        const targetPitch = isBraking ? 0.042 : (gameState.boostTimer > 0 ? -0.038 : 0);
+        chassis.rotation.x = THREE.MathUtils.lerp(chassis.rotation.x, targetPitch, rawDt * 14);
+
+        chassis.position.y = Math.sin(now * 0.028) * 0.04;
         chassis.scale.lerp(new THREE.Vector3(1, 1, 1), rawDt * 12);
 
-        playerVan.userData.wheels.forEach(w => {
+        // Wheels spin and front wheels steer with yaw
+        playerVan.userData.wheels.forEach((w, wIdx) => {
           w.rotation.x -= playerSpeed * dt * 0.35;
+          if (wIdx < 2) {
+            w.rotation.y = THREE.MathUtils.lerp(w.rotation.y, targetYaw * 1.6, rawDt * 25);
+          }
         });
 
         if (gameState.invulnerableTimer > 0) {
@@ -3178,13 +3841,63 @@
         }
 
         trafficTimer += dt;
-        if (trafficTimer > 1.45) {
+        if (trafficTimer > getRouteTrafficInterval()) {
           trafficTimer = 0;
           spawnTrafficWave();
         }
 
         for (let i = trafficVehicles.length - 1; i >= 0; i--) {
           const tv = trafficVehicles[i];
+
+          // Intelligent Lane-Switch AI (25% of vehicles telegraph with turn-signals for 1.2s before changing lanes)
+          if (tv.canSwitchLane && tv.leftBlinker && tv.rightBlinker) {
+            const dzToPlayer = playerVan.position.z - tv.mesh.position.z;
+            // When vehicle is within 45 units ahead of player
+            if (tv.laneSwitchState === 'idle' && dzToPlayer > 12 && dzToPlayer <= 45) {
+              const currentLane = tv.laneIdx;
+              const options = [];
+              if (currentLane > 0) options.push(currentLane - 1);
+              if (currentLane < 3) options.push(currentLane + 1);
+              if (options.length > 0) {
+                tv.targetLaneIdx = options[Math.floor(Math.random() * options.length)];
+                tv.signalSide = tv.targetLaneIdx < currentLane ? 'left' : 'right';
+                tv.laneSwitchState = 'signaling';
+                tv.signalTimer = 1.2;
+              }
+            }
+
+            if (tv.laneSwitchState === 'signaling') {
+              tv.signalTimer -= dt;
+              const isBlinking = Math.floor(now / 110) % 2 === 0;
+              if (tv.signalSide === 'left') {
+                tv.leftBlinker.visible = isBlinking;
+                tv.rightBlinker.visible = false;
+              } else {
+                tv.rightBlinker.visible = isBlinking;
+                tv.leftBlinker.visible = false;
+              }
+
+              if (tv.signalTimer <= 0) {
+                tv.laneSwitchState = 'switching';
+                tv.leftBlinker.visible = false;
+                tv.rightBlinker.visible = false;
+                tv.startLaneX = tv.mesh.position.x;
+                tv.switchProgress = 0;
+              }
+            } else if (tv.laneSwitchState === 'switching') {
+              tv.switchProgress += dt / 0.85; // smooth lane transition over 0.85s
+              const targetX = LANES[tv.targetLaneIdx];
+              const smoothT = THREE.MathUtils.smoothstep(tv.switchProgress, 0, 1);
+              tv.mesh.position.x = THREE.MathUtils.lerp(tv.startLaneX, targetX, smoothT);
+              tv.mesh.rotation.y = (tv.targetLaneIdx > tv.laneIdx ? -1 : 1) * Math.sin(smoothT * Math.PI) * 0.16;
+              if (tv.switchProgress >= 1) {
+                tv.mesh.position.x = targetX;
+                tv.mesh.rotation.y = 0;
+                tv.laneIdx = tv.targetLaneIdx;
+                tv.laneSwitchState = 'done';
+              }
+            }
+          }
 
           // Prevent vehicles in the same lane from ever overlapping or passing through each other!
           trafficVehicles.forEach((other) => {
@@ -3228,15 +3941,18 @@
           }
 
           // Traffic Near-Miss Combo System (Close adjacent pass or last-second lane dodge)
-          if (!tv.nearMissAwarded && gameState.invulnerableTimer <= 0 && gameState.mode === 'playing') {
-            const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
-            const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
+          const hitHalfZ = (tv.mesh.userData.halfZ + 1.8) * 0.85;
+          const hitHalfX = (tv.mesh.userData.halfX + 0.82) * 0.85;
+          const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
+          const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
 
-            const isClosePass = distZ < 3.2 && distX >= 1.6 && distX <= 4.6;
-            const isLastSecondDodge = distZ < 7.8 && distX >= 1.6 && distX <= 4.2 && Math.abs(playerVan.userData.chassis.rotation.y) > 0.035;
+          if (!tv.nearMissAwarded && gameState.invulnerableTimer <= 0 && gameState.mode === 'playing') {
+            const isClosePass = distZ < (hitHalfZ + 1.4) && distX >= hitHalfX && distX <= (hitHalfX + 2.5);
+            const isLastSecondDodge = distZ < 7.8 && distX >= hitHalfX && distX <= (hitHalfX + 2.8) && Math.abs(gameState.lateralVelocity || 0) > 1.2;
 
             if (isClosePass || isLastSecondDodge) {
               tv.nearMissAwarded = true;
+              increaseOverdrive(10); // +10% per traffic near-miss
               gameState.nearMissCount++;
               const bonusScore = 50 * gameState.combo;
               gameState.score += bonusScore;
@@ -3260,23 +3976,46 @@
           }
 
           if (gameState.invulnerableTimer <= 0) {
-            const distZ = Math.abs(tv.mesh.position.z - playerVan.position.z);
-            const distX = Math.abs(tv.mesh.position.x - playerVan.position.x);
-            if (distZ < (tv.mesh.userData.halfZ + 1.8) && distX < (tv.mesh.userData.halfX + 0.82)) {
-              if (gameState.immortalTimer > 0) {
-                // Rainbow Immortal Mode blasts traffic out of the way without losing hearts!
+            if (distZ < hitHalfZ && distX < hitHalfX) {
+              if (gameState.immortalTimer > 0 || gameState.overdriveActive) {
+                // Rainbow Immortal Mode or Midnight Overdrive blasts traffic out of the way without losing hearts!
                 soundFX.playDeliverSuccess();
-                gameState.score += 150;
+                const bonusScore = gameState.overdriveActive ? 300 : 150;
+                gameState.score += bonusScore;
                 updateHUD();
-                spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 24);
-                showFloatingPopup(tv.mesh.position.clone().add(new THREE.Vector3(0, 3, 0)), 'IMMORTAL SMASH +150!', 'text-amber-300');
-                scene.remove(tv.mesh);
+                spawnVoxelBurst(tv.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0xfacc15, 28);
+                showFloatingCombatText(tv.mesh.position.clone().add(new THREE.Vector3(0, 2.5, 0)), gameState.overdriveActive ? '⚡ OVERDRIVE SMASH! +300' : 'IMMORTAL SMASH! +150', 'combat-text-gold');
+                releaseTrafficVehicle(tv.mesh);
                 trafficVehicles.splice(i, 1);
                 continue;
               }
 
+              if (gameState.shieldBumperActive) {
+                // Shield Bumper absorbs 1 traffic collision without losing a heart or breaking combo!
+                gameState.shieldBumperActive = false;
+                if (shieldBumperMesh) shieldBumperMesh.visible = false;
+                soundFX.playPerfectChime();
+                triggerScreenShake(0.25, 0.9);
+                spawnVoxelBurst(playerVan.position.clone().add(new THREE.Vector3(0, 1.2, -1.8)), 0x38bdf8, 26);
+                showFloatingCombatText(playerVan.position.clone().add(new THREE.Vector3(0, 3, 0)), '🛡️ SHIELD DEFLECTED IMPACT!', 'combat-text-blue');
+                updateHUD();
+                // Knock traffic vehicle out of player's way
+                tv.forwardDriveSpeed = 45;
+                tv.mesh.position.x += (tv.mesh.position.x >= playerVan.position.x ? 2.8 : -2.8);
+                continue;
+              }
+
+              // Taking damage or grazing obstacles cracks fragile parcels in hand!
+              gameState.handModifiers.forEach((m) => {
+                if (m && m.type === 'fragile' && !m.cracked) {
+                  m.cracked = true;
+                }
+              });
+              renderBottomParcelHandUI();
+
               soundFX.playCrash();
               gameState.hearts -= 1;
+              damageHeadlight();
               gameState.combo = 1;
               gameState.invulnerableTimer = 1.65;
               updateHUD();
@@ -3286,6 +4025,7 @@
 
               if (gameState.hearts <= 0) {
                 gameState.mode = 'gameover';
+                completePersistentShift();
                 gameState.bestDeliveries = Math.max(gameState.bestDeliveries, gameState.deliveries);
                 gameState.bestDistance = Math.max(gameState.bestDistance, gameState.distanceMeters);
                 endParcelDrag();
@@ -3301,46 +4041,129 @@
           }
 
           if (tv.mesh.position.z > 38) {
-            scene.remove(tv.mesh);
+            releaseTrafficVehicle(tv.mesh);
             trafficVehicles.splice(i, 1);
           }
         }
 
         for (let i = flyingParcels.length - 1; i >= 0; i--) {
           const fp = flyingParcels[i];
+          if (!fp.targetApt) {
+            fp.progress += rawDt / fp.duration;
+            const t = Math.min(1, fp.progress);
+            fp.mesh.position.lerpVectors(fp.startPos, fp.endPos, t);
+            fp.mesh.position.y += Math.sin(t * Math.PI) * 4.8;
+            fp.mesh.rotation.x += rawDt * 10;
+            fp.mesh.rotation.y += rawDt * 12;
+
+            fp.trailDots.forEach((td, idx) => {
+              const tt = Math.max(0, t - (idx + 1) * 0.05);
+              td.position.lerpVectors(fp.startPos, fp.endPos, tt);
+              td.position.y += Math.sin(tt * Math.PI) * 4.8;
+            });
+
+            if (fp.progress >= 1) {
+              spawnVoxelBurst(fp.endPos, 0x94a3b8, 6);
+              removeFlyingParcel(i);
+            }
+            continue;
+          }
+          if (fp.targetApt.orderId !== fp.targetOrderId || fp.targetApt.delivered || !fp.targetApt.hasOrder) {
+            removeFlyingParcel(i);
+            continue;
+          }
           fp.progress += rawDt / fp.duration;
 
-          const liveEnd = new THREE.Vector3(
-            fp.targetApt.group.position.x + fp.targetApt.porchX,
-            1.0,
-            fp.targetApt.group.position.z
-          );
+          // Customer porch live position (magnetic homing tracks resident in real time)
+          const liveEnd = getResidentHandPosition(fp.targetApt, fp.endPos);
+          if (![liveEnd.x, liveEnd.y, liveEnd.z].every(Number.isFinite)) {
+            removeFlyingParcel(i);
+            continue;
+          }
 
           const t = Math.min(1, fp.progress);
+          // Parabolic trajectory with magnetic convergence
           fp.mesh.position.lerpVectors(fp.startPos, liveEnd, t);
-          fp.mesh.position.y += Math.sin(t * Math.PI) * 6.8;
-          fp.mesh.rotation.x += rawDt * 9;
-          fp.mesh.rotation.y += rawDt * 11;
+          fp.mesh.position.y += Math.sin(t * Math.PI) * 6.2;
+          fp.mesh.rotation.x += rawDt * 10;
+          fp.mesh.rotation.y += rawDt * 12;
 
           fp.trailDots.forEach((td, idx) => {
-            const tt = Math.max(0, t - (idx + 1) * 0.06);
+            const tt = Math.max(0, t - (idx + 1) * 0.05);
             td.position.lerpVectors(fp.startPos, liveEnd, tt);
-            td.position.y += Math.sin(tt * Math.PI) * 6.8;
+            td.position.y += Math.sin(tt * Math.PI) * 6.2;
           });
 
           if (fp.progress >= 1) {
             const apt = fp.targetApt;
             const pInfo = PARCEL_TYPES[fp.parcelType];
             if (apt.hasOrder && !apt.delivered) {
+              const engLvl = getVanTuningLevel(gameState.equippedVanId, 'engine');
+              const engScoreMult = 1 + (engLvl - 1) * 0.05;
+              const vanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
+              const baseCoinGain = Math.round((25 + gameState.combo * 8) * (1 + vanSpec.coinBonus / 100));
+
               if (apt.wantedType === fp.parcelType) {
+                // EXACT ORDER MATCH!
+                increaseOverdrive(20); // +20% Overdrive per successful delivery
+
+                // VIP DOUBLE ORDER (Roadside resident with golden crown requiring 2 throws)
+                if (apt.isVip && (!apt.vipDelivered || apt.vipDelivered < 1)) {
+                  apt.vipDelivered = 1;
+                  soundFX.playDeliverSuccess();
+                  triggerScreenShake(0.18, 0.7);
+                  spawnVoxelBurst(liveEnd, 0xfacc15, 24);
+
+                  const vipHalfPts = Math.round(pInfo.pts * 2 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier * (gameState.overdriveActive ? 2 : 1));
+                  const vipHalfCoins = Math.round(baseCoinGain * 2 * (gameState.overdriveActive ? 2 : 1) * fp.routeCoinMultiplier);
+                  gameState.score += vipHalfPts;
+                  gameState.coins += vipHalfCoins;
+                  gameState.runCoinsEarned += vipHalfCoins;
+                  gameState.deliveries += 1;
+                  updateHUD();
+
+                  updateContractProgress('deliveries_run', 1);
+                  showFloatingCombatText(liveEnd, fp.nightMultiplier > 1 ? '🌙 NIGHT VISION BONUS x1.5 • VIP 1/2' : '🎯 EXACT ORDER! x2 • VIP 1/2', 'combat-text-gold');
+
+                  // Guarantee matching parcel for 2nd throw in player's hand!
+                  ensureParcelAvailableInHand(apt.wantedType);
+
+                  removeFlyingParcel(i);
+                  continue;
+                }
+
+                // If VIP 2nd throw or Standard delivery:
+                const isVipJackpot = apt.isVip && apt.vipDelivered >= 1;
                 const isPerfect = !!fp.isSweetSpot;
-                const multiplier = isPerfect ? 2 : 1;
-                const engLvl = getVanTuningLevel(gameState.equippedVanId, 'engine');
-                const engScoreMult = 1 + (engLvl - 1) * 0.05;
-                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * engScoreMult);
-                const vanSpec = PLAYABLE_VANS.find(v => v.id === gameState.equippedVanId) || PLAYABLE_VANS[0];
-                const baseCoinGain = Math.round((25 + gameState.combo * 8) * (1 + vanSpec.coinBonus / 100));
-                const coinGain = baseCoinGain + (isPerfect ? 10 : 0);
+
+                // SPECIAL PARCEL MODIFIERS (HOT / FRAGILE)
+                let modMultiplier = 1.0;
+                let modText = '';
+                if (fp.modifier) {
+                  if (fp.modifier.type === 'hot') {
+                    if (fp.modifier.timer > 0) {
+                      modMultiplier *= 1.5; // +50% Piping Hot Bonus!
+                      modText = '🔥 PIPING HOT! +50%';
+                    } else {
+                      modText = '❄️ COOLED DOWN';
+                    }
+                  } else if (fp.modifier.type === 'fragile') {
+                    if (!fp.modifier.cracked) {
+                      modMultiplier *= 2.5; // 2.5x Intact Bonus!
+                      modText = '💎 INTACT FRAGILE! x2.5';
+                    } else {
+                      modText = '💔 CRACKED';
+                    }
+                  }
+                }
+
+                const overdriveMultiplier = gameState.overdriveActive ? 2 : 1;
+                const vipMultiplier = isVipJackpot ? 3.0 : 1.0;
+                const matchMultiplier = 2; // +100% exact order bonus
+                const multiplier = (isPerfect ? 2 : 1) * matchMultiplier * modMultiplier * vipMultiplier;
+                const pts = Math.round(pInfo.pts * gameState.combo * multiplier * overdriveMultiplier * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier);
+                const vipCoinBonus = isVipJackpot ? 100 : 0;
+                const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier * fp.routeCoinMultiplier);
 
                 apt.delivered = true;
                 apt.ringGroup.visible = false;
@@ -3351,7 +4174,7 @@
                 gameState.coins += coinGain;
                 gameState.runCoinsEarned += coinGain;
                 if (isPerfect) gameState.perfectDropCount++;
-                gameState.combo = Math.min(8, gameState.combo + (isPerfect ? 2 : 1));
+                gameState.combo = Math.min(8, gameState.combo + (isPerfect || isVipJackpot ? 2 : 1));
                 updateHUD();
 
                 updateContractProgress('deliveries_run', 1);
@@ -3364,33 +4187,51 @@
 
                 tryRandomDiscoveryOnDelivery(fp.parcelType, apt.character ? apt.character.id : null);
 
-                if (isPerfect) {
+                if (isVipJackpot) {
+                  soundFX.playPerfectChime();
+                  triggerScreenShake(0.42, 1.6);
+                  spawnVoxelBurst(liveEnd, 0xfacc15, 48);
+                  showFloatingCombatText(liveEnd, '🎯 VIP COMPLETE! +400', 'combat-text-gold');
+                } else if (isPerfect) {
                   soundFX.playPerfectChime();
                   triggerScreenShake(0.35, 1.4);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 36);
-                  showFloatingCombatText(liveEnd, '⚡ PERFECT DROP! x2', 'combat-text-gold');
-                  showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-amber-300 font-extrabold');
+                  showFloatingCombatText(liveEnd, '🎯 PERFECT! +200', 'combat-text-gold');
                 } else {
                   soundFX.playDeliverSuccess();
-                  triggerScreenShake(0.12, 0.5);
+                  triggerScreenShake(0.15, 0.6);
                   spawnVoxelBurst(liveEnd, pInfo.color, 24);
-                  showFloatingCombatText(liveEnd, 'GOOD DELIVERY!', 'combat-text-cyan');
-                  showFloatingPopup(liveEnd, `+${pts} PTS (+${coinGain} COINS)`, 'text-emerald-300 font-bold');
+                  showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! +2x', 'combat-text-gold');
                 }
+                if (fp.nightMultiplier > 1) showActionToast('🌙 NIGHT BONUS +1.5x', 'bonus');
               } else {
-                soundFX.playCrash();
-                gameState.combo = 1;
+                // WRONG PARCEL! Player receives 50% points & combo resets to 1
+                const pts = Math.max(10, Math.round(pInfo.pts * 0.5 * engScoreMult * fp.cargoMultiplier * fp.nightMultiplier));
+                const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5 * fp.routeCoinMultiplier));
+
+                apt.delivered = true;
+                apt.ringGroup.visible = false;
+                apt.cloudEl.classList.add('hidden');
+
+                gameState.score += pts;
+                gameState.deliveries += 1;
+                gameState.coins += coinGain;
+                gameState.runCoinsEarned += coinGain;
+                gameState.combo = 1; // Reset combo on wrong parcel
                 updateHUD();
-                spawnVoxelBurst(liveEnd, 0xef4444, 14);
-                showFloatingPopup(liveEnd, 'WRONG PARCEL!', 'text-rose-400');
+
+                updateContractProgress('deliveries_run', 1);
+
+                soundFX.playCrash();
+                triggerScreenShake(0.18, 0.6);
+                spawnVoxelBurst(liveEnd, 0xf43f5e, 18);
+                showFloatingCombatText(liveEnd, '📦 WRONG PARCEL! 50%', 'combat-text-rose');
               }
             } else {
               spawnVoxelBurst(liveEnd, 0x94a3b8, 12);
             }
 
-            scene.remove(fp.mesh);
-            fp.trailDots.forEach(td => scene.remove(td));
-            flyingParcels.splice(i, 1);
+            removeFlyingParcel(i);
           }
         }
       }
@@ -3427,8 +4268,19 @@
           particles.splice(i, 1);
         }
       }
+      while (particles.length > 60) {
+        const excess = particles.shift();
+        scene.remove(excess.mesh);
+      }
 
+      updateFallenCargo(rawDt);
+      updateNightSystems(rawDt, dt, playerSpeed);
+      updateRivalSystems(rawDt, dt, playerSpeed);
+      updateCourierPersistence(rawDt);
       renderer.render(scene, camera);
+      } catch (err) {
+        console.error("Game loop error:", err);
+      }
     }
 
     window.addEventListener('resize', updateCameraForViewport);
@@ -3468,26 +4320,18 @@
     window.addEventListener('pointerdown', startAudioOnFirstInteraction, { once: true });
     window.addEventListener('keydown', startAudioOnFirstInteraction, { once: true });
 
-    function hideLoadingOverlay() {
-      const loader = document.getElementById('loading-overlay');
-      if (loader && !loader.classList.contains('fade-out')) {
-        loader.classList.add('fade-out');
-        setTimeout(() => {
-          loader.style.display = 'none';
-        }, 550);
-      }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(hideLoadingOverlay, 1500);
-    });
-
-    window.onload = function () {
+    let isLoopStarted = false;
+    function startAnimationLoop() {
+      if (isLoopStarted) return;
       updateCameraForViewport();
       lastTime = performance.now();
+      renderer.render(scene, camera);
+      isLoopStarted = true;
       requestAnimationFrame(animate);
-      hideLoadingOverlay();
-    };
-
+      if (window.midnightStartup && window.midnightStartup.complete) {
+        window.midnightStartup.complete();
+      }
+    }
 
     function switchCityByIndex(targetIdx) {
       gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
@@ -3544,3 +4388,41 @@
         container.appendChild(btn);
       });
     }
+
+    function initializeGame() {
+      try {
+        initSavedProgression();
+        if (window.midnightStartup && window.midnightStartup.optional) {
+          window.midnightStartup.optional('parcel icons', generate3DIcons);
+          window.midnightStartup.optional('weather particles', initWeatherParticles);
+          window.midnightStartup.optional('ambient motes', initCozyMotes);
+          window.midnightStartup.optional('sidewalk actors', initSidewalkPromenadeActors);
+        } else {
+          generate3DIcons();
+          initWeatherParticles();
+          initCozyMotes();
+          initSidewalkPromenadeActors();
+        }
+        for (let pairIndex = 0; pairIndex < NUM_PAIRS; pairIndex++) {
+          const zPos = 12 - pairIndex * BLOCK_SPACING;
+          apartments.push(createApartmentBuilding('left', zPos, pairIndex * 2));
+          apartments.push(createApartmentBuilding('right', zPos, pairIndex * 2 + 1));
+        }
+        renderBottomParcelHandUI();
+        if (typeof initializeNightSystems === 'function') initializeNightSystems();
+        if (typeof updateCityLeftLandmark === 'function') updateCityLeftLandmark(CITY_THEMES[gameState.cityIndex]);
+        setHomePageMode(true);
+        updateHomeGarageUI();
+        if (typeof initializeCourierUI === 'function') initializeCourierUI();
+        renderCitySelectorUI();
+        startAnimationLoop();
+      } catch (error) {
+        if (window.midnightStartup && window.midnightStartup.fail) {
+          window.midnightStartup.fail(error, 'Game initialization failed');
+        } else {
+          console.error('Game initialization failed:', error);
+        }
+      }
+    }
+
+    initializeGame();

@@ -1,6 +1,6 @@
     const matCache = {};
     function getMat(colorHex, opts = {}) {
-      const key = `${colorHex}_${opts.emissive || 0}_${opts.emissiveIntensity || 0}_${opts.opacity || 1}`;
+      const key = `${colorHex}_${opts.emissive || 0}_${opts.emissiveIntensity || 0}_${opts.opacity ?? 1}_${opts.roughness ?? 0.5}_${opts.metalness ?? 0.08}`;
       if (!matCache[key]) {
         matCache[key] = new THREE.MeshStandardMaterial({
           color: colorHex,
@@ -8,14 +8,15 @@
           metalness: opts.metalness !== undefined ? opts.metalness : 0.08,
           emissive: opts.emissive || 0x000000,
           emissiveIntensity: opts.emissiveIntensity || 0,
-          transparent: !!opts.opacity,
-          opacity: opts.opacity || 1.0
+          transparent: opts.opacity !== undefined,
+          opacity: opts.opacity ?? 1.0
         });
       }
       return matCache[key];
     }
 
     const unitBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const trafficBlinkerMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
     function addVoxelBox(parent, sx, sy, sz, px, py, pz, colorHex, opts = {}) {
       const mesh = new THREE.Mesh(unitBoxGeo, getMat(colorHex, opts));
       mesh.scale.set(sx, sy, sz);
@@ -24,6 +25,29 @@
       mesh.receiveShadow = true;
       parent.add(mesh);
       return mesh;
+    }
+
+    function batchStaticVoxelBoxes(group) {
+      const materialGroups = new Map();
+      group.children.forEach(child => {
+        if (!child.isMesh || child.geometry !== unitBoxGeo || child.children.length > 0) return;
+        if (!materialGroups.has(child.material)) materialGroups.set(child.material, []);
+        materialGroups.get(child.material).push(child);
+      });
+      materialGroups.forEach((meshes, material) => {
+        if (meshes.length < 2) return;
+        const batch = new THREE.InstancedMesh(unitBoxGeo, material, meshes.length);
+        batch.castShadow = true;
+        batch.receiveShadow = true;
+        batch.frustumCulled = false;
+        meshes.forEach((mesh, index) => {
+          mesh.updateMatrix();
+          batch.setMatrixAt(index, mesh.matrix);
+          group.remove(mesh);
+        });
+        batch.instanceMatrix.needsUpdate = true;
+        group.add(batch);
+      });
     }
 
     // Native Script 3D Signboard Generator for Authentic Local Shops & Stalls
@@ -80,14 +104,15 @@
     // Horizon Chase-Cam Perspective matching Reference Images 1 & 2 (Sky visible at top, buildings framing street, full van above bar)
     const PLAY_CAM_POS = new THREE.Vector3(0, 9.2, 12.2);
     const PLAY_CAM_LOOK = new THREE.Vector3(0, 2.3, -42.0);
-    const SHOWROOM_CAM_POS = new THREE.Vector3(5.6, 4.1, 6.8);
-    const SHOWROOM_CAM_LOOK = new THREE.Vector3(0, 1.5, 0);
+    const SHOWROOM_CAM_POS = new THREE.Vector3(5.8, 2.3, -7.2);
+    const SHOWROOM_CAM_LOOK = new THREE.Vector3(0, 1.15, -0.2);
 
     function updateCameraForViewport() {
       const w = window.innerWidth || 375;
       const h = window.innerHeight || 667;
       const aspect = w / h;
       camera.aspect = aspect;
+      camera.userData.gameplayFov = aspect < 0.65 ? 58 : 55;
 
       if (aspect < 0.65) {
         // Tall Portrait Mobile (Matches Screenshots 1 & 2: sky at top, full van centered above parcel bar)
@@ -111,15 +136,16 @@
         PLAY_CAM_LOOK.set(0, 2.3, -42.0);
       }
 
+      if (gameState.mode !== 'home') camera.fov = camera.userData.gameplayFov;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
       if (gameState.mode === 'home') {
-        const distMult = aspect < 0.75 ? 1.28 : 1.0;
-        const targetY = aspect < 0.75 ? 1.25 : 1.55;
-        SHOWROOM_CAM_POS.set(5.4 * distMult, 4.0 * distMult, 6.5 * distMult);
-        SHOWROOM_CAM_LOOK.set(0, targetY, 0);
+        const distMult = aspect < 0.75 ? 1.25 : (aspect < 1.0 ? 1.12 : 1.0);
+        const targetY = aspect < 0.75 ? 1.05 : 1.15;
+        SHOWROOM_CAM_POS.set(5.8 * distMult, 2.3 * distMult, -7.2 * distMult);
+        SHOWROOM_CAM_LOOK.set(0, targetY, -0.2);
         camera.up.set(0, 1, 0);
         camera.position.copy(SHOWROOM_CAM_POS);
         camera.lookAt(SHOWROOM_CAM_LOOK);
@@ -437,11 +463,11 @@
         return group;
       }
 
-      const skin = charTypeId === 'doge' ? 0xf59e0b : 0xf4be92;
+      const skin = charTypeId === 'inlechef' ? 0xf59e0b : 0xf4be92;
       addVoxelBox(group, 0.32, 0.44, 0.34, -0.22, 0.22, 0, 0x1e293b);
       addVoxelBox(group, 0.32, 0.44, 0.34,  0.22, 0.22, 0, 0x1e293b);
 
-      const coatCol = charTypeId === 'wizard' ? 0x6d28d9 : (charTypeId === 'doge' ? 0xffffff : 0xec4899);
+      const coatCol = charTypeId === 'wizard' ? 0x6d28d9 : (charTypeId === 'inlechef' ? 0xffffff : 0xec4899);
       addVoxelBox(group, 0.84, 0.78, 0.52, 0, 0.88, 0, coatCol);
 
       const rightArmPivot = new THREE.Group();
@@ -457,7 +483,7 @@
       addVoxelBox(group, 0.14, 0.20, 0.14, -0.26, 1.86, 0.51, 0x090d16);
       addVoxelBox(group, 0.14, 0.20, 0.14,  0.26, 1.86, 0.51, 0x090d16);
 
-      if (charTypeId === 'doge') {
+      if (charTypeId === 'inlechef') {
         addVoxelBox(group, 0.54, 0.34, 0.32, 0, 1.66, 0.54, 0xfef3c7);
         addVoxelBox(group, 0.20, 0.16, 0.16, 0, 1.76, 0.68, 0x090d16);
         addVoxelBox(group, 0.28, 0.36, 0.24, -0.38, 2.46, 0.08, 0xd97706);
@@ -594,7 +620,11 @@
       });
 
       iconRenderer.dispose();
+      iconRenderer.forceContextLoss();
     }
+
+    const gateSignGeo = new THREE.BoxGeometry(12.6, 2.4, 0.45);
+    const gateSignMatCache = {};
 
     function createCityWelcomeGate(cityTheme) {
       const group = new THREE.Group();
@@ -616,24 +646,26 @@
         addVoxelBox(group, 0.75, 0.95, 0.75, lx, 8.3, 0, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.95 });
       });
 
-      const signCanvas = document.createElement('canvas');
-      signCanvas.width = 512;
-      signCanvas.height = 128;
-      const ctx = signCanvas.getContext('2d');
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 512, 128);
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(6, 6, 500, 116);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(cityTheme.banner, 256, 64);
+      if (!gateSignMatCache[cityTheme.id]) {
+        const signCanvas = document.createElement('canvas');
+        signCanvas.width = 512;
+        signCanvas.height = 128;
+        const ctx = signCanvas.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 512, 128);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(6, 6, 500, 116);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cityTheme.banner, 256, 64);
 
-      const signTex = new THREE.CanvasTexture(signCanvas);
-      const signMat = new THREE.MeshBasicMaterial({ map: signTex });
-      const signMesh = new THREE.Mesh(new THREE.BoxGeometry(12.6, 2.4, 0.45), signMat);
+        const signTex = new THREE.CanvasTexture(signCanvas);
+        gateSignMatCache[cityTheme.id] = new THREE.MeshBasicMaterial({ map: signTex });
+      }
+      const signMesh = new THREE.Mesh(gateSignGeo, gateSignMatCache[cityTheme.id]);
       signMesh.position.set(0, 9.8, 0.95);
       group.add(signMesh);
 
@@ -667,7 +699,7 @@
           members.push(duck);
         }
       } else {
-        const walker = createVoxelCharacter('doge', 0.78);
+        const walker = createVoxelCharacter('inlechef', 0.78);
         walker.rotation.y = Math.PI / 2;
         walkerGroup.add(walker);
         members.push(walker);
@@ -754,6 +786,9 @@
 
       return [bL, bR];
     }
+
+    const immortalAuraGeometry = new THREE.RingGeometry(2.5, 3.2, 32);
+    const immortalAuraMaterial = new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
 
     function createPlayableVanMesh(vanId = 'classic', includeCargoGift = true) {
       const spec = PLAYABLE_VANS.find(v => v.id === vanId) || PLAYABLE_VANS[0];
@@ -956,8 +991,8 @@
 
       // Rainbow Immortal Aura Shield Ring around the vehicle (Visible when Immortal Power-Up is active)
       const immortalAura = new THREE.Mesh(
-        new THREE.RingGeometry(2.5, 3.2, 32),
-        new THREE.MeshBasicMaterial({ color: 0x00f5d4, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+        immortalAuraGeometry,
+        immortalAuraMaterial
       );
       immortalAura.rotation.x = -Math.PI / 2;
       immortalAura.position.y = 0.18;
@@ -989,18 +1024,71 @@
       if (currentVan) {
         scene.remove(currentVan);
       }
-      const newVan = createPlayableVanMesh(vanId, true);
-      if (typeof playerVan !== 'undefined') {
-        playerVan = newVan;
+      playerVan = createPlayableVanMesh(vanId, true);
+      playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
+      const isLightsOn = TIME_PRESETS[gameState.timeIndex].lightsOn;
+      if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = isLightsOn;
+      if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = isLightsOn;
+      scene.add(playerVan);
+      playerVan.add(overdriveAuraMesh);
+      playerVan.add(shieldBumperMesh);
+      attachRoofCargoToVan(playerVan);
+    }
+
+    function createCargoCrateMesh() {
+      const crate = new THREE.Group();
+      addVoxelBox(crate, 1.05, CARGO_CONFIG.crateHeight, 1.05, 0, 0, 0, 0xc58b4a);
+      addVoxelBox(crate, 0.14, CARGO_CONFIG.crateHeight + 0.02, 1.07, 0, 0, 0, 0xffedba);
+      addVoxelBox(crate, 1.07, CARGO_CONFIG.crateHeight + 0.02, 0.14, 0, 0, 0, 0xffedba);
+      addVoxelBox(crate, 0.28, 0.22, 0.02, 0.27, 0.02, 0.54, 0xffffff);
+      return crate;
+    }
+
+    function createSupplyDepotMesh(laneIndex) {
+      const depot = new THREE.Group();
+      const laneX = LANES[laneIndex];
+      const glow = { emissive: 0x22c55e, emissiveIntensity: 0.9 };
+      for (const side of [-1, 1]) {
+        addVoxelBox(depot, 0.24, 9.2, 0.5, laneX + side * 1.65, 4.6, 0, 0x22c55e, glow);
       }
-      if (typeof window !== 'undefined') {
-        window.playerVan = newVan;
-      }
-      newVan.position.set(gameState.currentX, 0, gameState.vanZ);
-      const isLightsOn = (typeof TIME_PRESETS !== 'undefined' && TIME_PRESETS[gameState.timeIndex]) ? TIME_PRESETS[gameState.timeIndex].lightsOn : false;
-      if (newVan.userData.beamLeft) newVan.userData.beamLeft.visible = isLightsOn;
-      if (newVan.userData.beamRight) newVan.userData.beamRight.visible = isLightsOn;
-      scene.add(newVan);
+      addVoxelBox(depot, 3.55, 0.35, 0.6, laneX, 9.1, 0, 0x22c55e, glow);
+      addVoxelBox(depot, 3.15, 0.04, 4.0, laneX, 0.06, 0, 0x22c55e, glow);
+      const sign = createNativeSignboardMesh('SUPPLY', '+2 CRATES', '#064e3b', '#86efac', 3.2, 1.1, 0.2);
+      sign.position.set(laneX, 9.9, 0.4);
+      depot.add(sign);
+      return depot;
+    }
+
+    function createCargoOverpassMesh(safeLaneIndex, rackHeight) {
+      const bridge = new THREE.Group();
+      const clearances = LANES.map((laneX, laneIndex) => {
+        const allowedCrates = laneIndex === safeLaneIndex ? CARGO_CONFIG.capacity : 1 + laneIndex % 3;
+        const clearance = rackHeight + 0.18 + allowedCrates * CARGO_CONFIG.spacing;
+        const safe = laneIndex === safeLaneIndex;
+        const color = safe ? 0x22c55e : 0xef4444;
+        const glow = { emissive: color, emissiveIntensity: 0.85 };
+        for (const side of [-1, 1]) {
+          addVoxelBox(bridge, 0.18, safe ? 9 : clearance, 0.55, laneX + side * 1.7, (safe ? 9 : clearance) / 2, 0, safe ? 0x166534 : 0x475569);
+        }
+        if (!safe) {
+          addVoxelBox(bridge, 3.4, 0.35, 1.0, laneX, clearance + 0.15, 0, 0xef4444, glow);
+          addVoxelBox(bridge, 3.4, 0.08, 1.04, laneX, clearance, 0, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 1.0 });
+        } else {
+          addVoxelBox(bridge, 3.4, 0.3, 0.8, laneX, 9.1, 0, 0x22c55e, glow);
+        }
+        const sign = createNativeSignboardMesh(
+          safe ? '✅ OPEN' : '❌ LOW',
+          safe ? 'OPEN LANE' : `MAX ${allowedCrates} CRATES`,
+          safe ? '#064e3b' : '#450a0a',
+          safe ? '#4ade80' : '#fecaca',
+          3.1, 1.0, 0.2
+        );
+        sign.position.set(laneX, safe ? 9.3 : clearance + 0.95, 0.65);
+        bridge.add(sign);
+        return safe ? Infinity : clearance;
+      });
+      bridge.userData.clearances = clearances;
+      return bridge;
     }
 
     function createTrafficVehicle(type) {
@@ -1178,6 +1266,8 @@
     const windowMeshes = [];
     const sidewalkActors = [];
 
+    const streetLampPoolGeometry = new THREE.CircleGeometry(2.6, 16);
+    const streetLampPoolMaterial = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.22, depthWrite: false });
     function initSidewalkPromenadeActors() {
       // Cozy Warm Gooseneck Streetlamps on the outer road curb edge (x = ±7.95)
       for (let z = 25; z > -235; z -= 26) {
@@ -1203,8 +1293,8 @@
 
           // Warm soft ambient golden light puddle on sidewalk
           const pool = new THREE.Mesh(
-            new THREE.CircleGeometry(3.6, 24),
-            new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.32, depthWrite: false })
+            streetLampPoolGeometry,
+            streetLampPoolMaterial
           );
           pool.rotation.x = -Math.PI / 2;
           pool.position.set(sign * 0.95, 0.26, 0);
@@ -1216,8 +1306,9 @@
         });
       }
 
-      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path (x = ±11.45)
-      const charIds = ['goblin', 'doge', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
+      // Cyclists ride in the green bike lane (x = ±9.15) and Dog-Walkers stroll on a dedicated clear path
+      // (x = ±10.95) while trees & porch pads are positioned so nobody ever walks through a tree!
+      const charIds = ['goblin', 'inlechef', 'banana', 'neko', 'wizard', 'panda', 'cyberpunk'];
       const dogCols = [0xd97706, 0xfef3c7, 0x78350f, 0xf97316];
       for (let i = 0; i < 12; i++) {
         const isLeft = i % 2 === 0;
@@ -1242,7 +1333,7 @@
     // 8B. 10 GRAND REAL-LIFE CITY LANDMARKS (Towering authentic architecture)
     // ============================================================================
 
-// 1. TOKYO - Grand Tokyo Tower (Minato, Tokyo)
+    // 1. TOKYO - Grand Tokyo Tower (Minato, Tokyo)
 // Authentic 7 alternating bands of International Orange & Aviation White
 // 2-story glass-walled Main Deck with glowing observation lights & red aviation beacon spire
 function createGrandTokyoTower(parent, px, py, pz) {
@@ -1967,7 +2058,14 @@ function createGrandPyramidAndSphinx(parent, px, py, pz) {
 function updateCityLeftLandmark(cityTheme) {
   if (!window.cityLeftLandmarkGroup) return;
   while (window.cityLeftLandmarkGroup.children.length > 0) {
-    window.cityLeftLandmarkGroup.remove(window.cityLeftLandmarkGroup.children[0]);
+    const child = window.cityLeftLandmarkGroup.children[0];
+    child.traverse(c => {
+      if (c.isMesh) {
+        if (c.geometry && c.geometry !== unitBoxGeo) c.geometry.dispose();
+        if (c.material) { if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+      }
+    });
+    window.cityLeftLandmarkGroup.remove(child);
   }
   if (!cityTheme) return;
 
@@ -2131,8 +2229,11 @@ function addBackgroundSkyline(parent, xSign, index, cityTheme) {
 
 // FULL REBUILD APARTMENT VISUALS WITH AUTHENTIC MULTI-PART ARCHITECTURE
 function rebuildApartmentVisuals(apt, cityTheme, index) {
+  apt.currentThemeId = cityTheme.id;
   while (apt.archGroup.children.length > 0) {
-    apt.archGroup.remove(apt.archGroup.children[0]);
+    const child = apt.archGroup.children[0];
+    if (child.isInstancedMesh) child.dispose();
+    apt.archGroup.remove(child);
   }
   apt.windowMeshes = [];
 
@@ -3024,6 +3125,7 @@ function rebuildApartmentVisuals(apt, cityTheme, index) {
   addVoxelBox(apt.archGroup, 0.52, 1.8, 0.52, treeX, 0.9, 5.4, 0x78350f);
   const leafCol = cityTheme.id === 'tokyo' ? 0xf472b6 : (cityTheme.id === 'chinatown' ? 0x10b981 : 0x22c55e);
   addVoxelBox(apt.archGroup, 1.85, 2.1, 1.85, treeX, 2.7, 5.4, leafCol);
+  batchStaticVoxelBoxes(apt.archGroup);
 }
 
 var apartments = [];
@@ -3034,7 +3136,7 @@ window.apartments = apartments;
 window.NUM_PAIRS = NUM_PAIRS;
 window.BLOCK_SPACING = BLOCK_SPACING;
 
-function createApartmentBuilding(side, zPos, index) {
+    function createApartmentBuilding(side, zPos, index) {
       const group = new THREE.Group();
       const xSign = side === 'left' ? -1 : 1;
       const xCenter = xSign * 16.2;
@@ -3097,10 +3199,34 @@ function createApartmentBuilding(side, zPos, index) {
         orderId: 0
       };
 
+      cloudEl.addEventListener('click', event => {
+        if (!event.target.closest('.quick-throw-cloud-btn') || !isResidentInThrowRange(aptData)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const matchingSlot = gameState.handSlots.indexOf(aptData.wantedType);
+        if (matchingSlot !== -1) {
+          gameState.lockedTargetApt = aptData;
+          throwFromSlot(matchingSlot);
+        }
+      });
+
       rebuildApartmentVisuals(aptData, CITY_THEMES[gameState.cityIndex], index);
       configureApartmentCustomer(aptData, zPos < -42);
       envGroup.add(group);
       return aptData;
+    }
+
+    function createVoxelCrownMesh() {
+      const crown = new THREE.Group();
+      const cOpt = { emissive: 0xfacc15, emissiveIntensity: 0.95, metalness: 0.8 };
+      addVoxelBox(crown, 1.0, 0.22, 1.0, 0, 0, 0, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24, -0.38, 0.28, -0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24,  0.38, 0.28, -0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24, -0.38, 0.28,  0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.24, 0.44, 0.24,  0.38, 0.28,  0.38, 0xfacc15, cOpt);
+      addVoxelBox(crown, 0.28, 0.28, 0.28, 0, 0.22, 0.42, 0xef4444, { emissive: 0xef4444, emissiveIntensity: 1.0 });
+      crown.position.y = 2.45;
+      return crown;
     }
 
     function configureApartmentCustomer(apt, allowOrder = true) {
@@ -3108,11 +3234,18 @@ function createApartmentBuilding(side, zPos, index) {
         apt.customerSlot.remove(apt.customerSlot.children[0]);
       }
       apt.charMesh = null;
+      apt.crownMesh = null;
       apt.delivered = false;
+      apt.isVip = false;
+      apt.vipNeeded = 1;
+      apt.vipDelivered = 0;
 
-      // Enforce at least ~165m gap between active orders so only 1 order is active at a time
+      const isRushHour = !!(gameState && gameState.rushHourActive);
+      const minOrderGap = isRushHour ? 48 : 95;
+
+      // Enforce order gap so orders don't overcrowd
       const tooCloseToExistingOrder = apartments.some(
-        other => other !== apt && other.hasOrder && !other.delivered && Math.abs(other.group.position.z - apt.group.position.z) < 95
+        other => other !== apt && other.hasOrder && !other.delivered && Math.abs(other.group.position.z - apt.group.position.z) < minOrderGap
       );
 
       // Hold off spawning customer orders while player is still in Tutorial Step 1 (Steering Practice)
@@ -3123,7 +3256,8 @@ function createApartmentBuilding(side, zPos, index) {
         return;
       }
 
-      if (!allowOrder || tooCloseToExistingOrder || Math.random() < 0.35) {
+      const skipChance = routeState.kind === 'express' ? 0 : isRushHour ? 0.12 : 0.35;
+      if (!allowOrder || tooCloseToExistingOrder || Math.random() < skipChance) {
         apt.hasOrder = false;
         apt.ringGroup.visible = false;
         apt.cloudEl.classList.add('hidden');
@@ -3133,14 +3267,32 @@ function createApartmentBuilding(side, zPos, index) {
       globalOrderCounter++;
       apt.hasOrder = true;
       apt.orderId = globalOrderCounter;
-      apt.wantedType = Math.floor(Math.random() * PARCEL_TYPES.length);
+
+      // In Rush Hour Blitz, 65% chance for high-tier parcel (Legendary, Gold, Epic: ids 0 to 5)
+      if (isRushHour && Math.random() < 0.65) {
+        const highTierPool = [0, 1, 2, 3, 4, 5];
+        apt.wantedType = highTierPool[Math.floor(Math.random() * highTierPool.length)];
+      } else {
+        apt.wantedType = Math.floor(Math.random() * PARCEL_TYPES.length);
+      }
       apt.character = CHARACTER_TYPES[Math.floor(Math.random() * CHARACTER_TYPES.length)];
 
       const charMesh = createVoxelCharacter(apt.character.id, 0.96);
       apt.customerSlot.add(charMesh);
       apt.charMesh = charMesh;
 
-      apt.ringGroup.visible = true;
+      // VIP Double Order (20% chance)
+      const isVip = routeState.kind === 'express' || Math.random() < 0.20;
+      apt.isVip = isVip;
+      apt.vipNeeded = isVip ? 2 : 1;
+      apt.vipDelivered = 0;
+      if (isVip) {
+        const crown = createVoxelCrownMesh();
+        apt.crownMesh = crown;
+        apt.customerSlot.add(crown);
+      }
+
+      apt.ringGroup.visible = false;
       ensureParcelAvailableInHand(apt.wantedType);
     }
 

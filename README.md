@@ -11,7 +11,7 @@
 ## 📖 Executive Summary
 **Midnight Delivery** is a high-octane 3D arcade voxel delivery runner developed for Myanmar's **Digit7 competition**. Players pilot customizable delivery rigs across global metropolitan highways (featuring **Yangon**, Tokyo, Chinatown, Little India, and Pastel Metro), dodging traffic hazards, navigating pedestrian crosswalks, and slinging tiered meme parcels to quirky roadside voxel residents.
 
-The game is built as a self-contained, zero-dependency, single-file HTML5 web application (`midnight_delivery.html`) utilizing Three.js and procedural Web Audio chiptune synthesis.
+The game is a modular static HTML5 application utilizing Three.js and procedural Web Audio chiptune synthesis. `index.html` and `midnight_delivery.html` are identical entry points; gameplay lives in the shared `scripts/` files.
 
 ---
 
@@ -22,13 +22,32 @@ Double-click [`midnight_delivery.html`](file:///c:/Users/ZL_sht_H/Documents/Proj
 
 ### Option 2: Local HTTP Server (Recommended)
 ```powershell
-# Using Python
-python -m http.server 8000
-
-# Using Node.js
-npx serve .
+# Using Node.js dev server
+npm start
 ```
-Then visit: **`http://localhost:8000/midnight_delivery.html`**
+Then visit: **`http://localhost:8081`** or **`http://localhost:8081/midnight_delivery.html`**
+
+### Option 3: Automated Verification & Testing
+```powershell
+# Run automated build, layout, and browser smoke verification
+npm test
+
+# Run 1,000-throw & sway physics stress suite
+npm run test:stress
+
+# Run continuous 15-minute soak test
+npm run test:soak
+```
+
+`http://localhost:8081/` and `http://localhost:8081/midnight_delivery.html` open the same synchronized game. Both load active code from `scripts/` and styles from `styles/`.
+
+Three.js r128 is bundled locally in `scripts/vendor/` with its license. Fonts are optional and never block startup. The ordered deferred scripts initialize after the DOM is parsed; `scripts/startup.js` registers error reporting and an eight-second loader watchdog before dependencies load. Optional visual-helper failures are logged without blocking the menu. Critical failures dismiss the loader and show a retry screen rather than pretending the game is playable. Startup script versions must stay synchronized between both entry points.
+
+Utility styles are bundled in `styles/utilities.css`, so layout and SVG sizing do not require the Tailwind CDN. After changing utility classes in HTML or JavaScript, rebuild the stylesheet from the project directory:
+
+```powershell
+npx --yes --package tailwindcss@3.4.17 tailwindcss -i styles/utilities.input.css -o styles/utilities.css --content "./*.html,./scripts/*.js" --minify
+```
 
 ---
 
@@ -37,9 +56,10 @@ Then visit: **`http://localhost:8000/midnight_delivery.html`**
 | Action | Desktop Keyboard | Mobile / Touch |
 | :--- | :--- | :--- |
 | **Steer / Switch Lanes** | `A` / `D` or `←` / `→` Arrow Keys | Swipe Left / Right on road |
-| **Deliver Parcel** | Drag parcel slot & release left or right | Touch & drag parcel card from dock to roadside target |
+| **Deliver Parcel** | Left slot: `Q` / `1`; middle: `W` / `2`; right: `E` / `3`, or click a card | Tap a parcel card once; drag aiming is also supported |
 | **⚡ Sweet-Spot Perfect Drop** | Release parcel when roadside ring shrinks to center | Release in golden pulsing zone for 2x pts & +10 coins |
 | **🔥 Traffic Near-Miss** | Pass close in adjacent lane or dodge at last second | Close-pass traffic to build combo & trigger speed lines |
+| **💥 Side-Ram Rival** | Steer into adjacent lane while alongside Shadow Express | Side-ram rival to stun them for 4s and steal +2 crates |
 | **Slow-Mo Aiming** | Hold parcel while dragging | Hold parcel while dragging |
 | **Pause / Resume** | `Escape` key | Pause button on top-right HUD |
 | **Garage Orbit** | Click & drag 3D turntable | Drag finger on 3D garage showroom |
@@ -48,18 +68,60 @@ Then visit: **`http://localhost:8000/midnight_delivery.html`**
 
 ## 🗺️ Codebase Architecture & System Map
 
+Residents lock on between 40 world units ahead and 12 units behind the van. Their ground ring and parcel badge show the matching dock key. Exact orders earn x2 points and coins before additional modifiers; wrong items award 50% of base points and coins. Throws track the resident's moving hands, and a resident's active flight completes before their building is recycled.
+
+### Signature Gameplay Pillars
+
+1. **Roof-Stacking Cargo Physics & Overpasses (`scripts/cargo.js`):**
+   - Each shift starts with three physical roof crates. Every throw consumes one; capacity is six. Q/W/E choose the parcel type from active dock slots.
+   - Drive through green `SUPPLY / +2 CRATES` arches to reload. Empty cargo prevents throws until a depot is collected.
+   - Delivery scores scale with stack size: one crate gives x1.0, three x1.8, and six x3.0.
+   - Rapid opposite lane changes destabilize tall stacks. Extreme sway shears off the top crate.
+   - Low-clearance overpass gantries knock off excessive crates unless guided into the marked green safe clearance lane.
+
+2. **Midnight Blackout Zones & Headlight Cones (`scripts/night.js`):**
+   - Every ~350m, a 25-second power grid blackout plunges the highway into deep midnight darkness while building windows glow.
+   - Dual 3D headlight cones illuminate the road. Traffic collisions crack one headlight beam until repaired at a blue glowing `🔧 PIT-STOP REPAIR` road pad (+1 Heart restoration).
+   - Roadside customers ignite bright red/gold SOS flares with rising spark particles.
+
+3. **Rival Courier AI & Split-Road Route Forks (`scripts/rivals.js`):**
+   - Every 45s, the Shadow Express rival van races alongside the player and attempts to snipe customer deliveries.
+   - Sniping before the rival awards `⚡ SNIPED RIVAL! +500`. Steering side-by-side into the rival executes a side-ram, stunning them for 4s and looting +2 roof crates.
+   - Route gates spawn every 500m: **Left Gate (Express Shortcut)** triggers dense traffic, low bridges, 2x coins, and VIP orders for 20s; **Right Gate (Safe Bypass)** provides clear lanes with guaranteed Supply Depots and Repair Pads.
+
+4. **Object Pooling & Memory Stability (`scripts/pools.js`, `scripts/audio.js`):**
+   - Pre-instantiated `trafficMeshPool` recycles vehicle meshes and turn blinkers without WebGL allocation churn.
+   - Burst particles strictly capped to 60 with automatic queue cleanup.
+   - Web Audio oscillators and gains pooled up to 32 voices with immediate disconnection upon playback completion.
+   - Schema-validated `CourierDB` in `scripts/database.js` provides crash-resilient auto-save and active shift resumption.
+
 The project is structured into the official **Digit7 Jam Modular Architecture** with shared global scope:
 
 ```
-├── index.html                 : HTML head, CDNs, #loading-overlay (<10s loader), UI modals, and script tags
+├── index.html                 : HTML entry point, CDNs, #loading-overlay, HUD, and modals
+├── midnight_delivery.html     : Identical alternate entry point (synchronized)
+├── server.js                  : Built-in local HTTP server with automatic port fallback
 ├── styles/
-│   └── main.css               : Arcade design system, glassmorphism, 3D buttons, and loading spinner styles
+│   ├── main.css               : Custom arcade HUD, responsive viewports, and modal styles
+│   └── utilities.css          : Tailored utility styles
 ├── scripts/
-│   ├── audio.js               : SoundSystem Web Audio synth with iOS/Safari try/catch compatibility (~300 lines)
-│   ├── data.js                : Registries (PARCEL_TYPES, CHARACTER_TYPES, PLAYABLE_VANS, CITY_THEMES, gameState) (~475 lines)
-│   ├── voxels.js              : Three.js Scene, Camera, Lights, and procedural Voxel Geometry builders (~1,520 lines)
-│   └── game.js                : Showroom Garage, UI handlers, Traffic, Crosswalks, Controls, and Game Loop (~2,520 lines)
-└── midnight_delivery.html     : Single-file source backup (preserved)
+│   ├── audio.js               : SoundSystem Web Audio synth with voice pooling and SFX
+│   ├── data.js                : Registries (PARCEL_TYPES, CHARACTER_TYPES, PLAYABLE_VANS, CITY_THEMES, gameState)
+│   ├── database.js            : Schema-validated CourierDB with localStorage recovery and telemetry
+│   ├── voxels.js              : Three.js scene, shared geometry caches, and procedural voxel mesh builders
+│   ├── cargo.js               : Roof cargo stacking, sway physics, overpasses, and fallen crate pool
+│   ├── night.js               : Blackout zones, dynamic headlight cones, pit-stop repairs, and SOS flares
+│   ├── rivals.js              : Shadow Express rival courier AI, delivery racing, and route fork gates
+│   ├── pools.js               : Object pooling for traffic vehicles and burst particles
+│   ├── startup.js             : Fail-safe boot loader and initialization watchdog
+│   └── game.js                : Core game loop, vehicle physics, input handling, and delivery mechanics
+└── tests/
+    ├── verify_build.js        : Automated static and Playwright browser verification suite
+    ├── stress_test.js         : 1,000-throw & extreme sway physics stress test harness
+    ├── smoke.js               : Automated headless browser smoke and soak driver
+    ├── database.js            : CourierDB schema and persistence unit tests
+    ├── mechanics.js           : Gameplay mechanics validation
+    └── layout.js              : 1280x720 desktop & 360x640 mobile viewport layout auditor
 ```
 
 ---
@@ -146,7 +208,7 @@ When prompting **Gemini (Argon model)** or working cooperatively with your AI as
 - [x] Authentic Myanmar theme (Yangon, Burmese signboards, local lore)
 - [x] Responsive layout (playable on mobile phones and PC desktops)
 - [x] Procedural audio synthesis without external asset lag
-- [x] Gacha / Collection progression & high score retention
+- [x] Courier Supply Drops / Collection progression & high score retention
 - [ ] Additional Myanmar landmarks (e.g., Mandalay Palace, Inle Lake stilt houses)
 - [ ] Multiplayer / Local pass-and-play ghost racer mode
 - [ ] Burmese language UI toggle option (Zawgyi / Unicode)

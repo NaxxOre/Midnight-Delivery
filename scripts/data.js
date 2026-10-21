@@ -28,7 +28,7 @@
       },
       {
         id: 2,
-        key: 'ps5',
+        key: 'digitbox',
         name: 'DigitBox 7 Pro Console',
         short: 'DIGITBOX 7',
         pts: 450,
@@ -151,7 +151,7 @@
     // 8 Expressive, Cool Voxel Characters
     const CHARACTER_TYPES = [
       { id: 'goblin',    name: 'Big-Eye Goblin',   phrase: '"Hehe!  Yes!"' },
-      { id: 'doge',      name: 'Golden Inle Chef', phrase: '"Much Parcel! Very Fast!"' },
+      { id: 'inlechef',  name: 'Golden Inle Chef', phrase: '"Fresh parcels, happy neighbors!"' },
       { id: 'banana',    name: 'Cool Banana Bro',  phrase: '"Peel Good Bro!"' },
       { id: 'neko',      name: 'Neko-Chan',        phrase: '"Meow! Toss Here!"' },
       { id: 'ledbot',    name: 'LED-Bot 9000',     phrase: '"BEEP! Drop Beat!"' },
@@ -444,7 +444,7 @@
           { top: 'برج مارينا',   bottom: 'MARINA SKY LOUNGE', bg: '#0369a1', fg: '#ffffff' }
         ]
       },
-            {
+      {
         id: 'cairo',
         name: 'Cairo',
         banner: 'مرحباً بكم في القاهرة (WELCOME TO CAIRO)',
@@ -564,6 +564,7 @@
 
     const LANES = [-5.4, -1.8, 1.8, 5.4];
     const ROAD_WIDTH = 16.5;
+    const CARGO_CONFIG = Object.freeze({ capacity: 6, spacing: 0.72, crateHeight: 0.66, swayLimit: 0.5 });
 
     const gameState = {
       mode: 'home',
@@ -572,12 +573,27 @@
       bestDeliveries: 0,
       bestDistance: 0,
       coins: 250,
+      callsign: 'Courier',
+      highScore: 0,
+      lifetimeDeliveries: 0,
+      maxRoofStack: 3,
       runCoinsEarned: 0,
+      roofCrates: 3,
+      vanSwayAngle: 0,
+      cargoSwayVelocity: 0,
+      cargoStress: 0,
+      cargoDanger: 0,
+      cargoLossCooldown: 0,
+      lastCargoVelocity: 0,
+      lastCargoSteerTime: -Infinity,
+      lastCargoSteerDir: 0,
+      nextSupplyDistance: 65,
+      nextOverpassDistance: 100,
       combo: 1,
       nearMissCount: 0,
       perfectDropCount: 0,
       hearts: 3,
-      maxHearts: 5,
+      maxHearts: 3,
       laneIndex: 2,
       currentX: LANES[2],
       vanZ: -5.4,
@@ -589,6 +605,7 @@
       entranceTimer: 0,
       baseSpeed: 31,
       handSlots: [0, 2, 6],
+      handModifiers: [null, null, null],
       selectedSlotIndex: 0,
       cityIndex: 0,
       timeIndex: 0,
@@ -601,14 +618,26 @@
       dragSide: null,
       dragCancel: false,
       targetAptLock: null,
+      // Overdrive & Power-Up States
+      overdriveMeter: 0,
+      overdriveActive: false,
+      overdriveTimer: 0,
+      droneAssistTimer: 0,
+      coinMagnetTimer: 0,
+      shieldBumperActive: false,
+      // Dynamic Road Events
+      survivalTimer: 0,
+      rushHourActive: false,
+      rushHourTimer: 0,
+      nextRushHourAt: 60.0,
       // Courier Rank & Retention State
       courierXP: 0,
       courierRankLevel: 1,
       shiftContracts: [],
       vanTuning: {},
-      gachaPityEpic: 0,
-      gachaPityLegendary: 0,
-      gachaTotalPulls: 0,
+      capsulePityEpic: 0,
+      capsulePityLegendary: 0,
+      capsuleTotalPulls: 0,
       // Step-by-Step Tutorial State
       tutorialActive: false,
       tutorialStep: 0,
@@ -619,7 +648,7 @@
       selectedVanIndex: 0,
       equippedVanId: 'classic',
       unlockedItems: [0, 2, 6],
-      unlockedChars: ['goblin', 'doge']
+      unlockedChars: ['goblin', 'inlechef']
     };
 
     const COURIER_RANKS = [
@@ -641,6 +670,14 @@
     ];
 
     const TUNING_STAT_SPECS = {
+      cargoMagnet: {
+        name: 'Cargo Magnet', desc: 'Wider supply depot collection range', icon: '🧲',
+        costs: [0, 100, 220, 360, 580], labels: ['Standard Reach', 'Reach +0.15m', 'Reach +0.30m', 'Reach +0.45m', 'Reach +0.60m']
+      },
+      headlights: {
+        name: 'Headlight Beam', desc: 'Longer ground illumination in blackout zones', icon: '💡',
+        costs: [0, 100, 220, 360, 580], labels: ['Standard Beam', 'Reach +2m', 'Reach +4m', 'Reach +6m', 'Reach +8m']
+      },
       engine: {
         name: 'Engine Tune',
         desc: 'Boosts Top Speed & Score Multiplier',
@@ -665,19 +702,17 @@
     };
 
     const SAVE_KEY = 'midnight_delivery_v1_save';
+    const hudNumberFormat = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+    function formatHudNumber(value) { return value < 100000 ? Math.round(value).toLocaleString('en') : hudNumberFormat.format(value); }
 
     function loadSavedProgression() {
-      try {
-        const raw = localStorage.getItem(SAVE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch (e) {
-        console.warn('Failed to load save from localStorage', e);
-        return null;
-      }
+      return courierDB.data.profile;
     }
 
     function saveProgression() {
+      if (typeof saveCourierProfile === 'function') {
+        saveCourierProfile();
+      }
       try {
         const payload = {
           coins: gameState.coins,
@@ -691,9 +726,9 @@
           courierRankLevel: gameState.courierRankLevel,
           shiftContracts: gameState.shiftContracts,
           vanTuning: gameState.vanTuning,
-          gachaPityEpic: gameState.gachaPityEpic || 0,
-          gachaPityLegendary: gameState.gachaPityLegendary || 0,
-          gachaTotalPulls: gameState.gachaTotalPulls || 0
+          capsulePityEpic: gameState.capsulePityEpic || 0,
+          capsulePityLegendary: gameState.capsulePityLegendary || 0,
+          capsuleTotalPulls: gameState.capsuleTotalPulls || 0
         };
         localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
       } catch (e) {
