@@ -4374,7 +4374,7 @@
     // Start cozy background music on first user interaction anywhere
     const startAudioOnFirstInteraction = () => {
       soundFX.init();
-      if (soundFX.enabled && !soundFX.isPlayingMusic) {
+      if (soundFX.enabled) {
         soundFX.startCozyMusic(gameState.mode === 'home' ? 'garage' : 'drive');
       }
       window.removeEventListener('pointerdown', startAudioOnFirstInteraction);

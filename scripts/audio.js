@@ -40,8 +40,12 @@
         const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
         const other = this.currentTrack === 'garage' ? this.bgmDrive : this.bgmGarage;
 
-        if (other && !other.paused) {
-          other.pause();
+        if (other) {
+          try {
+            other.pause();
+            other.currentTime = 0;
+            other.volume = 0;
+          } catch (e) {}
         }
 
         if (active) {
@@ -115,7 +119,7 @@
       initBGM() {
         try {
           if (!this.bgmDrive) {
-            const driveEl = typeof document !== 'undefined' ? (document.getElementById('bgm-drive') || document.getElementById('bgm-audio')) : null;
+            const driveEl = typeof document !== 'undefined' ? document.getElementById('bgm-drive') : null;
             if (driveEl) {
               this.bgmDrive = driveEl;
             } else if (typeof Audio !== 'undefined') {
@@ -124,7 +128,7 @@
             }
             if (this.bgmDrive) {
               this.bgmDrive.loop = true;
-              this.bgmDrive.volume = this._enabled ? this.bgmVolume : 0;
+              this.bgmDrive.volume = (this._enabled && this.currentTrack === 'drive') ? this.bgmVolume : 0;
               this.bgmDrive.preload = 'auto';
             }
           }
@@ -139,7 +143,7 @@
             }
             if (this.bgmGarage) {
               this.bgmGarage.loop = true;
-              this.bgmGarage.volume = this._enabled ? this.bgmVolume : 0;
+              this.bgmGarage.volume = (this._enabled && this.currentTrack === 'garage') ? this.bgmVolume : 0;
               this.bgmGarage.preload = 'auto';
             }
           }
@@ -159,69 +163,91 @@
           this.initBGM();
         }
 
+        trackName = trackName === 'drive' ? 'drive' : 'garage';
         const prevTrack = this.currentTrack;
         this.currentTrack = trackName;
         const targetBgm = trackName === 'garage' ? this.bgmGarage : this.bgmDrive;
         const otherBgm = trackName === 'garage' ? this.bgmDrive : this.bgmGarage;
         this.bgm = targetBgm;
 
-        // Smoothly fade out previous track if playing
-        if (otherBgm && !otherBgm.paused) {
-          try {
-            let fadeVol = otherBgm.volume;
-            const step = Math.max(0.03, fadeVol / 8);
-            const fadeTimer = setInterval(() => {
-              fadeVol = Math.max(0, fadeVol - step);
-              try { otherBgm.volume = fadeVol; } catch (e) {}
-              if (fadeVol <= 0) {
-                clearInterval(fadeTimer);
-                try {
-                  otherBgm.pause();
-                  otherBgm.currentTime = 0;
-                } catch (e) {}
-              }
-            }, 25);
-          } catch (e) {
-            otherBgm.pause();
-          }
+        // Clear any transition timer
+        if (this._fadeTimer) {
+          clearInterval(this._fadeTimer);
+          this._fadeTimer = null;
         }
 
-        if (this._enabled && this.isPlayingMusic && targetBgm) {
+        // Strictly stop, rewind, and silence the inactive track to prevent bleed
+        if (otherBgm) {
+          try {
+            otherBgm.pause();
+            otherBgm.currentTime = 0;
+            otherBgm.volume = 0;
+          } catch (e) {}
+        }
+
+        if (this._enabled && targetBgm) {
           targetBgm.volume = this.bgmVolume;
-          if (targetBgm.paused || prevTrack !== trackName) {
+          if (prevTrack !== trackName || targetBgm.paused) {
+            try {
+              targetBgm.currentTime = 0;
+            } catch (e) {}
             const playPromise = targetBgm.play();
             if (playPromise !== undefined) {
-              playPromise.catch(err => {
+              playPromise.then(() => {
+                this.isPlayingMusic = true;
+              }).catch(err => {
+                this.isPlayingMusic = false;
                 console.log('BGM playback waiting for user interaction:', err);
               });
+            } else {
+              this.isPlayingMusic = true;
             }
+          } else {
+            this.isPlayingMusic = true;
           }
         }
       }
 
       startCozyMusic(trackName) {
         this.init();
-        this.isPlayingMusic = true;
-        const target = trackName || this.currentTrack || ((typeof gameState !== 'undefined' && gameState && gameState.mode === 'playing') ? 'drive' : 'garage');
+        const target = trackName || (typeof gameState !== 'undefined' && gameState && gameState.mode === 'playing' ? 'drive' : 'garage');
         this.playTrack(target);
       }
 
       stopMusic() {
         this.isPlayingMusic = false;
+        if (this._fadeTimer) {
+          clearInterval(this._fadeTimer);
+          this._fadeTimer = null;
+        }
         if (this.bgmDrive) {
-          this.bgmDrive.pause();
-          this.bgmDrive.currentTime = 0;
+          try {
+            this.bgmDrive.pause();
+            this.bgmDrive.currentTime = 0;
+            this.bgmDrive.volume = 0;
+          } catch (e) {}
         }
         if (this.bgmGarage) {
-          this.bgmGarage.pause();
-          this.bgmGarage.currentTime = 0;
+          try {
+            this.bgmGarage.pause();
+            this.bgmGarage.currentTime = 0;
+            this.bgmGarage.volume = 0;
+          } catch (e) {}
         }
       }
 
       pauseMusic() {
         const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        const other = this.currentTrack === 'garage' ? this.bgmDrive : this.bgmGarage;
+        if (other) {
+          try {
+            other.pause();
+            other.currentTime = 0;
+            other.volume = 0;
+          } catch (e) {}
+        }
         if (active && !active.paused) {
-          active.pause();
+          try { active.pause(); } catch (e) {}
           this._wasPlayingBeforeHide = true;
         }
       }
@@ -229,6 +255,14 @@
       resumeMusic() {
         if (!this._enabled || !this.isPlayingMusic) return;
         const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        const other = this.currentTrack === 'garage' ? this.bgmDrive : this.bgmGarage;
+        if (other) {
+          try {
+            other.pause();
+            other.currentTime = 0;
+            other.volume = 0;
+          } catch (e) {}
+        }
         if (active) {
           active.volume = this.bgmVolume;
           active.play().catch(() => {});
@@ -241,11 +275,13 @@
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('md_volume_music', this.bgmVolume.toString());
         }
-        if (this.bgmDrive && this._enabled) {
-          this.bgmDrive.volume = this.bgmVolume;
+        const active = this.currentTrack === 'garage' ? this.bgmGarage : this.bgmDrive;
+        const other = this.currentTrack === 'garage' ? this.bgmDrive : this.bgmGarage;
+        if (active && this._enabled) {
+          active.volume = this.bgmVolume;
         }
-        if (this.bgmGarage && this._enabled) {
-          this.bgmGarage.volume = this.bgmVolume;
+        if (other) {
+          other.volume = 0;
         }
       }
 
