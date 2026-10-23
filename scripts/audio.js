@@ -309,8 +309,9 @@
           // Epic 5-note fanfare with shimmering vibrato: C5, E5, G5, B5, C6
           const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
           notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            const voice = this.createVoice();
+            if (!voice) return;
+            const { oscillator: osc, gain } = voice;
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(freq, t + idx * 0.08);
 
@@ -327,8 +328,9 @@
           // Rich 4-note chime: E5, G#5, B5, E6
           const notes = [659.25, 830.61, 987.77, 1318.51];
           notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            const voice = this.createVoice();
+            if (!voice) return;
+            const { oscillator: osc, gain } = voice;
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, t + idx * 0.09);
 

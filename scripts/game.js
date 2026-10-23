@@ -197,7 +197,17 @@
       if (coinsReadout) coinsReadout.textContent = gameState.coins.toLocaleString();
     }
 
+    let isSpinningCapsule = false;
+    let capsuleSpinTimer = null;
+    let lastWonVanId = null;
+
     function resetCapsuleModalStage() {
+      if (capsuleSpinTimer) {
+        clearTimeout(capsuleSpinTimer);
+        capsuleSpinTimer = null;
+      }
+      isSpinningCapsule = false;
+
       const singleView = document.getElementById('capsule-single-view');
       const multiView = document.getElementById('capsule-multi-view');
       const singleActions = document.getElementById('capsule-single-actions');
@@ -291,98 +301,110 @@
       return { van: wonVan, rarity, tierInfo, wasNew, scrapCoins };
     }
 
-    let isSpinningCapsule = false;
-    let lastWonVanId = null;
-
     function spinCapsuleDraw(pullCount = 1) {
       if (isSpinningCapsule) return;
       const cost = pullCount === 10 ? 900 : 100;
 
       const titleEl = document.getElementById('draw-result-title');
       const subEl = document.getElementById('draw-result-sub');
+      const singleView = document.getElementById('capsule-single-view');
+      const multiView = document.getElementById('capsule-multi-view');
+      const summaryEl = document.getElementById('capsule-multi-summary');
 
       if (gameState.coins < cost) {
+        soundFX.init();
         soundFX.playCrash();
-        if (titleEl) titleEl.textContent = `INSUFFICIENT COINS (NEED ${cost})`;
-        if (subEl) subEl.textContent = 'Deliver wishes on the road to earn coins or complete shift contracts!';
+        if (singleView) singleView.classList.remove('hidden');
+        if (multiView) {
+          multiView.classList.add('hidden');
+          multiView.classList.remove('flex');
+        }
+        if (titleEl) titleEl.textContent = `INSUFFICIENT COINS (NEED ${cost} 🪙)`;
+        if (subEl) subEl.textContent = `You have ${gameState.coins.toLocaleString()} 🪙 — click +1,000 🪙 Supply Grant below or deliver wishes!`;
+        if (summaryEl) summaryEl.textContent = `Need ${cost} 🪙 (Have ${gameState.coins.toLocaleString()} 🪙)`;
         return;
       }
 
-      soundFX.init();
-      isSpinningCapsule = true;
-      gameState.coins -= cost;
-      updateHomeGarageUI();
-      updateCapsulePityUI();
-      saveProgression();
+      try {
+        soundFX.init();
+        isSpinningCapsule = true;
+        gameState.coins -= cost;
 
-      const stageBox = document.getElementById('draw-stage-box');
-      const mysteryCrate = document.getElementById('draw-mystery-crate');
-      const vehicleImg = document.getElementById('draw-vehicle-img');
-      const tierPill = document.getElementById('draw-tier-pill');
-      const sunburst = document.getElementById('draw-sunburst');
-      const singleView = document.getElementById('capsule-single-view');
-      const multiView = document.getElementById('capsule-multi-view');
-      const singleActions = document.getElementById('capsule-single-actions');
-
-      if (singleView) singleView.classList.remove('hidden');
-      if (multiView) {
-        multiView.classList.add('hidden');
-        multiView.classList.remove('flex');
-      }
-      if (singleActions) singleActions.classList.add('hidden');
-      if (mysteryCrate) mysteryCrate.classList.remove('hidden');
-      if (vehicleImg) vehicleImg.classList.add('hidden');
-
-      if (stageBox) {
-        stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
-        stageBox.classList.add('capsule-tumbling');
-      }
-      if (sunburst) sunburst.style.opacity = '0.9';
-      if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING CAPSULE CAPSULE...';
-      if (subEl) subEl.textContent = 'Querying global courier requisition database...';
-
-      // Execute pull logic
-      const results = [];
-      if (pullCount === 10) {
-        let gotEpicOrHigher = false;
-        for (let i = 0; i < 9; i++) {
-          const res = executeSingleCapsulePull(false);
-          if (res.rarity === 'EPIC' || res.rarity === 'LEGENDARY') gotEpicOrHigher = true;
-          results.push(res);
-        }
-        // 10th pull is guaranteed Epic+ if none hit yet
-        results.push(executeSingleCapsulePull(!gotEpicOrHigher));
-      } else {
-        results.push(executeSingleCapsulePull(false));
-      }
-
-      // Mystery badges animation
-      const mysteryBadges = ['COMMON ★', 'RARE ★★', 'EPIC ★★★', 'LEGENDARY ★★★★★', 'LOCKED RIG', 'UNBOXING!'];
-      const totalSteps = pullCount === 10 ? 18 : 14;
-      let step = 0;
-
-      function nextTick() {
-        if (tierPill) tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
-        soundFX.playReelTick(320 + step * 28);
-        step++;
-        if (step < totalSteps) {
-          const delay = 45 + Math.pow(step / totalSteps, 2.0) * 150;
-          setTimeout(nextTick, delay);
-        } else {
-          // Reveal Results!
-          if (stageBox) stageBox.classList.remove('capsule-tumbling');
-          if (pullCount === 10) {
-            renderGachaMultiResult(results);
-          } else {
-            renderGachaSingleResult(results[0]);
+        // Execute pull logic immediately so results & coin balance are persisted atomically
+        const results = [];
+        if (pullCount === 10) {
+          let gotEpicOrHigher = false;
+          for (let i = 0; i < 9; i++) {
+            const res = executeSingleCapsulePull(false);
+            if (res.rarity === 'EPIC' || res.rarity === 'LEGENDARY') gotEpicOrHigher = true;
+            results.push(res);
           }
-          isSpinningCapsule = false;
-          saveProgression();
-          updateHomeGarageUI();
-          updateCapsulePityUI();
+          // 10th pull is guaranteed Epic+ if none hit yet
+          results.push(executeSingleCapsulePull(!gotEpicOrHigher));
+        } else {
+          results.push(executeSingleCapsulePull(false));
         }
+
+        saveProgression();
+        updateHomeGarageUI();
+        updateCapsulePityUI();
+
+        const stageBox = document.getElementById('draw-stage-box');
+        const mysteryCrate = document.getElementById('draw-mystery-crate');
+        const vehicleImg = document.getElementById('draw-vehicle-img');
+        const tierPill = document.getElementById('draw-tier-pill');
+        const sunburst = document.getElementById('draw-sunburst');
+        const singleActions = document.getElementById('capsule-single-actions');
+
+        if (singleView) singleView.classList.remove('hidden');
+        if (multiView) {
+          multiView.classList.add('hidden');
+          multiView.classList.remove('flex');
+        }
+        if (singleActions) singleActions.classList.add('hidden');
+        if (mysteryCrate) mysteryCrate.classList.remove('hidden');
+        if (vehicleImg) vehicleImg.classList.add('hidden');
+
+        if (stageBox) {
+          stageBox.classList.remove('prize-reveal-anim', 'blind-crate-idle');
+          stageBox.classList.add('capsule-tumbling');
+        }
+        if (sunburst) sunburst.style.opacity = '0.9';
+        if (titleEl) titleEl.textContent = pullCount === 10 ? 'OPENING 10x FLEET CRATES...' : 'DISPENSING FLEET CAPSULE...';
+        if (subEl) subEl.textContent = 'Querying global courier requisition database...';
+
+        // Mystery badges animation
+        const mysteryBadges = ['COMMON ★', 'RARE ★★', 'EPIC ★★★', 'LEGENDARY ★★★★★', 'LOCKED RIG', 'UNBOXING!'];
+        const totalSteps = pullCount === 10 ? 18 : 14;
+        let step = 0;
+
+        function nextTick() {
+          if (tierPill) tierPill.textContent = mysteryBadges[step % mysteryBadges.length];
+          soundFX.playReelTick(320 + step * 28);
+          step++;
+          if (step < totalSteps) {
+            const delay = 45 + Math.pow(step / totalSteps, 2.0) * 150;
+            capsuleSpinTimer = setTimeout(nextTick, delay);
+          } else {
+            capsuleSpinTimer = null;
+            // Reveal Results!
+            if (stageBox) stageBox.classList.remove('capsule-tumbling');
+            if (pullCount === 10) {
+              renderGachaMultiResult(results);
+            } else {
+              renderGachaSingleResult(results[0]);
+            }
+            isSpinningCapsule = false;
+            saveProgression();
+            updateHomeGarageUI();
+            updateCapsulePityUI();
+          }
+        }
+        nextTick();
+      } catch (err) {
+        console.error('Capsule spin error:', err);
+        isSpinningCapsule = false;
       }
-      nextTick();
     }
 
     function renderGachaSingleResult(res) {
@@ -850,15 +872,28 @@
       }
 
       const statusBadge = document.getElementById('home-van-status');
+      const quickDrawBtn = document.getElementById('btn-home-quick-draw');
       if (isOwned) {
         gameState.equippedVanId = spec.id;
         statusBadge.textContent = 'EQUIPPED';
         statusBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase';
+        statusBadge.onclick = null;
+        if (quickDrawBtn) {
+          quickDrawBtn.innerHTML = `<span>🎰</span><span>CAPSULE (100)</span>`;
+          quickDrawBtn.classList.remove('hidden');
+          quickDrawBtn.classList.add('flex');
+        }
       } else {
         statusBadge.textContent = 'LOCKED';
-        statusBadge.className = 'px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase';
+        statusBadge.className = 'px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase cursor-pointer';
+        statusBadge.title = 'Open Fleet Capsule Machine to unlock';
+        statusBadge.onclick = () => {
+          soundFX.init();
+          resetCapsuleModalStage();
+          openModal('modal-draw');
+        };
         if (quickDrawBtn) {
-          quickDrawBtn.innerHTML = `<span>🎰</span><span>FLEET CAPSULE (100)</span>`;
+          quickDrawBtn.innerHTML = `<span>🎰</span><span>UNLOCK (100)</span>`;
           quickDrawBtn.classList.remove('hidden');
           quickDrawBtn.classList.add('flex');
         }
@@ -2502,15 +2537,20 @@
 
     window.addEventListener('keydown', (e) => {
       if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
-      // Escape for Pause / Resume
+      const openModalEl = document.querySelector('[id^="modal-"]:not(.hidden)');
+      // Escape for Closing Modals or Pause / Resume
       if (e.key === 'Escape') {
+        if (openModalEl && openModalEl.id !== 'modal-pause') {
+          closeModal(openModalEl.id);
+          return;
+        }
         if (gameState.mode === 'playing') pauseShift();
         else if (gameState.mode === 'paused') resumeShiftWithCountdown();
         return;
       }
 
-      // Space / Enter on Home or Game Over Screen starts / restarts shift
-      if (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+      // Space / Enter on Home or Game Over Screen starts / restarts shift (when no modal is open)
+      if (!openModalEl && (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter')) {
         if (gameState.mode === 'home') {
           e.preventDefault();
           const startBtn = document.getElementById('btn-start-play');
@@ -2733,6 +2773,13 @@
       }
     }
     function closeModal(id) {
+      if (id === 'modal-draw') {
+        if (capsuleSpinTimer) {
+          clearTimeout(capsuleSpinTimer);
+          capsuleSpinTimer = null;
+        }
+        isSpinningCapsule = false;
+      }
       const m = document.getElementById(id);
       if (m) {
         m.classList.add('hidden');
@@ -2810,6 +2857,7 @@
           gameState.equippedVanId = lastWonVanId;
           gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
           rebuildGarageTurntableVan();
+          saveProgression();
           updateHomeGarageUI();
           soundFX.playDeliverSuccess();
           closeModal('modal-draw');
@@ -2824,6 +2872,7 @@
           gameState.equippedVanId = lastWonVanId;
           gameState.selectedVanIndex = PLAYABLE_VANS.findIndex(v => v.id === lastWonVanId);
           rebuildGarageTurntableVan();
+          saveProgression();
           updateHomeGarageUI();
           soundFX.playDeliverSuccess();
           closeModal('modal-draw');
@@ -2836,6 +2885,24 @@
 
     const btnSpin10xAgain = document.getElementById('btn-capsule-spin-10x-again');
     if (btnSpin10xAgain) btnSpin10xAgain.addEventListener('click', () => spinCapsuleDraw(10));
+
+    const btnCapsuleAddCoins = document.getElementById('btn-capsule-add-coins');
+    if (btnCapsuleAddCoins) {
+      btnCapsuleAddCoins.addEventListener('click', () => {
+        soundFX.init();
+        soundFX.playDeliverSuccess();
+        gameState.coins += 1000;
+        saveProgression();
+        updateHomeGarageUI();
+        updateCapsulePityUI();
+        const titleEl = document.getElementById('draw-result-title');
+        const subEl = document.getElementById('draw-result-sub');
+        if (titleEl && titleEl.textContent.startsWith('INSUFFICIENT')) {
+          titleEl.textContent = 'COURIER SUPPLY GRANT RECEIVED (+1,000 🪙)';
+          if (subEl) subEl.textContent = 'Ready to spin for Common, Rare, Epic, & Legendary Rigs!';
+        }
+      });
+    }
 
     function switchCityByIndex(targetIdx) {
       gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
@@ -2913,7 +2980,9 @@
       soundFX.playDeliverSuccess();
       gameState.coins += 300;
       tryRandomDiscoveryOnDelivery(Math.floor(Math.random() * PARCEL_TYPES.length), null);
+      saveProgression();
       updateHomeGarageUI();
+      updateCapsulePityUI();
     });
 
     const btnOpenTuning = document.getElementById('btn-open-tuning');
@@ -4394,62 +4463,6 @@
       if (window.midnightStartup && window.midnightStartup.complete) {
         window.midnightStartup.complete();
       }
-    }
-
-    function switchCityByIndex(targetIdx) {
-      gameState.cityIndex = (targetIdx + CITY_THEMES.length) % CITY_THEMES.length;
-      const theme = CITY_THEMES[gameState.cityIndex];
-      transformAllApartmentsToCity(theme);
-      soundFX.playCityGateChime();
-      showCityToast(theme);
-      if (theme.id === 'tokyo') applyWeatherMode(4);
-      else if (theme.id === 'chinatown') applyWeatherMode(1);
-      else if (theme.id === 'yangon') applyWeatherMode(1);
-      else if (theme.id === 'littleindia') applyWeatherMode(1);
-      else if (theme.id === 'pastel') applyWeatherMode(4);
-      else if (theme.id === 'paris') applyWeatherMode(4);
-      else if (theme.id === 'rio') applyWeatherMode(1);
-      else if (theme.id === 'washington') applyWeatherMode(4);
-      else if (theme.id === 'dubai') applyWeatherMode(1);
-      else if (theme.id === 'cairo') applyWeatherMode(1);
-      renderCitySelectorUI();
-    }
-
-    function renderCitySelectorUI() {
-      const container = document.getElementById('setting-city-buttons');
-      const label = document.getElementById('setting-current-city');
-      if (label && CITY_THEMES[gameState.cityIndex]) {
-        label.textContent = CITY_THEMES[gameState.cityIndex].name.toUpperCase();
-      }
-      if (!container) return;
-      container.innerHTML = '';
-      const cityIcons = {
-        tokyo: '🗼',
-        chinatown: '🏮',
-        littleindia: '🛕',
-        yangon: '🇲🇲',
-        pastel: '🌆',
-        paris: '🥐',
-        rio: '🌴',
-        washington: '🏛️',
-        dubai: '🏙️',
-        cairo: '🐪'
-      };
-      CITY_THEMES.forEach((ct, idx) => {
-        const isCur = idx === gameState.cityIndex;
-        const btn = document.createElement('button');
-        btn.className = 'p-2 rounded-xl text-[10px] font-extrabold text-left transition-all arcade-btn flex items-center gap-1.5 ' + (
-          isCur
-            ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-2 border-white shadow-lg'
-            : 'bg-slate-900/90 text-sky-200 border border-slate-700 hover:border-sky-400 hover:text-white'
-        );
-        btn.innerHTML = '<span class="text-sm">' + (cityIcons[ct.id] || '📍') + '</span> <span class="truncate">' + ct.name + '</span>';
-        btn.addEventListener('click', () => {
-          soundFX.init();
-          switchCityByIndex(idx);
-        });
-        container.appendChild(btn);
-      });
     }
 
     function initializeGame() {
