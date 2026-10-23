@@ -872,31 +872,20 @@
       }
 
       const statusBadge = document.getElementById('home-van-status');
-      const quickDrawBtn = document.getElementById('btn-home-quick-draw');
       if (isOwned) {
         gameState.equippedVanId = spec.id;
         statusBadge.textContent = 'EQUIPPED';
         statusBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase';
         statusBadge.onclick = null;
-        if (quickDrawBtn) {
-          quickDrawBtn.innerHTML = `<span>🎰</span><span>CAPSULE (100)</span>`;
-          quickDrawBtn.classList.remove('hidden');
-          quickDrawBtn.classList.add('flex');
-        }
       } else {
         statusBadge.textContent = 'LOCKED';
         statusBadge.className = 'px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase cursor-pointer';
-        statusBadge.title = 'Open Fleet Capsule Machine to unlock';
+        statusBadge.title = 'Open Fleet Draw Machine to unlock';
         statusBadge.onclick = () => {
           soundFX.init();
           resetCapsuleModalStage();
           openModal('modal-draw');
         };
-        if (quickDrawBtn) {
-          quickDrawBtn.innerHTML = `<span>🎰</span><span>UNLOCK (100)</span>`;
-          quickDrawBtn.classList.remove('hidden');
-          quickDrawBtn.classList.add('flex');
-        }
       }
 
       updateRankUI();
@@ -2834,14 +2823,6 @@
     const menuBtnDraw = document.getElementById('menu-btn-draw');
     if (menuBtnDraw) {
       menuBtnDraw.addEventListener('click', () => {
-        updateHomeGarageUI();
-        resetCapsuleModalStage();
-        openModal('modal-draw');
-      });
-    }
-    const btnHomeQuickDraw = document.getElementById('btn-home-quick-draw');
-    if (btnHomeQuickDraw) {
-      btnHomeQuickDraw.addEventListener('click', () => {
         updateHomeGarageUI();
         resetCapsuleModalStage();
         openModal('modal-draw');
