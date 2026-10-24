@@ -227,6 +227,48 @@
         roofHex: 0xf8fafc
       },
       {
+        id: 'keipost',
+        name: 'Metro Post Kei-Van',
+        rarity: 'COMMON',
+        stars: '★',
+        tier: 'COMMON RIG',
+        speedStat: 82,
+        handStat: 94,
+        coinBonus: 5,
+        desc: 'Ultra-nimble Japanese postal micro-van with sliding side doors, amber roof beacon & high-stack mail rack.',
+        bodyHex: 0xdc2626,
+        stripeHex: 0xf8fafc,
+        roofHex: 0xfef2f2
+      },
+      {
+        id: 'yangonpickup',
+        name: 'Bogyoke Market Pickup',
+        rarity: 'COMMON',
+        stars: '★',
+        tier: 'COMMON RIG',
+        speedStat: 83,
+        handStat: 88,
+        coinBonus: 8,
+        desc: 'Rugged Myanmar utility pickup with teakwood cargo bed rails, chrome bullbar & canvas sun canopy.',
+        bodyHex: 0x0284c7,
+        stripeHex: 0xfde047,
+        roofHex: 0x92400e
+      },
+      {
+        id: 'bobaexpress',
+        name: 'Matcha Boba Wagon',
+        rarity: 'COMMON',
+        stars: '★',
+        tier: 'COMMON RIG',
+        speedStat: 81,
+        handStat: 92,
+        coinBonus: 10,
+        desc: 'Pastel street-cafe delivery wagon topped with a giant tapioca pearl cup, striped straw & mint awning.',
+        bodyHex: 0x10b981,
+        stripeHex: 0xfef3c7,
+        roofHex: 0xecfdf5
+      },
+      {
         id: 'ramen',
         name: 'Harajuku Ramen Truck',
         rarity: 'RARE',
@@ -239,20 +281,6 @@
         bodyHex: 0xf472b6,
         stripeHex: 0xfef08a,
         roofHex: 0xfff1f2
-      },
-      {
-        id: 'cyber',
-        name: 'Cyber-Blade 2099',
-        rarity: 'EPIC',
-        stars: '★★★',
-        tier: 'EPIC RIG',
-        speedStat: 95,
-        handStat: 96,
-        coinBonus: 25,
-        desc: 'Low-slung wedge super-courier with rear window louvers, laser visor, GT wing & dual plasma thrusters.',
-        bodyHex: 0x1e293b,
-        stripeHex: 0x00f5d4,
-        roofHex: 0x0f172a
       },
       {
         id: 'goldtuktuk',
@@ -269,6 +297,48 @@
         roofHex: 0xf59e0b
       },
       {
+        id: 'yangonbus',
+        name: 'Yangon Golden Coach',
+        rarity: 'RARE',
+        stars: '★★',
+        tier: 'RARE RIG',
+        speedStat: 88,
+        handStat: 91,
+        coinBonus: 22,
+        desc: 'Iconic vintage Burmese wooden-and-chrome city bus with ornate roof pagoda crest, side ladders & neon sunvisor!',
+        bodyHex: 0xd97706,
+        stripeHex: 0xfef08a,
+        roofHex: 0x78350f
+      },
+      {
+        id: 'tokyodrift',
+        name: 'Shibuya Drift AE-86',
+        rarity: 'RARE',
+        stars: '★★',
+        tier: 'RARE RIG',
+        speedStat: 93,
+        handStat: 97,
+        coinBonus: 18,
+        desc: 'Two-tone panda street-touge hatchback with pop-up headlights, carbon hood, ducktail spoiler & tofu shop stripes!',
+        bodyHex: 0xf8fafc,
+        stripeHex: 0x090d16,
+        roofHex: 0x1e293b
+      },
+      {
+        id: 'cyber',
+        name: 'Cyber-Blade 2099',
+        rarity: 'EPIC',
+        stars: '★★★',
+        tier: 'EPIC RIG',
+        speedStat: 95,
+        handStat: 96,
+        coinBonus: 25,
+        desc: 'Low-slung wedge super-courier with rear window louvers, laser visor, GT wing & dual plasma thrusters.',
+        bodyHex: 0x1e293b,
+        stripeHex: 0x00f5d4,
+        roofHex: 0x0f172a
+      },
+      {
         id: 'bullion',
         name: 'Fort Knox Bullion Rig',
         rarity: 'EPIC',
@@ -283,6 +353,20 @@
         roofHex: 0x1e293b
       },
       {
+        id: 'neonbosozoku',
+        name: 'Shinjuku Dekotora Star',
+        rarity: 'EPIC',
+        stars: '★★★',
+        tier: 'EPIC RIG',
+        speedStat: 96,
+        handStat: 94,
+        coinBonus: 38,
+        desc: 'Illuminated chrome Dekotora art-truck with towering sky-exhaust pipes, neon kanji lightboard & laser underglow!',
+        bodyHex: 0x581c87,
+        stripeHex: 0xf43f5e,
+        roofHex: 0xfacc15
+      },
+      {
         id: 'moairig',
         name: 'Mecha-Moai Interceptor',
         rarity: 'LEGENDARY',
@@ -295,6 +379,20 @@
         bodyHex: 0x64748b,
         stripeHex: 0x00f5d4,
         roofHex: 0xfacc15
+      },
+      {
+        id: 'shwedagon_prime',
+        name: 'Golden Hintha Sovereign',
+        rarity: 'LEGENDARY',
+        stars: '★★★★★',
+        tier: 'LEGENDARY',
+        speedStat: 100,
+        handStat: 100,
+        coinBonus: 65,
+        desc: 'Royal Myanmar celestial chariot forged in 24K gold leaf with sculpted Hintha bird prow, emerald gems & solar thrusters!',
+        bodyHex: 0xfacc15,
+        stripeHex: 0x10b981,
+        roofHex: 0xfef08a
       }
     ];
 

@@ -1135,6 +1135,168 @@
         rackY = 3.18;
         rackZ = 0.45;
 
+      } else if (vanId === 'keipost') {
+        // 7. METRO POST KEI-VAN (COMMON ★) — Boxy Red/White Japanese Postal Micro-Van
+        addVoxelBox(chassis, 2.48, 0.30, 0.36, 0, 0.54, -2.38, 0x1e293b);
+        addVoxelBox(chassis, 2.48, 0.30, 0.36, 0, 0.54,  2.38, 0x1e293b);
+        // Tall cab-over boxy body
+        addVoxelBox(chassis, 2.28, 2.18, 4.45, 0, 1.82, 0.05, spec.bodyHex);
+        // Crisp white postal wrap stripe & postal T-emblem on nose
+        addVoxelBox(chassis, 2.34, 0.34, 4.50, 0, 1.42, 0.05, spec.stripeHex);
+        addVoxelBox(chassis, 0.72, 0.14, 0.16, 0, 1.54, -2.22, 0xf8fafc);
+        addVoxelBox(chassis, 0.72, 0.14, 0.16, 0, 1.32, -2.22, 0xf8fafc);
+        addVoxelBox(chassis, 0.18, 0.36, 0.16, 0, 1.22, -2.22, 0xf8fafc);
+        // Steep panoramic front windshield & side windows
+        addVoxelBox(chassis, 2.02, 0.88, 0.16, 0, 2.26, -2.14, 0x38bdf8, { roughness: 0.12 });
+        addVoxelBox(chassis, 2.34, 0.76, 1.25, 0, 2.26, -1.25, 0x38bdf8, { roughness: 0.12 });
+        addVoxelBox(chassis, 2.34, 0.72, 1.55, 0, 2.26,  0.65, 0x0f172a);
+        // White high-roof cap & amber postal beacon
+        addVoxelBox(chassis, 2.22, 0.28, 4.25, 0, 3.02, 0.05, spec.roofHex);
+        addVoxelBox(chassis, 0.64, 0.28, 0.42, 0, 3.26, -1.35, 0xf59e0b, { emissive: 0xf59e0b, emissiveIntensity: 1.1 });
+        rackY = 3.24;
+        rackZ = 0.55;
+
+      } else if (vanId === 'yangonpickup') {
+        // 8. BOGYOKE MARKET PICKUP (COMMON ★) — Rugged Myanmar Utility Truck with Teakwood Bed Rails
+        addVoxelBox(chassis, 2.68, 0.42, 0.42, 0, 0.62, -2.42, 0xe2e8f0, { metalness: 0.65 });
+        addVoxelBox(chassis, 1.85, 0.65, 0.22, 0, 1.05, -2.52, 0xcbd5e1, { metalness: 0.7 });
+        // Front hood & cab
+        addVoxelBox(chassis, 2.36, 0.96, 1.55, 0, 1.16, -1.58, spec.bodyHex);
+        addVoxelBox(chassis, 2.32, 1.88, 1.65, 0, 1.78, -0.35, spec.bodyHex);
+        addVoxelBox(chassis, 2.38, 0.24, 4.55, 0, 1.26, 0.05, spec.stripeHex);
+        addVoxelBox(chassis, 2.06, 0.78, 0.18, 0, 2.16, -1.16, 0x38bdf8);
+        addVoxelBox(chassis, 2.38, 0.72, 1.15, 0, 2.16, -0.35, 0x38bdf8);
+        // Rear pickup bed & slatted teakwood side stakes
+        addVoxelBox(chassis, 2.40, 0.92, 2.15, 0, 1.14, 1.32, spec.bodyHex);
+        [-1.12, 1.12].forEach((rx) => {
+          addVoxelBox(chassis, 0.16, 1.15, 2.08, rx, 2.12, 1.32, 0x92400e);
+          addVoxelBox(chassis, 0.20, 0.18, 2.12, rx, 2.45, 1.32, 0x78350f);
+        });
+        // Canvas arch canopy over cab & front bed
+        addVoxelBox(chassis, 2.26, 0.28, 1.62, 0, 2.82, -0.35, 0xfef3c7);
+        addVoxelBox(chassis, 2.36, 0.24, 2.12, 0, 2.82,  1.32, 0xd97706);
+        rackY = 3.02;
+        rackZ = 1.20;
+
+      } else if (vanId === 'bobaexpress') {
+        // 9. MATCHA BOBA WAGON (COMMON ★) — Pastel Cafe Van with Giant 3D Boba Cup on Roof
+        addVoxelBox(chassis, 2.58, 0.34, 0.38, 0, 0.56, -2.40, 0xfef3c7);
+        addVoxelBox(chassis, 2.58, 0.34, 0.38, 0, 0.56,  2.40, 0xfef3c7);
+        addVoxelBox(chassis, 2.38, 2.02, 4.35, 0, 1.76, 0.05, spec.bodyHex);
+        addVoxelBox(chassis, 2.44, 0.42, 4.42, 0, 1.32, 0.05, spec.stripeHex);
+        addVoxelBox(chassis, 2.08, 0.82, 0.18, 0, 2.14, -2.10, 0x38bdf8);
+        // Striped cafe side awnings
+        [-0.75, 0, 0.75].forEach((az, idx) => {
+          addVoxelBox(chassis, 2.58, 0.30, 0.55, 0, 2.38, 0.35 + az, idx % 2 === 0 ? 0x059669 : 0xfef3c7);
+        });
+        addVoxelBox(chassis, 2.32, 0.26, 4.18, 0, 2.88, 0.05, spec.roofHex);
+        // Sculpted 3D Boba Cup with tapioca pearls & striped straw on front roof
+        addVoxelBox(chassis, 0.96, 0.76, 0.96, 0, 3.36, -0.82, 0xfde68a);
+        addVoxelBox(chassis, 1.06, 0.16, 1.06, 0, 3.76, -0.82, 0xffffff);
+        addVoxelBox(chassis, 0.22, 0.62, 0.22, 0.12, 4.08, -0.78, 0xf43f5e);
+        [[-0.26, -1.26], [0.26, -1.26], [0, -1.30]].forEach(([px, pz]) => {
+          addVoxelBox(chassis, 0.18, 0.18, 0.18, px, 3.12, pz, 0x1e293b);
+        });
+        rackY = 3.08;
+        rackZ = 0.85;
+
+      } else if (vanId === 'yangonbus') {
+        // 10. YANGON GOLDEN COACH (RARE ★★) — Vintage Burmese Wooden/Chrome Bus with Ornate Crest
+        addVoxelBox(chassis, 2.68, 0.38, 0.42, 0, 0.58, -2.46, 0xe2e8f0, { metalness: 0.75 });
+        addVoxelBox(chassis, 2.68, 0.38, 0.42, 0, 0.58,  2.46, 0xe2e8f0, { metalness: 0.75 });
+        // Rounded vintage bus body in rich teak & gold
+        addVoxelBox(chassis, 2.48, 2.24, 4.65, 0, 1.88, 0.0, spec.bodyHex);
+        addVoxelBox(chassis, 2.54, 0.36, 4.72, 0, 1.38, 0.0, spec.stripeHex);
+        addVoxelBox(chassis, 2.54, 0.22, 4.72, 0, 0.92, 0.0, 0xb91c1c);
+        // Divided twin front windshields & overhanging sun visor
+        addVoxelBox(chassis, 0.98, 0.78, 0.18, -0.56, 2.24, -2.30, 0x38bdf8);
+        addVoxelBox(chassis, 0.98, 0.78, 0.18,  0.56, 2.24, -2.30, 0x38bdf8);
+        addVoxelBox(chassis, 2.52, 0.22, 0.48, 0, 2.72, -2.38, 0x16a34a);
+        // 4 Panoramic passenger side windows
+        [-1.25, -0.35, 0.55, 1.45].forEach((wz) => {
+          addVoxelBox(chassis, 2.54, 0.68, 0.68, 0, 2.22, wz, 0x38bdf8);
+        });
+        // Ornate Burmese golden roof crown & front pagoda crest
+        addVoxelBox(chassis, 2.38, 0.28, 4.45, 0, 3.12, 0.0, spec.roofHex);
+        addVoxelBox(chassis, 1.56, 0.36, 0.42, 0, 3.36, -1.85, 0xfacc15, { metalness: 0.6, emissive: 0xd97706, emissiveIntensity: 0.4 });
+        addVoxelBox(chassis, 0.52, 0.42, 0.36, 0, 3.68, -1.85, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.7 });
+        rackY = 3.34;
+        rackZ = 0.55;
+
+      } else if (vanId === 'tokyodrift') {
+        // 11. SHIBUYA DRIFT AE-86 (RARE ★★) — Panda Two-Tone Touge Hatchback with Pop-Up Headlights
+        // Lower panda black skirt & bumpers
+        addVoxelBox(chassis, 2.58, 0.36, 4.82, 0, 0.64, 0.0, 0x090d16);
+        // Crisp white upper sport coupe body
+        addVoxelBox(chassis, 2.42, 0.72, 4.64, 0, 1.18, 0.0, spec.bodyHex);
+        addVoxelBox(chassis, 2.48, 0.16, 4.68, 0, 0.92, 0.0, 0x090d16);
+        // Carbon fiber black hood & pop-up headlights
+        addVoxelBox(chassis, 2.18, 0.14, 1.52, 0, 1.56, -1.48, 0x1e293b);
+        [-0.78, 0.78].forEach((hx) => {
+          addVoxelBox(chassis, 0.46, 0.32, 0.38, hx, 1.62, -2.08, 0x090d16);
+          addVoxelBox(chassis, 0.38, 0.22, 0.14, hx, 1.62, -2.28, 0xfef08a, { emissive: 0xfef08a, emissiveIntensity: 1.3 });
+        });
+        // Fastback greenhouse cabin & black B-pillars
+        addVoxelBox(chassis, 2.16, 0.86, 2.35, 0, 1.92, 0.18, spec.bodyHex);
+        addVoxelBox(chassis, 1.96, 0.68, 0.20, 0, 1.92, -0.98, 0x38bdf8);
+        addVoxelBox(chassis, 2.22, 0.62, 1.65, 0, 1.92, 0.22, 0x0f172a);
+        // Rear ducktail spoiler & yellow fog lights
+        addVoxelBox(chassis, 2.38, 0.28, 0.36, 0, 1.64, 2.18, 0x090d16);
+        rackY = 2.42;
+        rackZ = 0.20;
+
+      } else if (vanId === 'neonbosozoku') {
+        // 12. SHINJUKU DEKOTORA STAR (EPIC ★★★) — Illuminated Chrome & Neon Japanese Art Truck
+        // Neon magenta underglow skirt & massive chrome multi-tiered front bumper
+        addVoxelBox(chassis, 2.72, 0.20, 4.96, 0, 0.42, 0.0, 0xf43f5e, { emissive: 0xf43f5e, emissiveIntensity: 1.2 });
+        addVoxelBox(chassis, 2.82, 0.68, 0.56, 0, 0.78, -2.48, 0xe2e8f0, { metalness: 0.85, roughness: 0.15 });
+        // Metallic purple cab & tall illuminated roof lightboard tiara
+        addVoxelBox(chassis, 2.38, 1.92, 1.48, 0, 1.72, -1.55, spec.bodyHex);
+        addVoxelBox(chassis, 2.12, 0.72, 0.18, 0, 2.08, -2.26, 0x38bdf8);
+        addVoxelBox(chassis, 2.32, 0.82, 1.15, 0, 3.06, -1.52, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 1.2 });
+        addVoxelBox(chassis, 2.08, 0.56, 0.16, 0, 3.06, -2.12, 0xf43f5e, { emissive: 0xf43f5e, emissiveIntensity: 1.5 });
+        // Illuminated Dekotora box cargo container with neon trim Matrix
+        addVoxelBox(chassis, 2.52, 2.32, 3.25, 0, 1.96, 0.72, 0x1e1b4b);
+        [-1.28, 1.28].forEach((sx) => {
+          addVoxelBox(chassis, 0.08, 2.18, 3.05, sx, 1.96, 0.72, 0xfacc15, { emissive: 0xfacc15, emissiveIntensity: 0.95 });
+          addVoxelBox(chassis, 0.12, 1.52, 2.45, sx, 1.96, 0.72, 0x00f5d4, { emissive: 0x00f5d4, emissiveIntensity: 1.1 });
+        });
+        // Twin towering sky-high chrome exhaust pipes behind cab
+        [-1.26, 1.26].forEach((px) => {
+          addVoxelBox(chassis, 0.24, 3.15, 0.24, px, 2.25, -0.72, 0xe2e8f0, { metalness: 0.85 });
+          addVoxelBox(chassis, 0.28, 0.35, 0.28, px, 3.82, -0.72, 0xfacc15, { emissive: 0xf59e0b, emissiveIntensity: 1.0 });
+        });
+        rackY = 3.20;
+        rackZ = 0.75;
+
+      } else if (vanId === 'shwedagon_prime') {
+        // 13. GOLDEN HINTHA SOVEREIGN (LEGENDARY ★★★★★) — 24K Royal Myanmar Celestial Chariot
+        const goldArmor = { metalness: 0.72, roughness: 0.18, emissive: 0xb45309, emissiveIntensity: 0.35 };
+        const emeraldGlow = { emissive: 0x10b981, emissiveIntensity: 1.35 };
+        // Emerald celestial aura base & golden stepped terrace chassis
+        addVoxelBox(chassis, 2.74, 0.22, 4.95, 0, 0.44, 0.0, 0x10b981, emeraldGlow);
+        addVoxelBox(chassis, 2.56, 1.05, 4.68, 0, 1.04, 0.0, 0xd97706, goldArmor);
+        addVoxelBox(chassis, 2.44, 1.45, 3.65, 0, 1.92, 0.35, 0xfacc15, goldArmor);
+        // Sculpted Golden Hintha (Sacred Swan) Prow & Crown on Front Hood
+        addVoxelBox(chassis, 1.12, 0.95, 1.15, 0, 1.72, -1.78, 0xfacc15, goldArmor);
+        addVoxelBox(chassis, 0.56, 1.05, 0.56, 0, 2.46, -2.18, 0xfde047, goldArmor);
+        addVoxelBox(chassis, 0.34, 0.26, 0.52, 0, 2.68, -2.56, 0xf97316, { emissive: 0xf97316, emissiveIntensity: 0.9 });
+        addVoxelBox(chassis, 0.24, 0.46, 0.28, 0, 3.06, -2.16, 0x10b981, emeraldGlow);
+        // Swept golden feather wings along both sides
+        [-1.30, 1.30].forEach((wx) => {
+          addVoxelBox(chassis, 0.18, 0.82, 3.45, wx, 1.88, 0.25, 0xfde047, goldArmor);
+          addVoxelBox(chassis, 0.22, 0.36, 2.65, wx, 2.15, 0.45, 0x10b981, emeraldGlow);
+        });
+        // Tiered Pyatthat Royal Spire Roof & Solar Thrusters
+        addVoxelBox(chassis, 2.28, 0.28, 3.25, 0, 2.76, 0.35, 0xb45309, goldArmor);
+        addVoxelBox(chassis, 1.92, 0.26, 2.68, 0, 3.02, 0.35, 0xfacc15, goldArmor);
+        [-0.74, 0.74].forEach((tx) => {
+          addVoxelBox(chassis, 0.72, 0.72, 0.65, tx, 1.42, 2.36, 0x064e3b);
+          addVoxelBox(chassis, 0.54, 0.54, 0.72, tx, 1.42, 2.42, 0x10b981, emeraldGlow);
+        });
+        rackY = 3.24;
+        rackZ = 0.45;
+
       } else {
         // 6. MECHA-MOAI INTERCEPTOR
         addVoxelBox(chassis, 2.68, 0.42, 0.42, 0, 0.58, -2.42, 0xfacc15);
