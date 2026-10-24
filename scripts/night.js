@@ -1,4 +1,4 @@
-const nightState = { remaining: 0, nextDistance: 550, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 };
+const nightState = { remaining: 0, nextDistance: 1800, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 };
 const nightSky = new THREE.Color(0x0e1832);
 const nightGround = new THREE.Color(0x16223e);
 const nightHeadlightMaterials = [headlightBeamMat.clone(), headlightBeamMat.clone()];
@@ -56,7 +56,7 @@ function attachNightHeadlights(van) {
 }
 
 function resetNightRun() {
-  Object.assign(nightState, { remaining: 0, nextDistance: 550, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 });
+  Object.assign(nightState, { remaining: 0, nextDistance: 1800, nextRepair: 550, blend: 0, damaged: false, elapsed: 0 });
   for (const pad of repairPadPool) { pad.active = false; pad.mesh.visible = false; }
   repairPads.length = 0;
   for (const flare of sosFlares) flare.mesh.visible = false;
@@ -66,8 +66,8 @@ function resetNightRun() {
 }
 
 function startBlackout() {
-  nightState.remaining = 25;
-  nightState.nextDistance = gameState.distanceMeters + 700;
+  nightState.remaining = 14;
+  nightState.nextDistance = gameState.distanceMeters + 2200;
   showActionToast('⚡ BLACKOUT ZONE', 'info');
 }
 
@@ -127,15 +127,11 @@ function updateNightSystems(rawDt, roadDt, speed) {
       if (windowMesh.material) windowMesh.material.emissiveIntensity = Math.max(windowMesh.material.emissiveIntensity, nightState.blend * 1.8);
     }
   }
-  const lightsOn = gameState.mode !== 'home' && (active || nightState.blend > 0.05 || TIME_PRESETS[gameState.timeIndex].lightsOn);
   [playerVan.userData.beamLeft, playerVan.userData.beamRight].forEach((beam, index) => {
     const flicker = index === 1 && nightState.damaged ? 0.35 * (Math.sin(nightState.elapsed * 37) > -0.7 ? 1 : 0.2) : 1;
-    beam.visible = lightsOn;
+    beam.visible = false;
     beam.material.opacity = 0.38 * flicker;
-    headlightGroundMeshes[index].visible = lightsOn;
-    const reach = 26 + (getVanTuningLevel(gameState.equippedVanId, 'headlights') - 1) * 3;
-    headlightGroundMeshes[index].scale.set(4.2, reach, 1);
-    headlightGroundMeshes[index].position.set(index ? 0.85 : -0.85, 0.05, -reach);
+    headlightGroundMeshes[index].visible = false;
     headlightGroundMeshes[index].material.opacity = 0.52 * flicker;
   });
   let sparkIndex = 0;

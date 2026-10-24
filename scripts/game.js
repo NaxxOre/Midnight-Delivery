@@ -172,14 +172,8 @@
       const vanSpec = PLAYABLE_VANS[gameState.selectedVanIndex];
       const mesh = createPlayableVanMesh(vanSpec.id, true);
       mesh.position.set(0, 0.04, 0);
-      if (mesh.userData.beamLeft) {
-        mesh.userData.beamLeft.visible = true;
-        mesh.userData.beamLeft.material.opacity = 0.45;
-      }
-      if (mesh.userData.beamRight) {
-        mesh.userData.beamRight.visible = true;
-        mesh.userData.beamRight.material.opacity = 0.45;
-      }
+      if (mesh.userData.beamLeft) mesh.userData.beamLeft.visible = false;
+      if (mesh.userData.beamRight) mesh.userData.beamRight.visible = false;
 
       garageVanHolder.add(mesh);
       updateHomeGarageUI();
@@ -2145,12 +2139,12 @@
       if (moteMat) moteMat.opacity = 0.0;
 
       if (playerVan && playerVan.userData.beamLeft) {
-        playerVan.userData.beamLeft.visible = t.lightsOn;
-        playerVan.userData.beamRight.visible = t.lightsOn;
+        playerVan.userData.beamLeft.visible = false;
+        playerVan.userData.beamRight.visible = false;
       }
       trafficVehicles.forEach((tv) => {
         if (tv.mesh.userData.beams) {
-          tv.mesh.userData.beams.forEach(b => (b.visible = t.lightsOn));
+          tv.mesh.userData.beams.forEach(b => (b.visible = false));
         }
       });
       streetLampPools.forEach(p => {
@@ -3335,7 +3329,7 @@
       const engSpeedMult = 1 + (engLvl - 1) * 0.045;
       const speedProgression = Math.min(22, gameState.distanceMeters * 0.015 + gameState.deliveries * 0.65);
       const playerSpeed = gameState.mode === 'playing'
-        ? (gameState.baseSpeed + speedProgression) * engSpeedMult * (gameState.overdriveActive ? 1.35 : 1)
+        ? (gameState.baseSpeed + speedProgression) * engSpeedMult * (gameState.overdriveActive ? 1.12 : 1)
         : 12;
 
       if (gameState.dragging || (gameState.mode === 'playing' && gameState.lockedTargetApt)) {
@@ -3531,7 +3525,7 @@
         if (gameState.overdriveActive) {
           gameState.overdriveTimer = Math.max(0, gameState.overdriveTimer - dt);
           gameState.overdriveMeter = Math.max(0, (gameState.overdriveTimer / 7.0) * 100);
-          camera.fov = THREE.MathUtils.lerp(camera.fov, 68, dt * 4.0);
+          camera.fov = THREE.MathUtils.lerp(camera.fov, (camera.userData.gameplayFov || 55) + 4, dt * 4.0);
           camera.updateProjectionMatrix();
 
           if (overdriveAuraMesh) {

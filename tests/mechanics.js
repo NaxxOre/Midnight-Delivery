@@ -3,11 +3,11 @@ const assert = require('node:assert/strict');
 exports.verify = async page => {
   const night = await page.evaluate(() => {
     resetGame(false);
-    gameState.distanceMeters = 550;
+    gameState.distanceMeters = 1800;
     updateNightSystems(0.01, 0, 0);
-    const triggered = nightState.remaining === 25;
+    const triggered = nightState.remaining === 14;
     for (let step = 0; step < 240; step++) updateNightSystems(1 / 60, 0, 0);
-    const dark = hemiLight.intensity < 0.2 && playerVan.userData.beamLeft.visible;
+    const dark = hemiLight.intensity < 0.2;
     damageHeadlight();
     updateNightSystems(0.01, 0, 0);
     const damaged = playerVan.userData.beamRight.material.opacity <= playerVan.userData.beamLeft.material.opacity * 0.4;

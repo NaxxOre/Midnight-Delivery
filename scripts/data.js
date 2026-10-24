@@ -772,10 +772,6 @@
         name: 'Cargo Magnet', desc: 'Wider supply depot collection range', icon: '🧲',
         costs: [0, 100, 220, 360, 580], labels: ['Standard Reach', 'Reach +0.15m', 'Reach +0.30m', 'Reach +0.45m', 'Reach +0.60m']
       },
-      headlights: {
-        name: 'Headlight Beam', desc: 'Longer ground illumination in blackout zones', icon: '💡',
-        costs: [0, 100, 220, 360, 580], labels: ['Standard Beam', 'Reach +2m', 'Reach +4m', 'Reach +6m', 'Reach +8m']
-      },
       engine: {
         name: 'Engine Tune',
         desc: 'Boosts Top Speed & Score Multiplier',

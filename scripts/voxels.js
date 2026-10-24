@@ -965,14 +965,13 @@
       const bL = new THREE.Mesh(headlightBeamGeo, headlightBeamMat);
       bL.rotation.x = Math.PI / 2;
       bL.position.set(-0.75, yPos, zFront - 4.4);
-      const isNight = (typeof gameState !== 'undefined' && gameState) ? TIME_PRESETS[gameState.timeIndex].lightsOn : false;
-      bL.visible = isNight;
+      bL.visible = false;
       parent.add(bL);
 
       const bR = new THREE.Mesh(headlightBeamGeo, headlightBeamMat);
       bR.rotation.x = Math.PI / 2;
       bR.position.set(0.75, yPos, zFront - 4.4);
-      bR.visible = isNight;
+      bR.visible = false;
       parent.add(bR);
 
       return [bL, bR];
@@ -1379,9 +1378,8 @@
       }
       playerVan = createPlayableVanMesh(vanId, true);
       playerVan.position.set(gameState.currentX, 0, gameState.vanZ);
-      const isLightsOn = TIME_PRESETS[gameState.timeIndex].lightsOn;
-      if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = isLightsOn;
-      if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = isLightsOn;
+      if (playerVan.userData.beamLeft) playerVan.userData.beamLeft.visible = false;
+      if (playerVan.userData.beamRight) playerVan.userData.beamRight.visible = false;
       scene.add(playerVan);
       playerVan.add(overdriveAuraMesh);
       playerVan.add(shieldBumperMesh);
