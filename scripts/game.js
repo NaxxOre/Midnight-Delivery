@@ -1694,6 +1694,9 @@
       if (pendingCount >= remainingDrops) return false;
       const parcelTypeId = gameState.handSlots[slotIndex];
       if (!PARCEL_TYPES[parcelTypeId]) return false;
+      if (parcelTypeId !== apt.wantedType) {
+        apt.deliveredWrong = true;
+      }
       soundFX.playThrow();
 
       const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
@@ -1911,16 +1914,18 @@
           const renderKey = `${apt.orderId}:delivered:${isWrong ? 'wrong' : 'exact'}`;
           if (apt.cloudEl.dataset.renderKey !== renderKey) {
             apt.cloudEl.dataset.renderKey = renderKey;
-            const statusTitle = isWrong ? 'DELIVERED (50%)' : 'DELIVERED!';
-            const statusSub = isWrong ? '📦 WRONG PARCEL' : (apt.isVip ? '👑 VIP COMPLETE' : '✓ ORDER COMPLETE');
+            const badgeStateClass = isWrong ? 'is-wrong-delivery' : 'is-delivered';
+            const statusTitle = isWrong ? 'WRONG PARCEL!' : 'DELIVERED!';
+            const statusSub = isWrong ? '✕ 50% POINTS' : (apt.isVip ? '👑 VIP COMPLETE' : '✓ ORDER COMPLETE');
+            const badgeIcon = isWrong ? '✕' : '✓';
             apt.cloudEl.innerHTML = `
-              <div class="thought-cloud-pill resident-order-badge is-delivered">
+              <div class="thought-cloud-pill resident-order-badge ${badgeStateClass}">
                 <img class="resident-request-icon" src="${parcelIconDataURLs[apt.wantedType]}" alt="${parcelInfo.name}" />
                 <div class="resident-order-copy">
                   <strong>${statusTitle}</strong>
                   <span class="cloud-distance-badge">${statusSub}</span>
                 </div>
-                <button type="button" class="quick-throw-cloud-btn parcel-key-badge" disabled title="Delivered">✓</button>
+                <button type="button" class="quick-throw-cloud-btn parcel-key-badge" disabled title="${statusTitle}">${badgeIcon}</button>
               </div>`;
             apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
             apt.cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');

@@ -632,6 +632,41 @@
 .blackout-active .thought-cloud-pill.resident-order-badge.is-delivered .cloud-distance-badge {
   color: #ecfdf5;
 }
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+  border-color: #f43f5e;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
+}
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery::after {
+  border-color: #ffe4e6 transparent;
+}
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery::before {
+  border-color: #f43f5e transparent;
+}
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery .resident-order-copy strong {
+  color: #9f1239;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery .cloud-distance-badge {
+  color: #be123c;
+  font-weight: 800;
+}
+.thought-cloud-pill.resident-order-badge.is-wrong-delivery .quick-throw-cloud-btn {
+  background: #f43f5e;
+  border-color: #e11d48;
+  color: #ffffff;
+  cursor: default;
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery {
+  background: #4c0519f5;
+  border-color: #fb7185;
+  box-shadow: 0 0 16px rgba(251, 113, 133, 0.55);
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery .resident-order-copy strong,
+.blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery .cloud-distance-badge {
+  color: #ffe4e6;
+}
 
 
 /* Tactical Speed Lines Layer (Disabled: screen light-up and overlay removed) */
