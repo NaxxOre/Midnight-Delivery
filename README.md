@@ -1,218 +1,193 @@
 # 🚚 Midnight Delivery — Voxel World Tour
-> **Digit7 Competition (Myanmar) — Arcade 3D Web Game**
 
-[![Three.js](https://img.shields.io/badge/Three.js-r128-black?logo=three.js)](https://threejs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-CDN-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
-[![Web Audio API](https://img.shields.io/badge/Audio-Procedural_Synth-amber)]()
-[![Platform](https://img.shields.io/badge/Platform-Web%20%2F%20Mobile%20Responsive-brightgreen)]()
+> **Digit7 Jam 2026 (Myanmar HTML5 Arcade Game Tournament) — Official Submission**
 
----
-
-## 📖 Executive Summary
-**Midnight Delivery** is a high-octane 3D arcade voxel delivery runner developed for Myanmar's **Digit7 competition**. Players pilot customizable delivery rigs across global metropolitan highways (featuring **Yangon**, Tokyo, Chinatown, Little India, and Pastel Metro), dodging traffic hazards, navigating pedestrian crosswalks, and slinging tiered meme parcels to quirky roadside voxel residents.
-
-The game is a modular static HTML5 application utilizing Three.js and procedural Web Audio chiptune synthesis. `index.html` and `midnight_delivery.html` are identical entry points; gameplay lives in the shared `scripts/` files.
+[![HTML5](https://img.shields.io/badge/HTML5-Vanilla_JS-E34F26?logo=html5&logoColor=white)]()
+[![Three.js](https://img.shields.io/badge/Three.js-r128_(Vendored_MIT)-000000?logo=three.js)]()
+[![Tailwind CSS](https://img.shields.io/badge/Styles-Pre--Compiled_Tailwind-38BDF8?logo=tailwindcss)]()
+[![Audio](https://img.shields.io/badge/Audio-Web_Audio_Synth_%2B_Dual_BGM-F59E0B)]()
+[![Viewports](https://img.shields.io/badge/Viewports-Mobile_360x640_%7C_Desktop_1280x720-10B981)]()
 
 ---
 
-## 🚀 Quick Start & How to Run
+## 📖 About the Game
 
-### Option 1: Direct File Opening
-Double-click [`midnight_delivery.html`](file:///c:/Users/ZL_sht_H/Documents/Projects/digit7/midnight_delivery.html) or open it directly in any modern browser (Google Chrome, Microsoft Edge, Brave, Firefox, Safari).
+**Midnight Delivery — Voxel World Tour** is a fast-paced, mobile-first and desktop-ready **3D arcade voxel courier runner** built for **Digit7 Jam 2026**. Players get behind the wheel of customizable courier vans and race down neon-lit midnight highways across **Yangon (ရန်ကုန်)** and vibrant world districts (**Tokyo**, **Chinatown**, **Little India**, and **Pastel Metro**).
 
-### Option 2: Local HTTP Server (Recommended)
-```powershell
-# Using Node.js dev server
-npm start
-```
-Then visit: **`http://localhost:8081`** or **`http://localhost:8081/midnight_delivery.html`**
+Celebrating Myanmar street culture alongside an arcade world tour, the Yangon highway features golden pagoda silhouettes, Burmese tea shops (`လက်ဖက်ရည်ဆိုင်`), Mohinga noodle stalls (`မုန့်ဟင်းခါး`), and glowing Shwedagon-inspired (`ရွှေတိဂုံ`) landmarks. Every 3D vehicle, building, parcel, and character in the game is constructed procedurally in code using Three.js voxel geometry and object pooling for smooth, sustained 60 FPS gameplay without external 3D model downloads or build steps.
 
-### Option 3: Automated Verification & Testing
-```powershell
-# Run automated build, layout, and browser smoke verification
-npm test
+---
 
-# Run 1,000-throw & sway physics stress suite
-npm run test:stress
+## 🎯 Objective
 
-# Run continuous 15-minute soak test
-npm run test:soak
-```
-
-`http://localhost:8081/` and `http://localhost:8081/midnight_delivery.html` open the same synchronized game. Both load active code from `scripts/` and styles from `styles/`.
-
-Three.js r128 is bundled locally in `scripts/vendor/` with its license. Fonts are optional and never block startup. The ordered deferred scripts initialize after the DOM is parsed; `scripts/startup.js` registers error reporting and an eight-second loader watchdog before dependencies load. Optional visual-helper failures are logged without blocking the menu. Critical failures dismiss the loader and show a retry screen rather than pretending the game is playable. Startup script versions must stay synchronized between both entry points.
-
-Utility styles are bundled in `styles/utilities.css`, so layout and SVG sizing do not require the Tailwind CDN. After changing utility classes in HTML or JavaScript, rebuild the stylesheet from the project directory:
-
-```powershell
-npx --yes --package tailwindcss@3.4.17 tailwindcss -i styles/utilities.input.css -o styles/utilities.css --content "./*.html,./scripts/*.js" --minify
-```
+1. **Complete Roadside Deliveries Under Pressure:** Steer across a 4-lane highway while matching and throwing requested parcels from your **3-Slot Parcel Dock** to waiting roadside residents before passing their porch drop zone.
+2. **Survive the Midnight Shift:** Protect your **3 Hearts** by dodging multi-lane traffic and crosswalk hazards, managing physical **Roof Cargo Stack** stability through low-clearance overpasses, surviving **Midnight Blackout** power outages, and out-delivering the rival **Shadow Express** courier van.
+3. **Climb Courier Ranks & Upgrade Your Fleet:** Earn Score, Coins, and Courier XP to complete **Active Shift Contracts**, advance from **Level 1 (Yangon Rookie)** to **Level 5 (Digit7 Legend)**, unlock 6 playable rigs via **Garage Requisitions**, tune vehicle stats (**Engine**, **Suspension/Handling**, and **Chrono-Battery**), and collect 12 original parody items across 4 rarity tiers via **Courier Supply Drops**.
 
 ---
 
 ## 🎮 Gameplay & Controls
 
-| Action | Desktop Keyboard | Mobile / Touch |
+### Controls (Mobile Touch & Desktop Keyboard/Mouse)
+
+The game is engineered for **one- or two-thumb mobile play** as well as snappy **desktop keyboard/mouse** play—including **simultaneous mid-swerve parcel delivery** while changing lanes:
+
+| Action | Mobile / Touch (`360×640`+) | Desktop (`1280×720`+) |
 | :--- | :--- | :--- |
-| **Steer / Switch Lanes** | `A` / `D` or `←` / `→` Arrow Keys | Swipe Left / Right on road |
-| **Deliver Parcel** | Left slot: `Q` / `1`; middle: `W` / `2`; right: `E` / `3`, or click a card | Tap a parcel card once; drag aiming is also supported |
-| **⚡ Sweet-Spot Perfect Drop** | Release parcel when roadside ring shrinks to center | Release in golden pulsing zone for 2x pts & +10 coins |
-| **🔥 Traffic Near-Miss** | Pass close in adjacent lane or dodge at last second | Close-pass traffic to build combo & trigger speed lines |
-| **💥 Side-Ram Rival** | Steer into adjacent lane while alongside Shadow Express | Side-ram rival to stun them for 4s and steal +2 crates |
-| **Slow-Mo Aiming** | Hold parcel while dragging | Hold parcel while dragging |
-| **Pause / Resume** | `Escape` key | Pause button on top-right HUD |
-| **Garage Orbit** | Click & drag 3D turntable | Drag finger on 3D garage showroom |
+| **Switch Lanes** | Swipe **Left** or **Right** anywhere on the road (1 discrete lane per swipe; instant mid-swerve reversal supported) | `A` / `D` or `←` / `→` Arrow Keys |
+| **Instant Throw (3-Slot Dock)** | Tap any **Parcel Dock Card** at the bottom—or tap the resident's **Order Badge** directly (works simultaneously while swiping lanes) | Press `Q` / `1` (Left), `W` / `2` (Middle), `E` / `3` (Right), or click a card / order badge |
+| **Tactical Slow-Mo Drag Aim** | Touch & hold a parcel card, drag to aim, release to throw | Click & hold a parcel card, drag to aim, release to throw |
+| **Side-Ram Rival Van** | Swipe into the adjacent lane while alongside **Shadow Express** | Steer into the adjacent lane while alongside **Shadow Express** |
+| **Pause & Settings** | Tap the top-right **Pause (`❚❚`)** button | Press `Escape` or click **Pause (`❚❚`)** |
+| **Garage 3D Showroom Orbit** | Drag finger horizontally across the 3D showroom | Click & drag horizontally across the 3D showroom |
 
 ---
 
-## 🗺️ Codebase Architecture & System Map
+### Core Gameplay Mechanics
 
-Residents lock on between 40 world units ahead and 12 units behind the van. Their ground ring and parcel badge show the matching dock key. Exact orders earn x2 points and coins before additional modifiers; wrong items award 50% of base points and coins. Throws track the resident's moving hands, and a resident's active flight completes before their building is recycled.
+#### 1. 3-Slot Designated Parcel Matching & Modifiers
+- **Smart Order Guarantee:** Whenever a roadside resident enters range, at least one of your 3 dock slots is guaranteed to hold their requested parcel, highlighted with a pulsing match indicator and floating key prompt (`[Q]`, `[W]`, or `[E]`).
+- **Exact Order vs. Wrong Parcel:**
+  - **🎯 Exact Order:** Awards **`2×` Points & Coins** and flips the resident badge to a green **`DELIVERED!`** confirmation.
+  - **⚡ Sweet-Spot Drop:** Releasing when the roadside target ring pulses gold in the sweet spot grants a **Perfect Drop** bonus and extra coins.
+  - **📦 Wrong Parcel:** Still completes at **`50%` Points & Coins** (`WRONG PARCEL!` badge) to keep arcade momentum flowing.
+- **Special Parcel Modifiers:** Watch for **Hot / Timed** parcels (deliver before the countdown expires for bonus tips) and **Fragile** parcels (**`2.5×` intact payout**, shattered if you collide with traffic).
 
-### Signature Gameplay Pillars
+#### 2. Roof-Stacking Cargo Physics, Supply Depots & Overpasses (`scripts/cargo.js`)
+- **Physical Roof Crates:** Every shift begins with **3 roof crates** (maximum capacity: **6**). Every parcel throw consumes 1 physical crate from the roof rack.
+- **Score Multiplier vs. Sway Risk:** Carrying taller stacks boosts all delivery payouts (`0` crates: `×1.0` · `1–2` crates: `×1.5` · `3–4` crates: `×2.0` · `5–6` crates: `×3.0`), but rapid opposite-direction swerves build lateral sway—pushing sway danger past 100% tumbles your top crate onto the asphalt.
+- **Supply Depots & Low Overpasses:** Drive through green **`SUPPLY / +2 CRATES`** arches to restock. When approaching **Low-Clearance Overpass** gantries, steer into the marked green **High-Clearance Safe Lane** or excess roof crates will be sheared off.
 
-1. **Roof-Stacking Cargo Physics & Overpasses (`scripts/cargo.js`):**
-   - Each shift starts with three physical roof crates. Every throw consumes one; capacity is six. Q/W/E choose the parcel type from active dock slots.
-   - Drive through green `SUPPLY / +2 CRATES` arches to reload. Empty cargo prevents throws until a depot is collected.
-   - Delivery scores scale with stack size: one crate gives x1.0, three x1.8, and six x3.0.
-   - Rapid opposite lane changes destabilize tall stacks. Extreme sway shears off the top crate.
-   - Low-clearance overpass gantries knock off excessive crates unless guided into the marked green safe clearance lane.
+#### 3. Midnight Blackout Zones & Pit-Stop Repairs (`scripts/night.js`)
+- **Power Grid Blackouts:** Periodic **14-second Midnight Blackout** events plunge the highway into darkness while building windows glow, residents ignite **red/gold SOS flares** with spark particles, and delivery destination badges switch to **high-contrast night-vision colors**.
+- **Headlight Damage & Repair Pads:** Traffic impacts can damage a headlight beam; driving over a glowing blue **`🔧 PIT-STOP REPAIR`** pad restores full lighting and heals **+1 Heart**.
 
-2. **Midnight Blackout Zones & Headlight Cones (`scripts/night.js`):**
-   - Every ~350m, a 25-second power grid blackout plunges the highway into deep midnight darkness while building windows glow.
-   - Dual 3D headlight cones illuminate the road. Traffic collisions crack one headlight beam until repaired at a blue glowing `🔧 PIT-STOP REPAIR` road pad (+1 Heart restoration).
-   - Roadside customers ignite bright red/gold SOS flares with rising spark particles.
+#### 4. Shadow Express Rival AI & Split-Road Route Forks (`scripts/rivals.js`)
+- **Rival Delivery Races:** Roughly every 45 seconds, rival courier **Shadow Express** pulls alongside to race for active resident orders. Beat their throw to score **`⚡ SNIPED RIVAL! +500`**, or **side-ram** into their lane while side-by-side to stun them for 4 seconds and claim bonus roof crates.
+- **Split-Road Route Gates:** Periodic highway forks offer a 20-second tactical choice:
+  - **Left Gate — `EXPRESS SHORTCUT`:** Denser traffic and low bridges in exchange for **`2×` Coin payouts**.
+  - **Right Gate — `SAFE BYPASS`:** Lighter traffic plus a guaranteed **Supply Depot** and **Pit-Stop Repair Pad**.
 
-3. **Rival Courier AI & Split-Road Route Forks (`scripts/rivals.js`):**
-   - Every 45s, the Shadow Express rival van races alongside the player and attempts to snipe customer deliveries.
-   - Sniping before the rival awards `⚡ SNIPED RIVAL! +500`. Steering side-by-side into the rival executes a side-ram, stunning them for 4s and looting +2 roof crates.
-   - Route gates spawn every 500m: **Left Gate (Express Shortcut)** triggers dense traffic, low bridges, 2x coins, and VIP orders for 20s; **Right Gate (Safe Bypass)** provides clear lanes with guaranteed Supply Depots and Repair Pads.
+#### 5. Overdrive Fever, Near-Misses & Road Power-Ups
+- **Traffic Near-Misses** and chained deliveries charge the **Overdrive Bar**. Reaching 100% triggers **Overdrive Fever** (boosted speed, temporary crash immunity, and `2×` score).
+- Collect highway power-ups including **Drone Assist** (automated deliveries), **Coin Magnet**, and **Shield Bumper**.
 
-4. **Object Pooling & Memory Stability (`scripts/pools.js`, `scripts/audio.js`):**
-   - Pre-instantiated `trafficMeshPool` recycles vehicle meshes and turn blinkers without WebGL allocation churn.
-   - Burst particles strictly capped to 60 with automatic queue cleanup.
-   - Web Audio oscillators and gains pooled up to 32 voices with immediate disconnection upon playback completion.
-   - Schema-validated `CourierDB` in `scripts/database.js` provides crash-resilient auto-save and active shift resumption.
+---
 
-The project is structured into the official **Digit7 Jam Modular Architecture** with shared global scope:
+## 🚀 How to Run the Game
 
+**Midnight Delivery** requires **zero compilation or bundling** to play. Both [`index.html`](index.html) and [`midnight_delivery.html`](midnight_delivery.html) are byte-for-byte synchronized entry points.
+
+### Option 1: Built-in Node.js Local Server (Recommended)
+Requires **Node.js 18+** (uses only built-in Node core modules—no `npm install` needed just to play):
+
+```bash
+node server.js
+# or
+npm start
 ```
-├── index.html                 : HTML entry point, CDNs, #loading-overlay, HUD, and modals
-├── midnight_delivery.html     : Identical alternate entry point (synchronized)
-├── server.js                  : Built-in local HTTP server with automatic port fallback
+
+Open **`http://localhost:8080`** (or **`http://localhost:8080/midnight_delivery.html`**) in Chrome, Edge, Safari, or Firefox.
+*(Note: If port `8080` is already in use, `server.js` automatically falls back to `8081`, `8082`, etc. and prints the active URL in the terminal.)*
+
+### Option 2: Any Static Web Server or Direct File Open
+You can serve the folder with any static file server (e.g., `python -m http.server 8080` or VS Code **Live Server**), or open `index.html` / `midnight_delivery.html` directly in a modern desktop browser.
+
+### Option 3: Automated Verification, Layout & Stress Suite (Optional)
+For reviewers who want to run the automated headless verification suite (static syntax/DOM/compliance checks, `CourierDB` storage unit tests, gameplay mechanics checks, and Playwright `1280×720` + `360×640` viewport layout & FPS audits):
+
+```bash
+# Install the single devDependency (playwright-core)
+npm ci
+
+# Run static checks + unit tests + desktop & mobile headless browser verification
+npm test
+
+# Run 1,000-throw & cargo-sway physics stress test
+npm run test:stress
+
+# Run 15-minute continuous memory & FPS soak test
+npm run test:soak
+```
+
+*(If running `npm test` only for static & database checks without launching a headless browser, run `node tests/verify_build.js --static`.)*
+
+---
+
+## 🔍 What Reviewers Should Know
+
+1. **True Mobile (`360×640`) & Desktop (`1280×720`) Responsiveness:**
+   - Designed with zero horizontal overflow, non-clipping HUD/modals, enlarged mobile parcel dock cards, critically damped ($\zeta = 1.0$) lane-switching physics without camera jitter, and multi-touch support so mobile players can swipe lanes and tap deliveries simultaneously.
+2. **Sustained 60 FPS & Leak-Free WebGL / Web Audio Memory Management:**
+   - All common voxel geometries and materials are cached and shared globally (`scripts/voxels.js`).
+   - Traffic vehicles (`trafficMeshPool`), fallen crates (`fallenCargoPool`), burst particles (capped at 60), and SOS flare sparks (capped at 120 vertices) are pre-allocated and recycled with zero mid-run WebGL allocation churn.
+   - `SoundSystem` (`scripts/audio.js`) caps active Web Audio synthesis at **32 pooled voices** and disconnects every oscillator/gain node immediately on `onended`.
+   - Frame delta time (`dt`) is strictly clamped (`0.001s`–`0.05s`) with finite-number guards across vehicle steering and parabolic parcel arcs.
+3. **Crash-Resilient Local Persistence & Mid-Shift Session Recovery (`CourierDB`):**
+   - All progression, active contracts, vehicle upgrades, audio preferences, and top-10 local run history are stored locally via `localStorage` (`scripts/database.js`) with strict schema validation, atomic backup recovery, JSON save export/import (in **Settings**), and graceful in-memory fallback if browser storage is restricted.
+   - **Refresh Recovery:** Reloading the browser mid-run preserves an active shift checkpoint and presents a **Resume Shift** prompt with a `3–2–1` countdown so progress is never lost accidentally.
+4. **Fail-Safe Startup Watchdog:**
+   - `scripts/startup.js` arms an 8-second boot watchdog before scripts load so any unexpected WebGL/environment failure cleanly surfaces a non-destructive retry screen without harming saved progress. Web fonts degrade gracefully to system fonts when offline.
+5. **Strict Digit7 Jam 2026 Rule Compliance:**
+   - **Zero Wagering Mechanics:** All unlocks use transparent coin costs, **Garage Requisitions**, and **Courier Supply Drops**.
+   - **Zero Unauthorized External APIs:** Runs 100% client-side with zero unannounced network calls.
+   - **Automated Compliance Gate:** `tests/verify_build.js` automatically verifies entry-point synchronization, DOM ID integrity, and competition terminology compliance on every test run.
+
+### Project Structure
+
+```text
+Midnight-Delivery/
+├── index.html                 # Primary HTML entry point (HUD, showroom, modals)
+├── midnight_delivery.html     # Byte-for-byte synchronized alternate entry point
+├── server.js                  # Zero-dependency Node.js local static server
+├── resources/
+│   ├── Passing_Streetlights.mp3   # Highway drive looping BGM track
+│   └── Asphalt_Reflections.mp3    # Garage showroom looping BGM track
 ├── styles/
-│   ├── main.css               : Custom arcade HUD, responsive viewports, and modal styles
-│   └── utilities.css          : Tailored utility styles
+│   ├── main.css               # Custom arcade HUD, Blackout high-contrast & mobile rules
+│   ├── utilities.css          # Pre-compiled local Tailwind CSS utilities (no CDN lag)
+│   └── utilities.input.css    # Tailwind source entry for rebuilding utilities.css
 ├── scripts/
-│   ├── audio.js               : SoundSystem Web Audio synth with voice pooling and SFX
-│   ├── data.js                : Registries (PARCEL_TYPES, CHARACTER_TYPES, PLAYABLE_VANS, CITY_THEMES, gameState)
-│   ├── database.js            : Schema-validated CourierDB with localStorage recovery and telemetry
-│   ├── voxels.js              : Three.js scene, shared geometry caches, and procedural voxel mesh builders
-│   ├── cargo.js               : Roof cargo stacking, sway physics, overpasses, and fallen crate pool
-│   ├── night.js               : Blackout zones, dynamic headlight cones, pit-stop repairs, and SOS flares
-│   ├── rivals.js              : Shadow Express rival courier AI, delivery racing, and route fork gates
-│   ├── pools.js               : Object pooling for traffic vehicles and burst particles
-│   ├── startup.js             : Fail-safe boot loader and initialization watchdog
-│   └── game.js                : Core game loop, vehicle physics, input handling, and delivery mechanics
+│   ├── startup.js             # Boot watchdog & non-destructive startup error boundary
+│   ├── audio.js               # 32-voice pooled Web Audio API synth + dual-BGM controller
+│   ├── data.js                # Playable vans, city themes, parody parcels & game state
+│   ├── database.js            # Schema-validated CourierDB, checkpoints & save export/import
+│   ├── voxels.js              # Three.js scene, shared caches & procedural voxel builders
+│   ├── pools.js               # Pooled traffic vehicles & bounded particle systems
+│   ├── cargo.js               # Roof cargo stack, sway physics, depots & overpasses
+│   ├── night.js               # Midnight Blackout zones, headlight cones, flares & pit-stops
+│   ├── rivals.js              # Shadow Express rival courier AI & split-road route forks
+│   ├── game.js                # Main loop, critically damped steering, multi-touch & throws
+│   └── vendor/
+│       ├── three.r128.min.js  # Vendored Three.js r128 runtime
+│       └── THREE-LICENSE.txt  # Bundled Three.js MIT License
 └── tests/
-    ├── verify_build.js        : Automated static and Playwright browser verification suite
-    ├── stress_test.js         : 1,000-throw & extreme sway physics stress test harness
-    ├── smoke.js               : Automated headless browser smoke and soak driver
-    ├── database.js            : CourierDB schema and persistence unit tests
-    ├── mechanics.js           : Gameplay mechanics validation
-    └── layout.js              : 1280x720 desktop & 360x640 mobile viewport layout auditor
+    ├── verify_build.js        # Static AST/DOM/compliance auditor + test runner
+    ├── database.js            # CourierDB schema, backup & storage fallback tests
+    ├── mechanics.js           # Blackout, rival, cargo, mobile multi-touch & checkpoint tests
+    ├── layout.js              # 1280×720 desktop & 360×640 mobile bounding-box auditor
+    ├── smoke.js               # Headless Chromium/Edge FPS & runtime error harness
+    └── stress_test.js         # 1,000-throw & extreme cargo-sway stress test
 ```
 
 ---
 
-## 💎 Core Game Entities & Data Models
+## 📜 Asset Rights, Licensing & Originality Declaration
 
-### 1. 🛞 Playable Rigs (`PLAYABLE_VANS`)
-1. **Express Courier GTI:** Starter step-van with roof rack.
-2. **Harajuku Ramen Truck:** Kei truck with ramen bowl, lanterns, and neko ears (+15% coin bonus).
-3. **Cyber-Blade 2099:** Wedge cyber-courier with GT wing and plasma thrusters (+25% coin bonus).
-4. **Royal Bangkok Tuk-Tuk:** 3-wheeled motorized rickshaw (+20% coin bonus, max handling).
-5. **Fort Knox Bullion Rig:** 6-wheel armored bank truck (+35% coin bonus).
-6. **Mecha-Moai Interceptor:** Easter Island rock rod with chrome V8 supercharger (+50% coin bonus).
+All visual, audio, code, and narrative assets in **Midnight Delivery — Voxel World Tour** are cleared for **Digit7 Jam 2026** judging, public web hosting, and tournament showcase:
 
-### 2. 🇲🇲 Authentic World Tour Cities (`CITY_THEMES`)
-- **Yangon (ရန်ကုန်):** Golden Pagoda architecture, Burmese tea shops (`လက်ဖက်ရည်ဆိုင်`), Mohinga stalls (`မုန့်ဟင်းခါး`), and Shwedagon gold aesthetic (`ရွှေတိဂုံ`).
-- **Tokyo (東京):** Torii gates, Shibuya neon signs, Takoyaki & Ramen stalls.
-- **ChinaTown (唐人街):** Red lanterns, golden dim sum banners, dragon temple roofs.
-- **Little India (लिटिल इंडिया):** Masala chai carts, spice bazaars, vibrant floral archways.
-- **Pastel Metro:** Retro-wave vaporwave cityscape.
-
-### 3. 📦 Parcel Tiers (`PARCEL_TYPES`)
-- **Legendary Tier:** Cool Shades Moai 🗿, 24K Gold Toilet, Cyber Neon Katana (600 pts).
-- **Gold Tier:** DigitBox 7 Pro Console, Golden King Durian, Golden Lucky Cat (450 pts).
-- **Epic Tier:** Sardine Can, Cat-in-a-Box, Galactic Lava Lamp (350 pts).
-- **Rare Tier:** Voxel Bicycle, Midnight Shan Noodle XL, Brown Sugar Boba XL (250 pts).
-
-### 4. 👥 Quirky Voxel Residents (`CHARACTER_TYPES`)
-- Big-Eye Goblin (`"Hehe! Yes!"`)
-- Golden Inle Chef (`"Much Parcel! Very Fast!"`)
-- Cool Banana Bro (`"Peel Good Bro!"`)
-- Neko-Chan (`"Meow! Toss Here!"`)
-- LED-Bot 9000 (`"BEEP! Drop Beat!"`)
-- Starlight Wizard (`"By My Beard!"`)
-- Master Bamboo (`"Inner Peace! Drop Here!"`)
-- Neon Samurai (`"Laser-Sharp Delivery!"`)
+| Asset Category | Source & Provenance | License / Rights Status |
+| :--- | :--- | :--- |
+| **3D Models, Vehicles, Characters & City Props** | **100% Original Procedural Code** (`scripts/voxels.js`, `scripts/cargo.js`, `scripts/night.js`, `scripts/rivals.js`). Built at runtime from Three.js primitive geometries; zero third-party `.glb`/`.obj`/`.fbx` meshes. | **Original First-Party Work** (Full rights held by team) |
+| **2D Parcel Icons, Signboards & Textures** | **100% Original Procedural HTML5 `<canvas>` Renders** & inline SVG HUD icons generated at runtime. Zero ripped sprites or external image packs. | **Original First-Party Work** (Full rights held by team) |
+| **In-Game Brands, Items & Character Personas** | **100% Original Parody Creations** (*DigitBox 7 Pro Console*, *Midnight Shan Noodle XL*, *Golden King Durian*, *Golden Inle Chef*, *Master Bamboo*, *Neon Samurai*, etc.). Contains **no** unauthorized third-party trademarks or copyrighted characters. | **Original First-Party IP** (Competition Compliant) |
+| **Gameplay Sound Effects (SFX)** | **100% Original Procedural Synthesis** (`scripts/audio.js`). Generated live via the browser's native Web Audio API (`OscillatorNode` / `GainNode`). Zero external SFX sample packs. | **Original First-Party Work** (Full rights held by team) |
+| **Background Music (`resources/*.mp3`)** | *Passing Streetlights* (Highway Drive BGM) & *Asphalt Reflections* (Garage Showroom BGM) — royalty-free / original instrumental synth tracks produced for this project (controllable and mutable anytime via **Settings**). | **Royalty-Free / Cleared for Commercial & Competition Distribution** |
+| **Three.js `r128`** | Vendored locally at `scripts/vendor/three.r128.min.js`. | **MIT License** — full license text included in [`scripts/vendor/THREE-LICENSE.txt`](scripts/vendor/THREE-LICENSE.txt) |
+| **Tailwind CSS `v3.4.17`** | Pre-compiled locally into `styles/utilities.css`. | **MIT License** |
+| **Typography (Web Fonts)** | *Fredoka*, *Press Start 2P*, and *Space Grotesk* served via Google Fonts CSS with local system-font fallbacks. | **SIL Open Font License 1.1 (OFL)** |
+| **Playwright Core (`devDependencies`)** | Used solely in `tests/` for offline automated verification; never loaded or bundled in the game client. | **Apache-2.0 License** |
 
 ---
 
-## 📋 Shift Contracts & ⚙️ Rig Tuning (Retention & Progression)
-
-### 1. Active Shift Contracts & Courier Ranks
-- **3 Persistent Missions:** Players always have 3 active contracts chosen from a pool:
-  - *Deliver 5 Parcels in a Single Run*
-  - *Land 3 Perfect Drops*
-  - *Perform 4 Traffic Near-Misses*
-  - *Collect 40 Coins in Yangon*
-  - *Reach Combo x5 without crashing*
-  - *Drive 500 Meters in a Shift*
-  - *Deliver a Legendary Tier Parcel*
-- **Rewards & Progression:** Completing each contract awards bonus **+150 Coins** and **Courier XP**.
-- **Courier Ranks:** Level 1 "Yangon Rookie" → Level 2 "Midnight Runner" → Level 3 "ASEAN Express" → Level 4 "Cyber Courier" → Level 5 "Digit7 Legend", complete with rank promotions and bonus awards.
-- **Live Widgets:** Real-time contract progress displayed on `#home-screen`, live during gameplay, and summarized on the Game Over screen. All progress persists across sessions in `localStorage`.
-
-### 2. Rig Tuning Upgrades (Garage Progression)
-Players can invest earned Coins to tune their unlocked vehicles across 3 stats (Level 1 to 5 each):
-- **⚡ Engine Tune:** Increases top speed multiplier (up to +18%) and score multiplier (up to +25%).
-- **🎯 Suspension / Handling:** Accelerates lane-switching snap lerp speed (up to +75% reaction speed).
-- **⏱️ Chrono-Battery:** Extends Slow-Mo aim capacity (from 8.0s up to 14.5s) and grants a 30% slower drain rate at Level 5.
-- Multipliers are applied dynamically in real time within the `animate()` physics and input loop.
-
----
-
-## 🛠️ Vibe Coding with Gemini Argon & Antigravity
-
-When prompting **Gemini (Argon model)** or working cooperatively with your AI assistant on this codebase, use these targeted prompt strategies:
-
-### 💡 Prompt Blueprint 1: Adding a New Vehicle
-> *"In `midnight_delivery.html`, add a new vehicle to `PLAYABLE_VANS` called 'Yangon Golden Bus' (a vintage Burmese wooden/metal bus). Give it custom stats, hex colors, and update `createPlayableVan()` to assemble its voxel mesh with authentic roof luggage and headlights."*
-
-### 💡 Prompt Blueprint 2: Adding New Power-Ups
-> *"In `midnight_delivery.html`, look at `activePowerUps` and the power-up spawn logic near line 5327. Add a new power-up type: 'Coin Magnet' (draws nearby coins and delivers parcels automatically within a radius for 6 seconds)."*
-
-### 💡 Prompt Blueprint 3: Adding Myanmar Cultural Elements
-> *"In `midnight_delivery.html`, add more Myanmar-themed roadside props to the `yangon` theme (such as roadside sugarcane juice carts, Thanaka-wearing voxel characters, and Bagan pagoda spires in the background)."*
-
-### 💡 Prompt Blueprint 4: Sound & Music Tweaks
-> *"In `midnight_delivery.html`, inspect the `SoundSystem` class near line 906. Add a custom engine acceleration pitch modulation that scales smoothly with `playerSpeed`."*
-
----
-
-## 🏆 Digit7 Myanmar Competition Checklist
-- [x] Functional 3D arcade runner prototype
-- [x] Authentic Myanmar theme (Yangon, Burmese signboards, local lore)
-- [x] Responsive layout (playable on mobile phones and PC desktops)
-- [x] Procedural audio synthesis without external asset lag
-- [x] Courier Supply Drops / Collection progression & high score retention
-- [ ] Additional Myanmar landmarks (e.g., Mandalay Palace, Inle Lake stilt houses)
-- [ ] Multiplayer / Local pass-and-play ghost racer mode
-- [ ] Burmese language UI toggle option (Zawgyi / Unicode)
-
----
-
-Developed with ❤️ for **Digit7 Myanmar**.
+Developed with ❤️ in Myanmar for **Digit7 Jam 2026**.
