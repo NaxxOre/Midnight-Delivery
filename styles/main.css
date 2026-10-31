@@ -536,8 +536,37 @@
 .run-history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .run-history-table th, .run-history-table td { text-align: left; padding: 8px 5px; border-bottom: 1px solid #334155; overflow-wrap: anywhere; }
 
-.blackout-active .resident-order-badge { border-color: #fcd34d; background: #071020f5; box-shadow: 0 0 16px #ff573388; }
-.blackout-active .parcel-key-badge { color: #071020; background: #fde047; }
+.blackout-active .thought-cloud-pill.resident-order-badge,
+.blackout-active .resident-order-badge {
+  border-color: #fcd34d;
+  background: #071020f5;
+  color: #f8fafc;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.55), 0 0 12px rgba(255, 87, 51, 0.45);
+}
+.blackout-active .thought-cloud-pill.resident-order-badge::after {
+  border-color: #071020 transparent;
+}
+.blackout-active .thought-cloud-pill.resident-order-badge::before {
+  border-color: #fcd34d transparent;
+}
+.blackout-active .resident-order-badge .resident-order-copy {
+  color: #f8fafc;
+}
+.blackout-active .resident-order-badge .resident-order-copy strong {
+  color: #fef08a;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+.blackout-active .resident-order-badge .cloud-distance-badge {
+  color: #bae6fd;
+  font-weight: 700;
+}
+.blackout-active .parcel-key-badge {
+  color: #071020;
+  background: #fde047;
+  border-color: #ffffff;
+  font-weight: 900;
+}
 
 #loading-overlay {
   position: fixed;
@@ -646,6 +675,12 @@
   border-color: #34d399;
   box-shadow: 0 0 16px rgba(52, 211, 153, 0.55);
 }
+.blackout-active .thought-cloud-pill.resident-order-badge.is-delivered::after {
+  border-color: #064e3b transparent;
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-delivered::before {
+  border-color: #34d399 transparent;
+}
 .blackout-active .thought-cloud-pill.resident-order-badge.is-delivered .resident-order-copy strong,
 .blackout-active .thought-cloud-pill.resident-order-badge.is-delivered .cloud-distance-badge {
   color: #ecfdf5;
@@ -680,6 +715,12 @@
   background: #4c0519f5;
   border-color: #fb7185;
   box-shadow: 0 0 16px rgba(251, 113, 133, 0.55);
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery::after {
+  border-color: #4c0519 transparent;
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery::before {
+  border-color: #fb7185 transparent;
 }
 .blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery .resident-order-copy strong,
 .blackout-active .thought-cloud-pill.resident-order-badge.is-wrong-delivery .cloud-distance-badge {

@@ -8,6 +8,30 @@ exports.verify = async page => {
     const triggered = nightState.remaining === 14;
     for (let step = 0; step < 240; step++) updateNightSystems(1 / 60, 0, 0);
     const dark = hemiLight.intensity < 0.2;
+    const testApt = apartments[0];
+    testApt.hasOrder = true;
+    testApt.delivered = false;
+    testApt.deliveredByPlayer = false;
+    testApt.orderId = ++globalOrderCounter;
+    testApt.wantedType = 0;
+    if (!testApt.charMesh) {
+      testApt.charMesh = createVoxelCharacter('goblin', 0.96);
+      testApt.customerSlot.add(testApt.charMesh);
+    }
+    testApt.group.position.z = playerVan.position.z - 22;
+    updateOrderAlertsAndBubbles();
+    const badgeEl = testApt.cloudEl.querySelector('.resident-order-badge');
+    const titleEl = testApt.cloudEl.querySelector('.resident-order-copy strong');
+    const distEl = testApt.cloudEl.querySelector('.cloud-distance-badge');
+    if (!document.body.classList.contains('blackout-active') || !badgeEl || !titleEl || !distEl) {
+      throw new Error('Blackout resident badge did not render');
+    }
+    const bgRgb = getComputedStyle(badgeEl).backgroundColor.match(/\d+/g).map(Number);
+    const titleRgb = getComputedStyle(titleEl).color.match(/\d+/g).map(Number);
+    const distRgb = getComputedStyle(distEl).color.match(/\d+/g).map(Number);
+    if (bgRgb[0] > 40 || titleRgb[0] < 200 || titleRgb[1] < 200 || distRgb[1] < 180 || distRgb[2] < 200) {
+      throw new Error('Blackout delivery text low contrast: ' + JSON.stringify({ bgRgb, titleRgb, distRgb }));
+    }
     damageHeadlight();
     updateNightSystems(0.01, 0, 0);
     const damaged = playerVan.userData.beamRight.material.opacity <= playerVan.userData.beamLeft.material.opacity * 0.4;
