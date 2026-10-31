@@ -133,7 +133,8 @@
 
     function spawnSupplyDepot(laneIndex = Math.floor(Math.random() * LANES.length), zPosition = -150) {
       if (gameState.distanceMeters < 250 && zPosition === -150) return null;
-      if (cargoRoadEvents.filter(event => event.type === 'supply').length >= 2) return null;
+      if (cargoRoadEvents.filter(event => event.type === 'supply').length >= 1) return null;
+      if (zPosition === -150 && cargoRoadEvents.some(event => Math.abs(event.mesh.position.z - zPosition) < 60)) return null;
       const mesh = createSupplyDepotMesh(laneIndex);
       mesh.position.z = zPosition;
       cargoRoadGroup.add(mesh);
@@ -146,6 +147,7 @@
       if (gameState.distanceMeters < 250 && zPosition === -165) return null;
       if (typeof nightState !== 'undefined' && nightState.remaining > 0) return null;
       if (cargoRoadEvents.some(event => event.type === 'bridge')) return null;
+      if (zPosition === -165 && cargoRoadEvents.some(event => Math.abs(event.mesh.position.z - zPosition) < 60)) return null;
       if (typeof routeState !== 'undefined' && routeState.gateActive && typeof routeGate !== 'undefined' && Math.abs(routeGate.position.z - zPosition) < 80) return null;
       if (typeof rivalState !== 'undefined' && rivalState.active && typeof rivalMesh !== 'undefined' && Math.abs(rivalMesh.position.z - zPosition) < 80) return null;
       const mesh = createCargoOverpassMesh(safeLaneIndex, playerVan.userData.rackY);
@@ -189,10 +191,10 @@
         gameState.cargoRegenTimer = 0;
       }
       if (gameState.distanceMeters >= gameState.nextSupplyDistance) {
-        if (spawnSupplyDepot()) gameState.nextSupplyDistance = gameState.distanceMeters + 65;
+        if (spawnSupplyDepot()) gameState.nextSupplyDistance = gameState.distanceMeters + 135;
       }
       if (!gameState.tutorialActive && gameState.distanceMeters >= gameState.nextOverpassDistance) {
-        if (spawnCargoOverpass()) gameState.nextOverpassDistance = gameState.distanceMeters + (routeState.kind === 'express' ? 50 : 110);
+        if (spawnCargoOverpass()) gameState.nextOverpassDistance = gameState.distanceMeters + (routeState.kind === 'express' ? 110 : 220);
       }
       roofCargoRoot.getWorldPosition(cargoWorldPosition);
       const roofZ = cargoWorldPosition.z;
@@ -245,8 +247,8 @@
       gameState.lastCargoVelocity = 0;
       gameState.lastCargoSteerTime = -Infinity;
       gameState.lastCargoSteerDir = 0;
-      gameState.nextSupplyDistance = 270;
-      gameState.nextOverpassDistance = 330;
+      gameState.nextSupplyDistance = 320;
+      gameState.nextOverpassDistance = 450;
       roofCargoRoot.rotation.z = 0;
       attachRoofCargoToVan(playerVan);
     }
