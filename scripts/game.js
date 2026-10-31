@@ -1221,39 +1221,20 @@
           card.dataset.slot = slotIdx;
           card.setAttribute('role', 'button');
           card.tabIndex = 0;
-          let pointerId = null;
-          let pointerDownX = 0;
-          let pointerDownY = 0;
-
-          card.addEventListener('pointerdown', event => {
-            if (gameState.mode !== 'playing' || !event.isPrimary || event.button !== 0) return;
+          card.addEventListener('touchstart', event => {
+            if (gameState.mode !== 'playing') return;
             event.preventDefault();
             event.stopPropagation();
             soundFX.init();
-            pointerId = event.pointerId;
-            pointerDownX = event.clientX;
-            pointerDownY = event.clientY;
-            card.setPointerCapture(pointerId);
-            selectHandSlot(slotIdx);
-          });
-          card.addEventListener('pointermove', event => {
-            if (event.pointerId !== pointerId || gameState.dragging) return;
-            if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 30) {
-              startParcelDrag(slotIdx, pointerDownX, pointerDownY, pointerId);
-              updateParcelDrag(event.clientX, event.clientY);
-            }
-          });
-          card.addEventListener('pointerup', event => {
-            if (event.pointerId !== pointerId) return;
-            pointerId = null;
-            if (!gameState.dragging) {
-              event.stopPropagation();
-              throwFromSlot(slotIdx);
-            }
-          });
-          card.addEventListener('pointercancel', () => {
-            pointerId = null;
-            if (gameState.dragging) gameState.dragCancel = true;
+            throwFromSlot(slotIdx);
+          }, { passive: false });
+          card.addEventListener('pointerdown', event => {
+            if (gameState.mode !== 'playing') return;
+            if (event.pointerType !== 'touch' && event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            soundFX.init();
+            throwFromSlot(slotIdx);
           });
           card.addEventListener('click', event => {
             event.preventDefault();
@@ -1705,6 +1686,7 @@
       }
       soundFX.playThrow();
 
+      if (playerVan) playerVan.updateMatrixWorld(true);
       const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
       const startPos = getRoofThrowPosition(new THREE.Vector3());
       mesh.position.copy(startPos);
@@ -1746,7 +1728,7 @@
         magneticHoming: isMagneticHoming
       });
 
-      playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      playerVan.userData.chassis.scale.set(1.06, 0.94, 1.03);
       if (gameState.roofCrates > 0) gameState.roofCrates--;
       claimRivalDelivery(apt, parcelTypeId);
       syncRoofCargo();
@@ -1762,6 +1744,7 @@
       if (!PARCEL_TYPES[parcelTypeId]) return false;
       soundFX.playThrow();
 
+      if (playerVan) playerVan.updateMatrixWorld(true);
       const mesh = createParcelVoxelMesh(parcelTypeId, 0.92);
       const startPos = getRoofThrowPosition(new THREE.Vector3());
       mesh.position.copy(startPos);
@@ -1801,7 +1784,7 @@
         magneticHoming: false
       });
 
-      playerVan.userData.chassis.scale.set(1.12, 0.88, 1.06);
+      playerVan.userData.chassis.scale.set(1.06, 0.94, 1.03);
       if (gameState.roofCrates > 0) gameState.roofCrates--;
       syncRoofCargo();
       refillHandSlot(slotIndex);
@@ -1838,7 +1821,7 @@
           slotIndex < 0 || slotIndex >= gameState.handSlots.length) return false;
       const now = performance.now() / 1000;
       if (!ignoreCooldown && now < slotCooldowns[slotIndex]) return false;
-      slotCooldowns[slotIndex] = now + 0.25;
+      slotCooldowns[slotIndex] = now + 0.18;
 
       const container = document.getElementById('parcel-hand-horizontal');
       if (container && container.children[slotIndex]) {
@@ -2511,7 +2494,23 @@
     let garageDragOffset = 0;
 
     function getLaneSwipeThreshold() {
-      return Math.max(38, Math.min(56, window.innerWidth * 0.115));
+      return Math.max(22, Math.min(32, window.innerWidth * 0.068));
+    }
+
+    function isSteerableGameplayTarget(target) {
+      if (!target || typeof target.closest !== 'function') return true;
+      if (
+        target.closest('#parcel-dock') ||
+        target.closest('.hud-controls') ||
+        target.closest('#tutorial-card') ||
+        target.closest('[id^="modal-"]') ||
+        target.closest('#gameover-modal') ||
+        target.closest('.resume-shift-panel') ||
+        target.closest('#home-screen')
+      ) {
+        return false;
+      }
+      return true;
     }
 
     canvas.addEventListener('pointerdown', (e) => {
@@ -2522,7 +2521,7 @@
         return;
       }
       if (e.pointerType === 'touch') return;
-      if (gameState.mode !== 'playing' || gameState.dragging) return;
+      if (gameState.mode !== 'playing') return;
       roadTouchId = e.pointerId;
       roadTouchStartX = e.clientX;
       roadTouchStartY = e.clientY;
@@ -2540,14 +2539,14 @@
         return;
       }
       if (e.pointerType === 'touch') return;
-      if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing' && !gameState.dragging) {
+      if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing') {
         const curX = e.clientX;
         const curY = e.clientY;
         const threshold = getLaneSwipeThreshold();
         if (roadSwipedDir === 0) {
           const dx = curX - roadTouchStartX;
           const dy = curY - roadTouchStartY;
-          if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 0.85) {
             const dir = dx > 0 ? 1 : -1;
             moveLane(dir);
             roadSwipedDir = dir;
@@ -2581,7 +2580,7 @@
     window.addEventListener('pointerup', endRoadTouch);
     window.addEventListener('pointercancel', endRoadTouch);
 
-    // Dedicated Mobile Touch Listeners: 1 Swipe = 1 Lane Change (Zero Accidental Parcel Throws)
+    // Dedicated Mobile Touch Listeners: Low-latency 1 Swipe = 1 Lane + Simultaneous Multi-Touch Parcel Delivery
     let touchSteerId = null;
     let touchSteerStartX = null;
     let touchSteerStartY = null;
@@ -2596,22 +2595,25 @@
       touchSwipedDir = 0;
     }
 
-    canvas.addEventListener('touchstart', (e) => {
-      if (gameState.mode !== 'playing' || gameState.dragging || e.touches.length === 0) return;
+    window.addEventListener('touchstart', (e) => {
+      if (gameState.mode !== 'playing' || !e.changedTouches || e.changedTouches.length === 0) return;
       if (touchSteerId !== null) return;
-      const t = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e.touches[0];
-      touchSteerId = t.identifier;
-      touchSteerStartX = t.clientX;
-      touchSteerStartY = t.clientY;
-      touchExtremeX = t.clientX;
-      touchSwipedDir = 0;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const candidate = e.changedTouches[i];
+        const target = candidate.target || e.target;
+        if (isSteerableGameplayTarget(target)) {
+          touchSteerId = candidate.identifier;
+          touchSteerStartX = candidate.clientX;
+          touchSteerStartY = candidate.clientY;
+          touchExtremeX = candidate.clientX;
+          touchSwipedDir = 0;
+          break;
+        }
+      }
     }, { passive: true });
 
-    canvas.addEventListener('touchmove', (e) => {
-      if (gameState.mode === 'playing') {
-        e.preventDefault();
-      }
-      if (touchSteerStartX === null || gameState.mode !== 'playing' || gameState.dragging) return;
+    window.addEventListener('touchmove', (e) => {
+      if (touchSteerId === null || touchSteerStartX === null || gameState.mode !== 'playing') return;
       let t = null;
       for (let i = 0; i < e.touches.length; i++) {
         if (e.touches[i].identifier === touchSteerId) {
@@ -2619,7 +2621,16 @@
           break;
         }
       }
+      if (!t && e.changedTouches) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchSteerId) {
+            t = e.changedTouches[i];
+            break;
+          }
+        }
+      }
       if (!t) return;
+      e.preventDefault();
 
       const curX = t.clientX;
       const curY = t.clientY;
@@ -2628,7 +2639,7 @@
       if (touchSwipedDir === 0) {
         const dx = curX - touchSteerStartX;
         const dy = curY - touchSteerStartY;
-        if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
+        if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 0.85) {
           const dir = dx > 0 ? 1 : -1;
           moveLane(dir);
           touchSwipedDir = dir;
@@ -2653,7 +2664,7 @@
       }
     }, { passive: false });
 
-    canvas.addEventListener('touchend', (e) => {
+    window.addEventListener('touchend', (e) => {
       if (touchSteerId !== null && e.changedTouches) {
         for (let i = 0; i < e.changedTouches.length; i++) {
           if (e.changedTouches[i].identifier === touchSteerId) {
@@ -2667,7 +2678,19 @@
       }
     }, { passive: true });
 
-    canvas.addEventListener('touchcancel', resetTouchSteer, { passive: true });
+    window.addEventListener('touchcancel', (e) => {
+      if (touchSteerId !== null && e.changedTouches) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchSteerId) {
+            resetTouchSteer();
+            return;
+          }
+        }
+      }
+      if (!e.touches || e.touches.length === 0) {
+        resetTouchSteer();
+      }
+    }, { passive: true });
 
     // Universal iOS Safari / Android Chrome Audio Unlock on first user interaction
     ['touchstart', 'pointerdown', 'click'].forEach((evtName) => {
@@ -2712,7 +2735,9 @@
       const key = e.key ? e.key.toLowerCase() : '';
       const code = e.code || '';
 
-      // Lane steering: A / D / Arrow Keys (Strictly reserved for steering)
+      if (e.repeat) return;
+
+      // Lane steering: A / D / Arrow Keys (1 press = 1 smooth lane switch, simultaneous with Q/W/E throws)
       if (key === 'a' || code === 'KeyA' || key === 'arrowleft') {
         e.preventDefault();
         moveLane(-1);
@@ -2721,8 +2746,6 @@
         e.preventDefault();
         moveLane(1);
       }
-
-      if (e.repeat) return;
 
       // Slot 0 throw: Q or 1
       if (key === 'q' || code === 'KeyQ' || key === '1' || code === 'Digit1') {
@@ -3358,9 +3381,12 @@
 
     let lastTime = performance.now();
     const gameplayCameraLook = new THREE.Vector3();
+    const UNIT_VEC3 = new THREE.Vector3(1, 1, 1);
+    let cameraFollowX = 0;
 
-    function aimGameplayCamera() {
+    function aimGameplayCamera(offsetX = 0) {
       gameplayCameraLook.copy(PLAY_CAM_LOOK);
+      gameplayCameraLook.x += offsetX;
       gameplayCameraLook.y -= 2.5;
       camera.lookAt(gameplayCameraLook);
     }
@@ -3412,9 +3438,10 @@
 
       // Freeze world movement while Paused or in 3-2-1 Countdown
       if (gameState.mode === 'paused' || gameState.mode === 'countdown' || gameState.mode === 'gameover') {
+        cameraFollowX = 0;
         camera.up.set(0, 1, 0);
         camera.position.copy(PLAY_CAM_POS);
-        aimGameplayCamera();
+        aimGameplayCamera(0);
         renderer.render(scene, camera);
         return;
       }
@@ -3456,6 +3483,9 @@
         }
       }
 
+      const targetCamX = (Number.isFinite(gameState.currentX) ? gameState.currentX : 0) * 0.16;
+      cameraFollowX = THREE.MathUtils.lerp(cameraFollowX, targetCamX, 1 - Math.exp(-8.5 * rawDt));
+
       // Smooth Roll-Out Entrance Animation when starting a shift (Straight-ahead chase dolly matching Images 1 & 2)
       if (gameState.entranceTimer > 0) {
         gameState.entranceTimer = Math.max(0, gameState.entranceTimer - rawDt);
@@ -3466,17 +3496,17 @@
 
         camera.up.set(0, 1, 0);
         camera.position.set(
-          0,
+          cameraFollowX * easeOut,
           THREE.MathUtils.lerp(PLAY_CAM_POS.y - 2.2, PLAY_CAM_POS.y, easeOut),
           THREE.MathUtils.lerp(PLAY_CAM_POS.z + 4.5, PLAY_CAM_POS.z, easeOut)
         );
-        aimGameplayCamera();
+        aimGameplayCamera(cameraFollowX * 0.55 * easeOut);
       } else {
         gameState.vanZ = -5.4;
         playerVan.position.z = gameState.vanZ;
         camera.up.set(0, 1, 0);
-        camera.position.copy(PLAY_CAM_POS);
-        aimGameplayCamera();
+        camera.position.set(PLAY_CAM_POS.x + cameraFollowX, PLAY_CAM_POS.y, PLAY_CAM_POS.z);
+        aimGameplayCamera(cameraFollowX * 0.55);
       }
 
       if (screenShakeTime > 0) {
@@ -4029,15 +4059,16 @@
         if (showCrosswalkWarning && !crosswalkWarningActive) showActionToast('⚠️ PEDESTRIAN CROSSING', 'info');
         crosswalkWarningActive = showCrosswalkWarning;
 
-        // Snappy Arcade Spring-Damped Lane Switching & Body Physics
+        // Critically-Damped (zeta = 1.0) Silky-Smooth Lane Switching & Body Physics (Zero Overshoot / Zero Wobble)
         const handLvl = getVanTuningLevel(gameState.equippedVanId, 'handling');
         const targetX = LANES[gameState.laneIndex];
-        const springK = 195 + (handLvl - 1) * 45;
-        const damping = 24 + (handLvl - 1) * 3.5;
+        const omega = 14.5 + (handLvl - 1) * 1.25;
+        const springK = omega * omega;
+        const damping = 2 * omega;
 
         if (!Number.isFinite(gameState.currentX)) gameState.currentX = targetX;
         if (!Number.isFinite(gameState.lateralVelocity)) gameState.lateralVelocity = 0;
-        const physicsSteps = Math.ceil(rawDt / (1 / 120));
+        const physicsSteps = Math.max(1, Math.ceil(rawDt / (1 / 180)));
         const physicsDt = rawDt / physicsSteps;
         for (let step = 0; step < physicsSteps; step++) {
           const springForce = -springK * (gameState.currentX - targetX) - damping * gameState.lateralVelocity;
@@ -4046,7 +4077,7 @@
         }
         const distToTarget = gameState.currentX - targetX;
 
-        if (Math.abs(distToTarget) < 0.012 && Math.abs(gameState.lateralVelocity) < 0.04) {
+        if (Math.abs(distToTarget) < 0.006 && Math.abs(gameState.lateralVelocity) < 0.03) {
           gameState.currentX = targetX;
           gameState.lateralVelocity = 0;
         }
@@ -4054,31 +4085,37 @@
         updateRoofSway(rawDt);
         updateCargoRoad(dt, playerSpeed);
 
-        // Dynamic Vehicle Body Physics during Lane Changes:
-        // 1. Yaw rotation (steering into the target lane and straightening out)
-        const targetYaw = -gameState.lateralVelocity * 0.028;
-        playerVan.rotation.y = THREE.MathUtils.lerp(playerVan.rotation.y, targetYaw, rawDt * 22);
+        // Frame-rate-independent exponential smoothing for silky vehicle banking & yaw during lane changes
+        const yawAlpha = 1 - Math.exp(-16 * rawDt);
+        const rollAlpha = 1 - Math.exp(-14 * rawDt);
+        const pitchAlpha = 1 - Math.exp(-12 * rawDt);
+        const scaleAlpha = 1 - Math.exp(-14 * rawDt);
+        const wheelAlpha = 1 - Math.exp(-20 * rawDt);
 
-        // 2. Chassis body roll (tilting into the swerve)
+        const targetYaw = THREE.MathUtils.clamp(-gameState.lateralVelocity * 0.024, -0.28, 0.28);
+        playerVan.rotation.y = THREE.MathUtils.lerp(playerVan.rotation.y, targetYaw, yawAlpha);
+
         const chassis = playerVan.userData.chassis;
-        const targetRoll = gameState.lateralVelocity * 0.032;
-        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, targetRoll, rawDt * 18);
+        const targetRoll = THREE.MathUtils.clamp(gameState.lateralVelocity * 0.025, -0.20, 0.20);
+        chassis.rotation.z = THREE.MathUtils.lerp(chassis.rotation.z, targetRoll, rollAlpha);
 
-        // 3. Pitch dip (pitch forward slightly during braking/slow-mo, back when boosting)
         const isBraking = gameState.dragging || (gameState.slowMoEnergy > 0 && gameState.mode === 'playing' && gameState.dragging);
         const targetPitch = isBraking ? 0.042 : (gameState.boostTimer > 0 ? -0.038 : 0);
-        chassis.rotation.x = THREE.MathUtils.lerp(chassis.rotation.x, targetPitch, rawDt * 14);
+        chassis.rotation.x = THREE.MathUtils.lerp(chassis.rotation.x, targetPitch, pitchAlpha);
 
-        chassis.position.y = Math.sin(now * 0.028) * 0.04;
-        chassis.scale.lerp(new THREE.Vector3(1, 1, 1), rawDt * 12);
+        chassis.position.y = Math.sin(now * 0.028) * 0.035;
+        chassis.scale.lerp(UNIT_VEC3, scaleAlpha);
 
-        // Wheels spin and front wheels steer with yaw
         playerVan.userData.wheels.forEach((w, wIdx) => {
           w.rotation.x -= playerSpeed * dt * 0.35;
           if (wIdx < 2) {
-            w.rotation.y = THREE.MathUtils.lerp(w.rotation.y, targetYaw * 1.6, rawDt * 25);
+            w.rotation.y = THREE.MathUtils.lerp(w.rotation.y, targetYaw * 1.5, wheelAlpha);
           }
         });
+
+        if (gameState.dragging || (gameState.mode === 'playing' && gameState.lockedTargetApt)) {
+          updateProjectileArcVisuals(now);
+        }
 
         if (gameState.invulnerableTimer > 0) {
           gameState.invulnerableTimer -= rawDt;
@@ -4459,17 +4496,14 @@
 
                 if (isVipJackpot) {
                   soundFX.playPerfectChime();
-                  triggerScreenShake(0.42, 1.6);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 48);
                   showFloatingCombatText(liveEnd, '🎯 VIP COMPLETE! +400', 'combat-text-gold');
                 } else if (isPerfect) {
                   soundFX.playPerfectChime();
-                  triggerScreenShake(0.35, 1.4);
                   spawnVoxelBurst(liveEnd, 0xfacc15, 36);
                   showFloatingCombatText(liveEnd, '🎯 PERFECT! +200', 'combat-text-gold');
                 } else {
                   soundFX.playDeliverSuccess();
-                  triggerScreenShake(0.15, 0.6);
                   spawnVoxelBurst(liveEnd, pInfo.color, 24);
                   showFloatingCombatText(liveEnd, '🎯 EXACT ORDER! +2x', 'combat-text-gold');
                 }
@@ -4494,7 +4528,6 @@
                 updateContractProgress('deliveries_run', 1);
 
                 soundFX.playCrash();
-                triggerScreenShake(0.18, 0.6);
                 spawnVoxelBurst(liveEnd, 0xf43f5e, 18);
                 showFloatingCombatText(liveEnd, '📦 WRONG PARCEL! 50%', 'combat-text-rose');
               }

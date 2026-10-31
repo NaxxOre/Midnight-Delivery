@@ -24,6 +24,7 @@ exports.run = async root => {
     const soakSeconds = Number(process.argv.find(argument => argument.startsWith('--soak='))?.split('=')[1] || 0);
     for (const [entry, width, height] of [['/', 1280, 720], ['/midnight_delivery.html', 360, 640]]) {
       const page = await browser.newPage({ viewport: { width, height } });
+      await page.route(/fonts\.g(oogleapis|static)\.com/, route => route.abort());
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       page.on('console', message => { if (message.type() === 'error' && /\[(Midnight Delivery|CourierDB)\]/.test(message.text())) { errors.push(message.text()); console.error(message.text()); } });

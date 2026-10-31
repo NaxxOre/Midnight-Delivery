@@ -155,9 +155,55 @@ exports.verify = async page => {
     fireTouch('touchend', 235, 320, 3);
     const noSwipeThrow = flyingParcels.length === 0;
 
+    // 4. Simultaneous multi-touch: while Finger 1 is actively holding/swiping lanes on road, Finger 2 (isPrimary: false) taps a parcel card to deliver mid-lane-switch!
+    gameState.laneIndex = 1;
+    gameState.currentX = LANES[1];
+    gameState.lateralVelocity = 12.5; // actively sliding across lanes
+    flyingParcels.length = 0;
+    slotCooldowns[0] = 0;
+    const roadTouch = { identifier: 10, clientX: 80, clientY: 320, pageX: 80, pageY: 320, target: canvas };
+    const startSteerEvt = new Event('touchstart', { bubbles: true, cancelable: true });
+    startSteerEvt.touches = [roadTouch];
+    startSteerEvt.targetTouches = [roadTouch];
+    startSteerEvt.changedTouches = [roadTouch];
+    canvas.dispatchEvent(startSteerEvt);
+
+    const movedRoadTouch = { identifier: 10, clientX: 125, clientY: 326, pageX: 125, pageY: 326, target: canvas };
+    const moveSteerEvt = new Event('touchmove', { bubbles: true, cancelable: true });
+    moveSteerEvt.touches = [movedRoadTouch];
+    moveSteerEvt.targetTouches = [movedRoadTouch];
+    moveSteerEvt.changedTouches = [movedRoadTouch];
+    canvas.dispatchEvent(moveSteerEvt);
+    const switchedWhileHolding = gameState.laneIndex === 2;
+
+    // Finger 2 taps Slot 0 card while Finger 1 is STILL down on the road (isPrimary: false!)
+    const card0 = document.querySelector('.parcel-card-slot[data-slot="0"]');
+    const cardTouch = { identifier: 11, clientX: 90, clientY: 600, pageX: 90, pageY: 600, target: card0 };
+    const cardTouchEvt = new Event('touchstart', { bubbles: true, cancelable: true });
+    cardTouchEvt.touches = [movedRoadTouch, cardTouch];
+    cardTouchEvt.targetTouches = [cardTouch];
+    cardTouchEvt.changedTouches = [cardTouch];
+    card0.dispatchEvent(cardTouchEvt);
+    const deliveredWhileSwitching = flyingParcels.length === 1;
+
+    // Finger 1 can still immediately reverse lanes right after Finger 2 delivered!
+    const revRoadTouch = { identifier: 10, clientX: 75, clientY: 328, pageX: 75, pageY: 328, target: canvas };
+    const revSteerEvt = new Event('touchmove', { bubbles: true, cancelable: true });
+    revSteerEvt.touches = [revRoadTouch];
+    revSteerEvt.targetTouches = [revRoadTouch];
+    revSteerEvt.changedTouches = [revRoadTouch];
+    canvas.dispatchEvent(revSteerEvt);
+    const reversedWhileDelivering = gameState.laneIndex === 1;
+
+    const endSteerEvt = new Event('touchend', { bubbles: true, cancelable: true });
+    endSteerEvt.touches = [];
+    endSteerEvt.targetTouches = [];
+    endSteerEvt.changedTouches = [revRoadTouch];
+    canvas.dispatchEvent(endSteerEvt);
+
     resetGame(false);
-    return { noTapThrow, singleLanePerSwipe, afterFirstDir, afterReversal, noSwipeThrow };
+    return { noTapThrow, singleLanePerSwipe, afterFirstDir, afterReversal, noSwipeThrow, switchedWhileHolding, deliveredWhileSwitching, reversedWhileDelivering };
   });
   for (const [name, passed] of Object.entries(touchSteer)) assert.equal(passed, true, `Mobile touch steering: ${name}`);
-  console.log('PASS mobile touch steering: 1 swipe = 1 lane, instant mid-swipe reversal, zero duplicate pointer+touch jumps, zero accidental road-touch parcel throws');
+  console.log('PASS mobile touch steering & simultaneous mid-swerve parcel delivery');
 };

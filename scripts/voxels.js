@@ -3579,6 +3579,8 @@ window.BLOCK_SPACING = BLOCK_SPACING;
         orderId: 0
       };
 
+      let cloudDownX = 0;
+      let cloudDownY = 0;
       const triggerCloudThrow = event => {
         if (
           gameState.mode !== 'playing' ||
@@ -3590,7 +3592,6 @@ window.BLOCK_SPACING = BLOCK_SPACING;
           return;
         }
         event.preventDefault();
-        event.stopPropagation();
         soundFX.init();
         const matchingSlot = gameState.handSlots.indexOf(aptData.wantedType);
         if (matchingSlot !== -1) {
@@ -3600,15 +3601,32 @@ window.BLOCK_SPACING = BLOCK_SPACING;
       };
 
       cloudEl.addEventListener('pointerdown', event => {
-        event.stopPropagation();
+        cloudDownX = event.clientX;
+        cloudDownY = event.clientY;
       });
       cloudEl.addEventListener('touchstart', event => {
-        event.stopPropagation();
+        const t = event.changedTouches && event.changedTouches[0];
+        if (t) {
+          cloudDownX = t.clientX;
+          cloudDownY = t.clientY;
+        }
       }, { passive: true });
-      cloudEl.addEventListener('pointerup', event => {
-        if (event.pointerType === 'touch') triggerCloudThrow(event);
+      cloudEl.addEventListener('touchend', event => {
+        const t = event.changedTouches && event.changedTouches[0];
+        if (t && Math.hypot(t.clientX - cloudDownX, t.clientY - cloudDownY) < 18) {
+          triggerCloudThrow(event);
+        }
       });
-      cloudEl.addEventListener('click', triggerCloudThrow);
+      cloudEl.addEventListener('pointerup', event => {
+        if (event.pointerType === 'touch' && Math.hypot(event.clientX - cloudDownX, event.clientY - cloudDownY) < 18) {
+          triggerCloudThrow(event);
+        }
+      });
+      cloudEl.addEventListener('click', event => {
+        if (Math.hypot(event.clientX - cloudDownX, event.clientY - cloudDownY) < 18 || event.detail === 0) {
+          triggerCloudThrow(event);
+        }
+      });
 
       rebuildApartmentVisuals(aptData, CITY_THEMES[gameState.cityIndex], index);
       configureApartmentCustomer(aptData, zPos < -42);
