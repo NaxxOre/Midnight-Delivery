@@ -66,6 +66,27 @@ exports.verify = async (page, root, width, height) => {
   assert.ok(Math.abs(tutorial.x + tutorial.width / 2 - width / 2) < 1);
   if (width <= 640) assert.ok(tutorial.y > layout.hearts.bottom);
   await page.locator('#btn-skip-tutorial').click();
+  const homeLayout = await page.evaluate(() => {
+    setHomePageMode(true);
+    updateCameraForViewport();
+    const rect = el => el.getBoundingClientRect().toJSON();
+    return {
+      overflow: document.documentElement.scrollWidth > innerWidth,
+      navStack: rect(document.querySelector('.arcade-nav-stack')),
+      navItems: [...document.querySelectorAll('.arcade-nav-item')].map(rect),
+      selector: rect(document.querySelector('.vehicle-selector-bar')),
+      startBtn: rect(document.getElementById('btn-start-play'))
+    };
+  });
+  await page.waitForTimeout(80);
+  await page.screenshot({ path: path.join(root, `test-results/home-${width}.png`) });
+  assert.equal(homeLayout.overflow, false, 'Home screen horizontal overflow');
+  for (const item of [...homeLayout.navItems, homeLayout.selector, homeLayout.startBtn]) {
+    assert.ok(item.left >= -1 && item.top >= -1 && item.right <= width + 1 && item.bottom <= height + 1, `Home element out of bounds: ${JSON.stringify(item)}`);
+  }
+  if (width <= 640) {
+    assert.ok(homeLayout.selector.top - homeLayout.navStack.bottom >= 140, `Showroom center obstructed on mobile: ${JSON.stringify(homeLayout)}`);
+  }
   await page.evaluate(() => resetGame(false));
-  console.log(`PASS layout ${width}x${height}: horizontal dock, van clearance, spaced metrics, one toast, all ${modalIds.length} modals, editable callsign and centered tutorial`);
+  console.log(`PASS layout ${width}x${height}: horizontal dock, van clearance, spaced metrics, one toast, all ${modalIds.length} modals, responsive home showroom, editable callsign and centered tutorial`);
 };

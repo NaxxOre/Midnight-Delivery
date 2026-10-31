@@ -103,4 +103,61 @@ exports.verify = async page => {
   });
   for (const [name, passed] of Object.entries(rival)) assert.equal(passed, true, `Rival/routes: ${name}`);
   console.log('PASS rival timing, parcel race, +500 counterplay, side-ram/stun/reward cap, route choices and expiry');
+
+  const touchSteer = await page.evaluate(() => {
+    resetGame(false);
+    gameState.entranceTimer = 0;
+    gameState.laneIndex = 1;
+    flyingParcels.length = 0;
+
+    function fireTouch(type, x, y, id = 1) {
+      const touchObj = { identifier: id, clientX: x, clientY: y, pageX: x, pageY: y, target: canvas };
+      const evt = new Event(type, { bubbles: true, cancelable: true });
+      evt.touches = (type === 'touchend' || type === 'touchcancel') ? [] : [touchObj];
+      evt.targetTouches = evt.touches;
+      evt.changedTouches = [touchObj];
+      canvas.dispatchEvent(evt);
+
+      const ptrMap = { touchstart: 'pointerdown', touchmove: 'pointermove', touchend: 'pointerup' };
+      if (ptrMap[type]) {
+        const ptrEvt = new PointerEvent(ptrMap[type], {
+          bubbles: true,
+          cancelable: true,
+          pointerId: id,
+          pointerType: 'touch',
+          isPrimary: true,
+          clientX: x,
+          clientY: y
+        });
+        (type === 'touchstart' ? canvas : window).dispatchEvent(ptrEvt);
+      }
+    }
+
+    // 1. Road tap must NOT throw any parcel
+    fireTouch('touchstart', 90, 320, 1);
+    fireTouch('touchend', 92, 321, 1);
+    const noTapThrow = flyingParcels.length === 0 && gameState.laneIndex === 1;
+
+    // 2. Single long swipe right across 180px (with simultaneous pointer+touch events) moves EXACTLY +1 lane and throws 0 parcels
+    fireTouch('touchstart', 60, 320, 2);
+    fireTouch('touchmove', 115, 322, 2);
+    fireTouch('touchmove', 175, 324, 2);
+    fireTouch('touchmove', 240, 325, 2);
+    fireTouch('touchend', 240, 325, 2);
+    const singleLanePerSwipe = gameState.laneIndex === 2 && flyingParcels.length === 0;
+
+    // 3. Mid-swipe reversal moves -1 lane then +1 lane cleanly without lifting finger, and throws 0 parcels
+    fireTouch('touchstart', 240, 320, 3);
+    fireTouch('touchmove', 160, 320, 3);
+    const afterFirstDir = gameState.laneIndex === 1;
+    fireTouch('touchmove', 235, 320, 3);
+    const afterReversal = gameState.laneIndex === 2;
+    fireTouch('touchend', 235, 320, 3);
+    const noSwipeThrow = flyingParcels.length === 0;
+
+    resetGame(false);
+    return { noTapThrow, singleLanePerSwipe, afterFirstDir, afterReversal, noSwipeThrow };
+  });
+  for (const [name, passed] of Object.entries(touchSteer)) assert.equal(passed, true, `Mobile touch steering: ${name}`);
+  console.log('PASS mobile touch steering: 1 swipe = 1 lane, instant mid-swipe reversal, zero duplicate pointer+touch jumps, zero accidental road-touch parcel throws');
 };

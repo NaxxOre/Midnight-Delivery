@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles/utilities.css" />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <script defer src="scripts/vendor/three.r128.min.js"></script>
-  <link rel="stylesheet" href="styles/main.css?v=20261021_unified" />
+  <link rel="stylesheet" href="styles/main.css?v=20261031_mobile" />
 </head>
 <body>
 
@@ -139,19 +139,19 @@
   <div id="home-screen" class="fixed inset-0 z-30 showroom-overlay flex flex-col justify-between p-3 sm:p-6 pointer-events-none">
 
     <!-- TOP BAR: Bold Stacked Typographic Logo + Clean Minimal Currency & Best Distance -->
-    <div class="flex items-start justify-between gap-2 w-full">
+    <div class="home-top-bar flex items-start justify-between gap-2 w-full">
       <div class="flex flex-col items-start pointer-events-auto">
         <div class="flex items-center gap-2">
           <span id="home-city-tag" class="street-badge text-[9px] sm:text-[11px] font-extrabold tracking-wider">SHIFT 04 — YANGON</span>
           <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">WORLD TOUR</span>
         </div>
-        <h1 class="arcade-font text-2xl sm:text-4xl text-white font-extrabold tracking-tight leading-none mt-1 drop-shadow-[2px_2px_0px_#000000]">
+        <h1 class="home-brand-title arcade-font text-2xl sm:text-4xl text-white font-extrabold tracking-tight leading-none mt-1 drop-shadow-[2px_2px_0px_#000000]">
           MIDNIGHT <span class="text-amber-400">//</span> DELIVERY
         </h1>
       </div>
 
       <!-- Right: Minimal Inline Counters (No heavy multi-column SaaS cards) -->
-      <div class="flex items-center gap-2 sm:gap-3 pointer-events-auto flex-shrink-0">
+      <div class="home-currency-row flex items-center gap-2 sm:gap-3 pointer-events-auto flex-shrink-0">
         <div class="flex items-center gap-2 bg-[#090a0f]/90 border-2 border-black rounded px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-[3px_3px_0px_#000000]">
           <span class="text-amber-400 text-xs sm:text-sm font-bold">🪙</span>
           <div>
@@ -173,7 +173,7 @@
     </div>
 
     <!-- MIDDLE AREA: Frameless Left Navigation Stack (Unobstructed 3D Showroom View) -->
-    <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between relative my-auto py-2">
+    <div class="home-middle-area flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between relative my-auto py-2">
       <!-- LEFT NAV: 4 crisp typographic arcade buttons sliding right on hover with yellow racing stripe indicator -->
       <div class="arcade-nav-stack z-20 pointer-events-auto py-1">
         <button id="menu-btn-tuning" class="arcade-nav-item" title="Tune & Upgrade Rig">
@@ -205,15 +205,15 @@
     </div>
 
     <!-- BOTTOM BAR: Sleek Integrated Vehicle Nameplate & Hazard-Yellow START CTA -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 sm:gap-3 w-full">
+    <div class="home-bottom-bar flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 sm:gap-3 w-full">
       <!-- Bottom-Center Vehicle Nameplate with Integrated Prev/Next Arrows -->
       <div class="vehicle-selector-bar pointer-events-auto sm:mx-auto">
         <button id="btn-prev-van" class="selector-nav-btn" title="Previous Rig">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
 
-        <div class="flex flex-col items-center px-2 sm:px-4 min-w-[160px] sm:min-w-[220px]">
-          <div class="flex items-center gap-2">
+        <div class="vehicle-selector-center flex flex-col items-center px-2 sm:px-4 min-w-[160px] sm:min-w-[220px]">
+          <div class="vehicle-title-row flex items-center gap-2">
             <span id="home-van-name" class="arcade-font text-sm sm:text-base text-white font-bold tracking-wide truncate max-w-[160px] sm:max-w-[240px]">Express Courier GTI</span>
             <span id="home-van-rarity" class="px-1.5 py-0.5 rounded bg-slate-700 text-white font-extrabold text-[8px] uppercase">★ COMMON</span>
             <span id="home-van-status" class="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold text-[8px] uppercase">EQUIPPED</span>

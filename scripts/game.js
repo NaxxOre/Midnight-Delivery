@@ -851,8 +851,8 @@
         dotsEl.innerHTML = PLAYABLE_VANS.map((v, idx) => {
           const owned = gameState.ownedVans.includes(v.id);
           const active = idx === gameState.selectedVanIndex;
-          return `<button data-van-idx="${idx}" class="h-2 rounded transition-all ${
-            active ? 'w-6 bg-amber-400' : (owned ? 'w-2 bg-emerald-400' : 'w-2 bg-slate-700')
+          return `<button type="button" data-van-idx="${idx}" aria-label="Select ${v.name}" class="van-dot-btn h-2 rounded transition-all ${
+            active ? 'w-5 bg-amber-400' : (owned ? 'w-2 bg-emerald-400' : 'w-2 bg-slate-700')
           }"></button>`;
         }).join('');
         dotsEl.querySelectorAll('button').forEach((btn) => {
@@ -1238,8 +1238,9 @@
           });
           card.addEventListener('pointermove', event => {
             if (event.pointerId !== pointerId || gameState.dragging) return;
-            if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 14) {
-              startParcelDrag(slotIdx, event.clientX, event.clientY, pointerId);
+            if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 30) {
+              startParcelDrag(slotIdx, pointerDownX, pointerDownY, pointerId);
+              updateParcelDrag(event.clientX, event.clientY);
             }
           });
           card.addEventListener('pointerup', event => {
@@ -1299,6 +1300,8 @@
     const slowmoVignette = document.getElementById('slowmo-vignette');
     let dragStartX = 0;
     let dragStartY = 0;
+    let lastDragX = 0;
+    let lastDragY = 0;
     let activeDragPointerId = null;
 
     function startParcelDrag(slotIdx, clientX, clientY, pointerId = null) {
@@ -1308,6 +1311,8 @@
       gameState.dragSlotIndex = slotIdx;
       dragStartX = clientX;
       dragStartY = clientY;
+      lastDragX = clientX;
+      lastDragY = clientY;
       gameState.dragSide = null;
       gameState.dragCancel = false;
       gameState.targetAptLock = null;
@@ -1394,6 +1399,8 @@
 
     function updateParcelDrag(clientX, clientY) {
       if (!gameState.dragging) return;
+      lastDragX = clientX;
+      lastDragY = clientY;
       dragGhost.style.left = `${clientX}px`;
       dragGhost.style.top = `${clientY}px`;
 
@@ -1485,6 +1492,8 @@
             completeInteractiveTutorial();
           }
         }
+      } else if (Math.hypot(lastDragX - dragStartX, lastDragY - dragStartY) < 36) {
+        throwFromSlot(slotIdx);
       }
     }
 
@@ -1930,11 +1939,16 @@
           getResidentHandPosition(apt, orderBadgePosition);
           orderBadgePosition.y += 2.2;
           orderBadgePosition.project(camera);
-          const padX = Math.min(110, window.innerWidth / 2 - 8);
+          const isMobileViewport = window.innerWidth <= 640;
+          const padX = isMobileViewport
+            ? Math.min(76, window.innerWidth / 2 - 6)
+            : Math.min(110, window.innerWidth / 2 - 8);
+          const minCloudTop = isMobileViewport ? 168 : 132;
+          const maxCloudTop = isMobileViewport ? window.innerHeight - 104 : window.innerHeight - 180;
           const screenX = (orderBadgePosition.x * 0.5 + 0.5) * window.innerWidth;
           const screenY = (-orderBadgePosition.y * 0.5 + 0.5) * window.innerHeight;
           apt.cloudEl.style.left = `${Math.max(padX, Math.min(window.innerWidth - padX, screenX))}px`;
-          apt.cloudEl.style.top = `${Math.max(110, Math.min(window.innerHeight - 180, screenY))}px`;
+          apt.cloudEl.style.top = `${Math.max(minCloudTop, Math.min(maxCloudTop, screenY))}px`;
           apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
           return;
         }
@@ -1985,11 +1999,16 @@
         getResidentHandPosition(apt, orderBadgePosition);
         orderBadgePosition.y += 2.2;
         orderBadgePosition.project(camera);
-        const padX = Math.min(110, window.innerWidth / 2 - 8);
+        const isMobileViewport = window.innerWidth <= 640;
+        const padX = isMobileViewport
+          ? Math.min(76, window.innerWidth / 2 - 6)
+          : Math.min(110, window.innerWidth / 2 - 8);
+        const minCloudTop = isMobileViewport ? 168 : 132;
+        const maxCloudTop = isMobileViewport ? window.innerHeight - 104 : window.innerHeight - 180;
         const screenX = (orderBadgePosition.x * 0.5 + 0.5) * window.innerWidth;
         const screenY = (-orderBadgePosition.y * 0.5 + 0.5) * window.innerHeight;
         apt.cloudEl.style.left = `${Math.max(padX, Math.min(window.innerWidth - padX, screenX))}px`;
-        apt.cloudEl.style.top = `${Math.max(110, Math.min(window.innerHeight - 180, screenY))}px`;
+        apt.cloudEl.style.top = `${Math.max(minCloudTop, Math.min(maxCloudTop, screenY))}px`;
         apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
       });
 
@@ -2424,20 +2443,30 @@
         }
       }
 
+      const isMobileTouch = window.innerWidth <= 640;
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
-      document.getElementById('tutorial-title').textContent = 'MATCH THE PARCEL & PRESS Q, W OR E!';
-      document.getElementById('tutorial-desc').textContent = 'Wait for the resident\'s target ring, then press the key on their parcel badge or tap the matching dock card once. Keys 1, 2 and 3 also throw!';
+      document.getElementById('tutorial-title').textContent = isMobileTouch
+        ? 'TAP THE MATCHING PARCEL CARD!'
+        : 'MATCH THE PARCEL & PRESS Q, W OR E!';
+      document.getElementById('tutorial-desc').textContent = isMobileTouch
+        ? 'Wait for the resident\'s target ring, then tap the glowing parcel card below (or tap their order badge) to deliver!'
+        : 'Wait for the resident\'s target ring, then press the key on their parcel badge or tap the matching dock card once. Keys 1, 2 and 3 also throw!';
     }
 
     function updateTutorialStep2Prompt(apt) {
       const sideText = apt.side === 'left' ? 'LEFT' : 'RIGHT';
       const matchingSlot = gameState.handSlots.indexOf(apt.wantedType);
       if (matchingSlot === -1) return;
-      const title = `PRESS [${SLOT_KEYS[matchingSlot]}] FOR THE ${sideText} RESIDENT!`;
+      const isMobileTouch = window.innerWidth <= 640;
+      const title = isMobileTouch
+        ? `TAP [${SLOT_KEYS[matchingSlot]}] CARD FOR ${sideText} RESIDENT!`
+        : `PRESS [${SLOT_KEYS[matchingSlot]}] FOR THE ${sideText} RESIDENT!`;
       if (document.getElementById('tutorial-title').textContent === title) return;
       document.getElementById('tutorial-step-badge').textContent = 'STEP 2 OF 2 • PARCEL THROW';
       document.getElementById('tutorial-title').textContent = title;
-      document.getElementById('tutorial-desc').textContent = `Press ${SLOT_KEYS[matchingSlot]} or ${matchingSlot + 1}, or tap the matching parcel card, to deliver the requested item to the ${sideText} resident.`;
+      document.getElementById('tutorial-desc').textContent = isMobileTouch
+        ? `Tap the glowing [${SLOT_KEYS[matchingSlot]}] parcel card below (or tap the resident's badge) to deliver!`
+        : `Press ${SLOT_KEYS[matchingSlot]} or ${matchingSlot + 1}, or tap the matching parcel card, to deliver the requested item to the ${sideText} resident.`;
     }
 
     function completeInteractiveTutorial() {
@@ -2467,15 +2496,23 @@
       overlay.classList.remove('flex');
     });
 
-    // Showroom Turntable Drag-to-Spin + Subway Surfers-style Direct Road Swipe Steering
-    // (Completely independent of the camera so swiping on mobile NEVER rotates the camera!)
+    // Showroom Turntable Drag-to-Spin + Subway Surfers-style Discrete Road Swipe Steering
+    // - 1 intentional swipe = 1 lane change (with instant mid-swipe opposite reversal)
+    // - Touching or swiping the road NEVER throws parcels (parcels throw only via dock cards, order badges, or keys)
+    // - Pointer events ignore touch during gameplay to eliminate duplicate pointer+touch double-firing
     let roadTouchId = null;
     let roadTouchStartX = 0;
     let roadTouchStartY = 0;
+    let roadExtremeX = 0;
+    let roadSwipedDir = 0;
     let garageDragging = false;
     let garageLastX = 0;
     let garageSpinVel = 0;
     let garageDragOffset = 0;
+
+    function getLaneSwipeThreshold() {
+      return Math.max(38, Math.min(56, window.innerWidth * 0.115));
+    }
 
     canvas.addEventListener('pointerdown', (e) => {
       soundFX.init();
@@ -2484,10 +2521,13 @@
         garageLastX = e.clientX;
         return;
       }
+      if (e.pointerType === 'touch') return;
       if (gameState.mode !== 'playing' || gameState.dragging) return;
       roadTouchId = e.pointerId;
       roadTouchStartX = e.clientX;
       roadTouchStartY = e.clientY;
+      roadExtremeX = e.clientX;
+      roadSwipedDir = 0;
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -2499,13 +2539,34 @@
         turntableGroup.rotation.y = (Math.sin(performance.now() * 0.0006) * 0.2618) + garageDragOffset;
         return;
       }
+      if (e.pointerType === 'touch') return;
       if (roadTouchId !== null && e.pointerId === roadTouchId && gameState.mode === 'playing' && !gameState.dragging) {
-        const dx = e.clientX - roadTouchStartX;
-        const dy = e.clientY - roadTouchStartY;
-        if (Math.abs(dx) > 22 && Math.abs(dx) > Math.abs(dy)) {
-          moveLane(dx > 0 ? 1 : -1);
-          roadTouchStartX = e.clientX;
-          roadTouchStartY = e.clientY;
+        const curX = e.clientX;
+        const curY = e.clientY;
+        const threshold = getLaneSwipeThreshold();
+        if (roadSwipedDir === 0) {
+          const dx = curX - roadTouchStartX;
+          const dy = curY - roadTouchStartY;
+          if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
+            const dir = dx > 0 ? 1 : -1;
+            moveLane(dir);
+            roadSwipedDir = dir;
+            roadExtremeX = curX;
+          }
+        } else if (roadSwipedDir === 1) {
+          if (curX > roadExtremeX) roadExtremeX = curX;
+          else if (roadExtremeX - curX >= threshold) {
+            moveLane(-1);
+            roadSwipedDir = -1;
+            roadExtremeX = curX;
+          }
+        } else if (roadSwipedDir === -1) {
+          if (curX < roadExtremeX) roadExtremeX = curX;
+          else if (curX - roadExtremeX >= threshold) {
+            moveLane(1);
+            roadSwipedDir = 1;
+            roadExtremeX = curX;
+          }
         }
       }
     });
@@ -2513,67 +2574,100 @@
     function endRoadTouch(e) {
       garageDragging = false;
       if (roadTouchId !== null && (!e || e.pointerId === roadTouchId)) {
-        if (e && gameState.mode === 'playing' && !gameState.dragging) {
-          const dx = e.clientX - roadTouchStartX;
-          const dy = e.clientY - roadTouchStartY;
-          // Tap detection without dragging swerves: tap roadside to quick-throw!
-          if (Math.hypot(dx, dy) < 18) {
-            if (e.clientX < window.innerWidth * 0.38) {
-              quickThrowParcel('left');
-            } else if (e.clientX > window.innerWidth * 0.62) {
-              quickThrowParcel('right');
-            } else {
-              quickThrowParcel('auto');
-            }
-          }
-        }
         roadTouchId = null;
+        roadSwipedDir = 0;
       }
     }
     window.addEventListener('pointerup', endRoadTouch);
     window.addEventListener('pointercancel', endRoadTouch);
 
-    // Dedicated Touch Listeners for Instant Mobile Lane Swipes
+    // Dedicated Mobile Touch Listeners: 1 Swipe = 1 Lane Change (Zero Accidental Parcel Throws)
+    let touchSteerId = null;
     let touchSteerStartX = null;
     let touchSteerStartY = null;
+    let touchExtremeX = 0;
+    let touchSwipedDir = 0;
+
+    function resetTouchSteer() {
+      touchSteerId = null;
+      touchSteerStartX = null;
+      touchSteerStartY = null;
+      touchExtremeX = 0;
+      touchSwipedDir = 0;
+    }
+
     canvas.addEventListener('touchstart', (e) => {
-      if (gameState.mode !== 'playing' || gameState.dragging || e.touches.length !== 1) return;
-      touchSteerStartX = e.touches[0].clientX;
-      touchSteerStartY = e.touches[0].clientY;
+      if (gameState.mode !== 'playing' || gameState.dragging || e.touches.length === 0) return;
+      if (touchSteerId !== null) return;
+      const t = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e.touches[0];
+      touchSteerId = t.identifier;
+      touchSteerStartX = t.clientX;
+      touchSteerStartY = t.clientY;
+      touchExtremeX = t.clientX;
+      touchSwipedDir = 0;
     }, { passive: true });
 
     canvas.addEventListener('touchmove', (e) => {
       if (gameState.mode === 'playing') {
         e.preventDefault();
       }
-      if (touchSteerStartX === null || gameState.mode !== 'playing' || gameState.dragging || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - touchSteerStartX;
-      const dy = e.touches[0].clientY - touchSteerStartY;
-      if (Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy)) {
-        moveLane(dx > 0 ? 1 : -1);
-        touchSteerStartX = e.touches[0].clientX;
-        touchSteerStartY = e.touches[0].clientY;
+      if (touchSteerStartX === null || gameState.mode !== 'playing' || gameState.dragging) return;
+      let t = null;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === touchSteerId) {
+          t = e.touches[i];
+          break;
+        }
+      }
+      if (!t) return;
+
+      const curX = t.clientX;
+      const curY = t.clientY;
+      const threshold = getLaneSwipeThreshold();
+
+      if (touchSwipedDir === 0) {
+        const dx = curX - touchSteerStartX;
+        const dy = curY - touchSteerStartY;
+        if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          const dir = dx > 0 ? 1 : -1;
+          moveLane(dir);
+          touchSwipedDir = dir;
+          touchExtremeX = curX;
+        }
+      } else if (touchSwipedDir === 1) {
+        if (curX > touchExtremeX) {
+          touchExtremeX = curX;
+        } else if (touchExtremeX - curX >= threshold) {
+          moveLane(-1);
+          touchSwipedDir = -1;
+          touchExtremeX = curX;
+        }
+      } else if (touchSwipedDir === -1) {
+        if (curX < touchExtremeX) {
+          touchExtremeX = curX;
+        } else if (curX - touchExtremeX >= threshold) {
+          moveLane(1);
+          touchSwipedDir = 1;
+          touchExtremeX = curX;
+        }
       }
     }, { passive: false });
 
     canvas.addEventListener('touchend', (e) => {
-      if (touchSteerStartX !== null && gameState.mode === 'playing' && !gameState.dragging && e.changedTouches && e.changedTouches.length > 0) {
-        const touch = e.changedTouches[0];
-        const dx = touch.clientX - touchSteerStartX;
-        const dy = touch.clientY - touchSteerStartY;
-        if (Math.hypot(dx, dy) < 18) {
-          if (touch.clientX < window.innerWidth * 0.38) {
-            quickThrowParcel('left');
-          } else if (touch.clientX > window.innerWidth * 0.62) {
-            quickThrowParcel('right');
-          } else {
-            quickThrowParcel('auto');
+      if (touchSteerId !== null && e.changedTouches) {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchSteerId) {
+            resetTouchSteer();
+            return;
           }
         }
       }
-      touchSteerStartX = null;
-      touchSteerStartY = null;
+      if (!e.touches || e.touches.length === 0) {
+        resetTouchSteer();
+      }
     }, { passive: true });
+
+    canvas.addEventListener('touchcancel', resetTouchSteer, { passive: true });
 
     // Universal iOS Safari / Android Chrome Audio Unlock on first user interaction
     ['touchstart', 'pointerdown', 'click'].forEach((evtName) => {

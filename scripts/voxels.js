@@ -147,8 +147,8 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
       if (gameState.mode === 'home') {
-        const distMult = aspect < 0.75 ? 1.25 : (aspect < 1.0 ? 1.12 : 1.0);
-        const targetY = aspect < 0.75 ? 1.05 : 1.15;
+        const distMult = aspect < 0.75 ? 1.42 : (aspect < 1.0 ? 1.16 : 1.0);
+        const targetY = aspect < 0.75 ? 1.32 : 1.15;
         SHOWROOM_CAM_POS.set(5.8 * distMult, 2.3 * distMult, -7.2 * distMult);
         SHOWROOM_CAM_LOOK.set(0, targetY, -0.2);
         camera.up.set(0, 1, 0);
@@ -3579,16 +3579,36 @@ window.BLOCK_SPACING = BLOCK_SPACING;
         orderId: 0
       };
 
-      cloudEl.addEventListener('click', event => {
-        if (!event.target.closest('.quick-throw-cloud-btn') || !isResidentInThrowRange(aptData)) return;
+      const triggerCloudThrow = event => {
+        if (
+          gameState.mode !== 'playing' ||
+          aptData.delivered ||
+          hasPendingFullDelivery(aptData) ||
+          !event.target.closest('.resident-order-badge') ||
+          !isResidentInThrowRange(aptData)
+        ) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
+        soundFX.init();
         const matchingSlot = gameState.handSlots.indexOf(aptData.wantedType);
         if (matchingSlot !== -1) {
           gameState.lockedTargetApt = aptData;
           throwFromSlot(matchingSlot);
         }
+      };
+
+      cloudEl.addEventListener('pointerdown', event => {
+        event.stopPropagation();
       });
+      cloudEl.addEventListener('touchstart', event => {
+        event.stopPropagation();
+      }, { passive: true });
+      cloudEl.addEventListener('pointerup', event => {
+        if (event.pointerType === 'touch') triggerCloudThrow(event);
+      });
+      cloudEl.addEventListener('click', triggerCloudThrow);
 
       rebuildApartmentVisuals(aptData, CITY_THEMES[gameState.cityIndex], index);
       configureApartmentCustomer(aptData, zPos < -42);
