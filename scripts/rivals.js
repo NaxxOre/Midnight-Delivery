@@ -47,15 +47,6 @@ function activateRoute(kind) {
   routeState.remaining = 20;
   if (kind === 'express') {
     gameState.nextOverpassDistance = Math.min(gameState.nextOverpassDistance, gameState.distanceMeters + 1);
-    for (const apartment of apartments) {
-      if (!apartment.hasOrder || apartment.delivered || apartment.isVip) continue;
-      apartment.isVip = true;
-      apartment.vipNeeded = 2;
-      apartment.vipDelivered = 0;
-      apartment.crownMesh = createVoxelCrownMesh();
-      apartment.customerSlot.add(apartment.crownMesh);
-      apartment.cloudEl.dataset.renderKey = '';
-    }
     showActionToast('🔥 EXPRESS ROUTE', 'danger');
   } else {
     for (let index = cargoRoadEvents.length - 1; index >= 0; index--) {

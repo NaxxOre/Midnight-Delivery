@@ -1127,10 +1127,7 @@
       if (!apt || !apt.hasOrder) return false;
       if (apt.delivered) return true;
       const pending = getPendingParcelsForApartment(apt);
-      if (pending.length === 0) return false;
-      if (pending.some(parcel => parcel.parcelType !== apt.wantedType)) return true;
-      const remainingDrops = apt.isVip ? 2 - (apt.vipDelivered || 0) : 1;
-      return pending.length >= remainingDrops;
+      return pending.length >= 1;
     }
 
     function pickSmartParcelType() {

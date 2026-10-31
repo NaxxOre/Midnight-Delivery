@@ -3663,16 +3663,10 @@ window.BLOCK_SPACING = BLOCK_SPACING;
       apt.customerSlot.add(charMesh);
       apt.charMesh = charMesh;
 
-      // VIP Double Order (20% chance)
-      const isVip = routeState.kind === 'express' || Math.random() < 0.20;
-      apt.isVip = isVip;
-      apt.vipNeeded = isVip ? 2 : 1;
+      // Single-throw delivery orders only (VIP double-throw disabled)
+      apt.isVip = false;
+      apt.vipNeeded = 1;
       apt.vipDelivered = 0;
-      if (isVip) {
-        const crown = createVoxelCrownMesh();
-        apt.crownMesh = crown;
-        apt.customerSlot.add(crown);
-      }
 
       apt.ringGroup.visible = false;
       ensureParcelAvailableInHand(apt.wantedType);
