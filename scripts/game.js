@@ -1118,9 +1118,24 @@
       stepConfetti();
     }
 
+    function getPendingParcelsForApartment(apt) {
+      if (!apt || !apt.hasOrder) return [];
+      return flyingParcels.filter(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId);
+    }
+
+    function hasPendingFullDelivery(apt) {
+      if (!apt || !apt.hasOrder) return false;
+      if (apt.delivered) return true;
+      const pending = getPendingParcelsForApartment(apt);
+      if (pending.length === 0) return false;
+      if (pending.some(parcel => parcel.parcelType !== apt.wantedType)) return true;
+      const remainingDrops = apt.isVip ? 2 - (apt.vipDelivered || 0) : 1;
+      return pending.length >= remainingDrops;
+    }
+
     function pickSmartParcelType() {
       const upcomingOrders = apartments
-        .filter(a => a.hasOrder && !a.delivered && getResidentRelativeZ(a) <= THROW_RANGE_MAX)
+        .filter(a => a.hasOrder && !a.delivered && !hasPendingFullDelivery(a) && getResidentRelativeZ(a) <= THROW_RANGE_MAX)
         .sort((a, b) => (gameState.vanZ - a.group.position.z) - (gameState.vanZ - b.group.position.z));
 
       for (const apt of upcomingOrders) {
@@ -1170,7 +1185,7 @@
       const protectedTypes = new Set();
       apartments.forEach(apt => {
         const relativeZ = getResidentRelativeZ(apt);
-        if (apt.hasOrder && !apt.delivered && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) {
+        if (apt.hasOrder && !apt.delivered && !hasPendingFullDelivery(apt) && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) {
           protectedTypes.add(apt.wantedType);
         }
       });
@@ -1191,7 +1206,7 @@
       if (!gameState.handModifiers) gameState.handModifiers = [null, null, null];
       gameState.handModifiers[slotIndex] = rollParcelModifier();
       apartments.forEach(apt => {
-        if (apt.hasOrder && !apt.delivered && getResidentRelativeZ(apt) >= -95 &&
+        if (apt.hasOrder && !apt.delivered && !hasPendingFullDelivery(apt) && getResidentRelativeZ(apt) >= -95 &&
             getResidentRelativeZ(apt) <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
       });
       renderBottomParcelHandUI(slotIndex);
@@ -1794,11 +1809,11 @@
 
     function findTargetApartment(targetSide = 'auto') {
       const locked = gameState.lockedTargetApt;
-      if (isResidentInThrowRange(locked) && (targetSide === 'auto' || locked.side === targetSide)) return locked;
+      if (isResidentInThrowRange(locked) && !hasPendingFullDelivery(locked) && (targetSide === 'auto' || locked.side === targetSide)) return locked;
       let target = null;
       let closestDistance = Infinity;
       apartments.forEach(apt => {
-        if (!isResidentInThrowRange(apt) || (targetSide !== 'auto' && apt.side !== targetSide)) return;
+        if (!isResidentInThrowRange(apt) || hasPendingFullDelivery(apt) || (targetSide !== 'auto' && apt.side !== targetSide)) return;
         const distance = Math.abs(getResidentRelativeZ(apt) + 18);
         if (distance < closestDistance) {
           target = apt;
@@ -1860,19 +1875,68 @@
       const now = performance.now();
       const playing = gameState.mode === 'playing';
       apartments.forEach(apt => {
-        if (!apt.hasOrder || apt.delivered) {
+        if (!apt.hasOrder) {
           apt.cloudEl.classList.add('hidden');
           apt.ringGroup.visible = false;
           return;
         }
         const relativeZ = getResidentRelativeZ(apt);
-        const pendingDelivery = flyingParcels.some(parcel => parcel.targetApt === apt && parcel.targetOrderId === apt.orderId);
+        const pendingParcels = getPendingParcelsForApartment(apt);
+        const pendingDelivery = pendingParcels.length > 0;
+        const fullDeliveryTriggered = hasPendingFullDelivery(apt);
+
         if (relativeZ > THROW_RANGE_MAX && !pendingDelivery) {
           apt.hasOrder = false;
           apt.cloudEl.classList.add('hidden');
           apt.ringGroup.visible = false;
           return;
         }
+
+        if (apt.delivered && !apt.deliveredByPlayer) {
+          apt.cloudEl.classList.add('hidden');
+          apt.ringGroup.visible = false;
+          return;
+        }
+
+        const inViewRange = playing && !!apt.charMesh && Number.isFinite(relativeZ) && relativeZ >= THROW_RANGE_MIN && relativeZ <= THROW_RANGE_MAX;
+
+        if (apt.deliveredByPlayer || fullDeliveryTriggered) {
+          apt.ringGroup.visible = false;
+          if (!inViewRange) {
+            apt.cloudEl.classList.add('hidden');
+            return;
+          }
+          const isWrong = !!(apt.deliveredWrong || pendingParcels.some(p => p.parcelType !== apt.wantedType));
+          const parcelInfo = PARCEL_TYPES[apt.wantedType];
+          const renderKey = `${apt.orderId}:delivered:${isWrong ? 'wrong' : 'exact'}`;
+          if (apt.cloudEl.dataset.renderKey !== renderKey) {
+            apt.cloudEl.dataset.renderKey = renderKey;
+            const statusTitle = isWrong ? 'DELIVERED (50%)' : 'DELIVERED!';
+            const statusSub = isWrong ? '📦 WRONG PARCEL' : (apt.isVip ? '👑 VIP COMPLETE' : '✓ ORDER COMPLETE');
+            apt.cloudEl.innerHTML = `
+              <div class="thought-cloud-pill resident-order-badge is-delivered">
+                <img class="resident-request-icon" src="${parcelIconDataURLs[apt.wantedType]}" alt="${parcelInfo.name}" />
+                <div class="resident-order-copy">
+                  <strong>${statusTitle}</strong>
+                  <span class="cloud-distance-badge">${statusSub}</span>
+                </div>
+                <button type="button" class="quick-throw-cloud-btn parcel-key-badge" disabled title="Delivered">✓</button>
+              </div>`;
+            apt.cloudDistBadge = apt.cloudEl.querySelector('.cloud-distance-badge');
+            apt.cloudBtn = apt.cloudEl.querySelector('.quick-throw-cloud-btn');
+          }
+          getResidentHandPosition(apt, orderBadgePosition);
+          orderBadgePosition.y += 2.2;
+          orderBadgePosition.project(camera);
+          const padX = Math.min(110, window.innerWidth / 2 - 8);
+          const screenX = (orderBadgePosition.x * 0.5 + 0.5) * window.innerWidth;
+          const screenY = (-orderBadgePosition.y * 0.5 + 0.5) * window.innerHeight;
+          apt.cloudEl.style.left = `${Math.max(padX, Math.min(window.innerWidth - padX, screenX))}px`;
+          apt.cloudEl.style.top = `${Math.max(110, Math.min(window.innerHeight - 180, screenY))}px`;
+          apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
+          return;
+        }
+
         if (playing && relativeZ >= -95 && relativeZ <= THROW_RANGE_MAX) ensureParcelAvailableInHand(apt.wantedType);
         const inRange = playing && isResidentInThrowRange(apt);
         apt.ringGroup.visible = inRange;
@@ -1927,7 +1991,7 @@
         apt.cloudEl.classList.toggle('hidden', orderBadgePosition.z >= 1);
       });
 
-      if (!isResidentInThrowRange(gameState.lockedTargetApt)) gameState.lockedTargetApt = null;
+      if (!isResidentInThrowRange(gameState.lockedTargetApt) || hasPendingFullDelivery(gameState.lockedTargetApt)) gameState.lockedTargetApt = null;
       gameState.lockedTargetApt = playing ? findTargetApartment() : null;
       const matchingSlot = gameState.lockedTargetApt ? gameState.handSlots.indexOf(gameState.lockedTargetApt.wantedType) : -1;
       const cards = document.getElementById('parcel-hand-horizontal').children;
@@ -3125,6 +3189,8 @@
       apartments.forEach((apt) => {
         apt.hasOrder = false;
         apt.delivered = false;
+        apt.deliveredByPlayer = false;
+        apt.deliveredWrong = false;
       });
 
       // Keep initial blocks order-free so the first order appears after driving ~150m (or sooner if in tutorial mode!)
@@ -4273,8 +4339,9 @@
                 const coinGain = Math.round((baseCoinGain * 2 + vipCoinBonus + (isPerfect ? 15 : 0)) * overdriveMultiplier * fp.routeCoinMultiplier);
 
                 apt.delivered = true;
+                apt.deliveredByPlayer = true;
+                apt.deliveredWrong = false;
                 apt.ringGroup.visible = false;
-                apt.cloudEl.classList.add('hidden');
 
                 gameState.score += pts;
                 gameState.deliveries += 1;
@@ -4317,8 +4384,9 @@
                 const coinGain = Math.max(5, Math.round(baseCoinGain * 0.5 * fp.routeCoinMultiplier));
 
                 apt.delivered = true;
+                apt.deliveredByPlayer = true;
+                apt.deliveredWrong = true;
                 apt.ringGroup.visible = false;
-                apt.cloudEl.classList.add('hidden');
 
                 gameState.score += pts;
                 gameState.deliveries += 1;

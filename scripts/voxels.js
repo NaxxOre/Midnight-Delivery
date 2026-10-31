@@ -3574,6 +3574,8 @@ window.BLOCK_SPACING = BLOCK_SPACING;
         wantedType: 0,
         character: CHARACTER_TYPES[0],
         delivered: false,
+        deliveredByPlayer: false,
+        deliveredWrong: false,
         orderId: 0
       };
 
@@ -3614,6 +3616,8 @@ window.BLOCK_SPACING = BLOCK_SPACING;
       apt.charMesh = null;
       apt.crownMesh = null;
       apt.delivered = false;
+      apt.deliveredByPlayer = false;
+      apt.deliveredWrong = false;
       apt.isVip = false;
       apt.vipNeeded = 1;
       apt.vipDelivered = 0;

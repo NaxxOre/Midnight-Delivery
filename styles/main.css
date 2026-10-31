@@ -597,6 +597,41 @@
   font-size: 16px;
   cursor: pointer;
 }
+.thought-cloud-pill.resident-order-badge.is-delivered {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #10b981;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+}
+.thought-cloud-pill.resident-order-badge.is-delivered::after {
+  border-color: #d1fae5 transparent;
+}
+.thought-cloud-pill.resident-order-badge.is-delivered::before {
+  border-color: #10b981 transparent;
+}
+.thought-cloud-pill.resident-order-badge.is-delivered .resident-order-copy strong {
+  color: #065f46;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.thought-cloud-pill.resident-order-badge.is-delivered .cloud-distance-badge {
+  color: #047857;
+  font-weight: 800;
+}
+.thought-cloud-pill.resident-order-badge.is-delivered .quick-throw-cloud-btn {
+  background: #10b981;
+  border-color: #059669;
+  color: #022c22;
+  cursor: default;
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-delivered {
+  background: #064e3bf5;
+  border-color: #34d399;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.55);
+}
+.blackout-active .thought-cloud-pill.resident-order-badge.is-delivered .resident-order-copy strong,
+.blackout-active .thought-cloud-pill.resident-order-badge.is-delivered .cloud-distance-badge {
+  color: #ecfdf5;
+}
 
 
 /* Tactical Speed Lines Layer (Disabled: screen light-up and overlay removed) */
